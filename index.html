@@ -522,15 +522,24 @@ class Component extends DCLogic {
 
   drawClip(c, local) {
     if (!c.ctx || !c.ready) return;
-    const idx = Math.round(Math.min(1, Math.max(0, local)) * (c.count - 1));
-    if (idx === c.drawn) return;
-    c.drawn = idx;
-    const img = this.pick(c.imgs, idx);
-    if (!img) return;
+    const l = Math.min(1, Math.max(0, local));
+    const idx = Math.round(l * (c.count - 1));
     const ctx = c.ctx;
     const cw = ctx.canvas.width, ch = ctx.canvas.height;
-    const s = Math.max(cw / img.width, ch / img.height);
-    const w = img.width * s, h = img.height * s;
+    // Portrait screens crop a 16:9 frame to its centre, cutting the logo off. Start clip A
+    // fitted to width (logo fully visible) and ease to cover over the first 12% of the clip.
+    let k = 1;
+    if (c.key === 'a' && ch > cw) { const u = Math.min(1, l / 0.12); k = u * u * (3 - 2 * u); }
+    const key = idx + ':' + Math.round(k * 60);
+    if (key === c.drawn) return;
+    c.drawn = key;
+    const img = this.pick(c.imgs, idx);
+    if (!img) return;
+    const cover = Math.max(cw / img.width, ch / img.height);
+    const fit = Math.min(cw / img.width, ch / img.height);
+    const sc = fit + (cover - fit) * k;
+    const w = img.width * sc, h = img.height * sc;
+    if (k < 1) { ctx.fillStyle = '#FAFAF8'; ctx.fillRect(0, 0, cw, ch); }
     ctx.drawImage(img, (cw - w) / 2, (ch - h) / 2, w, h);
   }
 
