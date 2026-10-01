@@ -423,7 +423,7 @@ class Component extends DCLogic {
     this.navZones = Array.from(document.querySelectorAll('[data-nav]'));
 
     this.measure();
-    if (this.mobile || this.reduced) {
+    if (this.reduced) {
       this.el.poster.style.display = 'block';
       this.clips.forEach((c) => { c.canvas.style.display = 'none'; });
       this.el.scrimDark.style.opacity = '1';
@@ -434,7 +434,11 @@ class Component extends DCLogic {
     }
     this.booted = true;
 
+    this.lastW = window.innerWidth;
     this.onResize = () => {
+      // mobile URL-bar show/hide fires resize with only the height changing; ignore it so the track doesn't jump
+      if (this.mobile && window.innerWidth === this.lastW) return;
+      this.lastW = window.innerWidth;
       this.measure();
       this.clips.forEach((c) => { this.sizeCanvas(c); c.drawn = -1; });
       this.settled = false;
@@ -532,7 +536,7 @@ class Component extends DCLogic {
 
   loop() {
     if (!this.booted) return;
-    if (!this.mobile && !this.reduced) {
+    if (!this.reduced) {
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       this.clips.forEach((c) => {
         const want = Math.round((c.canvas.clientWidth || 0) * dpr);
@@ -565,7 +569,7 @@ class Component extends DCLogic {
     this.settled = this.cur === target;
     const p = this.cur;
 
-    if (!this.mobile && !this.reduced) {
+    if (!this.reduced) {
       const cutNow = p >= this.CUT;
       if (cutNow !== this.onClipB) {
         this.onClipB = cutNow;
