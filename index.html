@@ -16,6 +16,18 @@
   a { color: #0B0C0E; text-decoration: none; }
   a:hover { color: #A8701A; }
   ::selection { background: #E39A2B; color: #0B0C0E; }
+  #burger { display: none; }
+  @media (max-width: 860px) {
+    #burger { display: flex; flex-direction: column; justify-content: center; gap: 6px; width: 44px; height: 44px; margin: -10px -10px -10px 0; padding: 0 10px; border: 0; background: none; cursor: pointer; transition: color 320ms ease; -webkit-tap-highlight-color: transparent; }
+    #burger span { display: block; height: 2px; background: currentColor; border-radius: 1px; transition: transform 260ms ease, opacity 200ms ease; }
+    #burger[aria-expanded="true"] span:nth-child(1) { transform: translateY(8px) rotate(45deg); }
+    #burger[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
+    #burger[aria-expanded="true"] span:nth-child(3) { transform: translateY(-8px) rotate(-45deg); }
+    #menu { position: absolute; top: 100%; left: 0; right: 0; flex-direction: column; align-items: stretch !important; gap: 0 !important; padding: 8px clamp(18px, 4vw, 48px) 24px; background: #0B0C0E; visibility: hidden; opacity: 0; transform: translateY(-8px); transition: opacity 240ms ease, transform 240ms ease, visibility 0s linear 240ms; }
+    #menu.open { visibility: visible; opacity: 1; transform: none; transition-delay: 0s; }
+    #menu a { color: #F5F4F1 !important; font-size: 14px !important; padding: 16px 0 !important; border-bottom: 1px solid rgba(245,244,241,0.12); }
+    #menu a:last-child { margin-top: 18px; border: 0; text-align: center; color: #0B0C0E !important; padding: 14px 16px 13px !important; }
+  }
   @keyframes spin { to { transform: rotate(360deg); } }
   @keyframes cue { 0%, 100% { transform: translateY(0); opacity: 0.55; } 50% { transform: translateY(7px); opacity: 1; } }
 </style>
@@ -23,9 +35,10 @@
 
 <div style="position: relative; width: 100%; background: #F5F4F1;">
 
-  <nav style="position: fixed; top: 0; left: 0; right: 0; z-index: 60; display: flex; align-items: center; justify-content: space-between; padding: 20px clamp(18px, 4vw, 48px);">
+  <nav style="transition: background 240ms ease; position: fixed; top: 0; left: 0; right: 0; z-index: 60; display: flex; align-items: center; justify-content: space-between; padding: 20px clamp(18px, 4vw, 48px);">
     <span id="navmark" style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 118; font-weight: 800; font-size: 22px; letter-spacing: 0.02em; color: #0B0C0E; transition: color 320ms ease;">2ACE</span>
-    <div style="display: flex; align-items: center; gap: clamp(14px, 2.4vw, 34px);">
+    <button id="burger" type="button" aria-label="Menu" aria-expanded="false" aria-controls="menu" style="color: #0B0C0E;"><span></span><span></span><span></span></button>
+    <div id="menu" style="display: flex; align-items: center; gap: clamp(14px, 2.4vw, 34px);">
       <a class="navlink" href="#services" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: #0B0C0E; transition: color 320ms ease;">Services</a>
       <a class="navlink" href="#pricing" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: #0B0C0E; transition: color 320ms ease;">Pricing</a>
       <a class="navlink" href="#market" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: #0B0C0E; transition: color 320ms ease;">Market</a>
@@ -448,6 +461,7 @@ class Component extends DCLogic {
     this.tickLoop = () => { this.raf = requestAnimationFrame(this.tickLoop); this.loop(); };
     this.raf = requestAnimationFrame(this.tickLoop);
 
+    this.setupMenu();
     this.setupReveals();
     this.setupForm();
     this.setupSlider();
@@ -646,9 +660,28 @@ class Component extends DCLogic {
     }
     if (mode === this.lastNav) return;
     this.lastNav = mode;
-    const c = mode === 'paper' ? '#F5F4F1' : '#0B0C0E';
+    const c = mode === 'paper' || this.menuOpen ? '#F5F4F1' : '#0B0C0E';
     this.el.navmark.style.color = c;
     this.el.navlinks.forEach((a) => { a.style.color = c; });
+    const bg = document.querySelector('#burger');
+    if (bg) bg.style.color = this.menuOpen ? '#E39A2B' : c;
+  }
+
+  setupMenu() {
+    const b = document.querySelector('#burger'), m = document.querySelector('#menu');
+    if (!b || !m) return;
+    const set = (open) => {
+      m.classList.toggle('open', open);
+      b.setAttribute('aria-expanded', String(open));
+      // orange X stays visible on both light and dark backgrounds
+      this.menuOpen = open;
+      m.parentElement.style.background = open ? '#0B0C0E' : '';
+      this.el.navmark.style.color = open ? '#F5F4F1' : (this.lastNav === 'paper' ? '#F5F4F1' : '#0B0C0E');
+      b.style.color = open ? '#E39A2B' : (this.lastNav === 'paper' ? '#F5F4F1' : '#0B0C0E');
+    };
+    b.addEventListener('click', () => set(!this.menuOpen));
+    m.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => set(false)));
+    window.addEventListener('resize', () => { if (window.innerWidth > 860 && this.menuOpen) set(false); }, { passive: true });
   }
 
   setupReveals() {
