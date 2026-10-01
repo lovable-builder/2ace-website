@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..900&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  body { margin: 0; background: #FFF8F1; color: #0B0C0E; font-family: "IBM Plex Sans", system-ui, sans-serif; -webkit-font-smoothing: antialiased; text-wrap: pretty; }
+  a { color: #0B0C0E; text-decoration: none; }
+  a:hover { color: #A8701A; }
+  button { font: inherit; }
+</style>
+</helmet>
+
+<div style="min-height: 100vh; background: #FFF8F1;">
+  <div style="background: #C8553D; color: #FFF8F1; padding: 9px clamp(16px, 3vw, 32px); display: flex; flex-wrap: wrap; justify-content: center; gap: 8px 28px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;">
+    <span>Free delivery over 149 zł</span><span style="color: #FFE3A3;">Order by 15:00, ships today</span><span>30-day free returns</span>
+  </div>
+
+  <header style="position: sticky; top: 0; z-index: 30; background: #FFFFFF; border-bottom: 1px solid rgba(11,12,14,0.08);">
+    <div style="max-width: 1320px; margin: 0 auto; padding: 14px clamp(16px, 3vw, 32px); display: flex; flex-wrap: wrap; align-items: center; gap: 14px 24px;">
+      <div style="display: flex; align-items: baseline; gap: 6px;">
+        <span style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 118; font-weight: 800; font-size: 24px; letter-spacing: 0.01em;">2ACE</span>
+        <span style="font-family: Archivo, sans-serif; font-weight: 600; font-size: 20px; color: #C8553D;">market</span>
+      </div>
+      <div style="flex: 1 1 320px; display: flex; align-items: center; gap: 10px; padding: 0 14px; border: 1.5px solid #0B0C0E; border-radius: 24px; height: 44px; background: #FFFFFF;">
+        <span style="font-size: 16px; color: rgba(11,12,14,0.5);">⌕</span>
+        <input type="text" value="{{ q }}" onChange="{{ onQ }}" placeholder="Search products and brands" style="flex: 1; min-width: 0; border: 0; outline: none; font-size: 15px; background: transparent;" />
+      </div>
+      <nav style="display: flex; align-items: center; gap: 18px; font-size: 14px; font-weight: 500;">
+        <a href="#brands">Brands</a>
+        <a href="platform.html" style="color: #C8553D;">Sell on 2ACE</a>
+        <button onClick="{{ openCart }}" style="cursor: pointer; display: flex; align-items: center; gap: 8px; padding: 10px 16px; border: 0; border-radius: 22px; background: #1F3D33; color: #FFF8F1; font-size: 14px; font-weight: 500;">Cart <span style="display: grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 11px; background: #FFC857; color: #1F3D33; font-family: 'IBM Plex Mono', monospace; font-size: 12px;">{{ cartCount }}</span></button>
+      </nav>
+    </div>
+    <div style="max-width: 1320px; margin: 0 auto; padding: 0 clamp(16px, 3vw, 32px) 12px; display: flex; gap: 8px; overflow-x: auto;">
+      <sc-for list="{{ cats }}" as="c" hint-placeholder-count="7">
+        <button onClick="{{ c.onClick }}" style="flex: none; cursor: pointer; padding: 8px 15px; border-radius: 18px; border: 1px solid {{ c.bd }}; background: {{ c.bg }}; color: {{ c.fg }}; font-size: 13px; font-weight: 500;">{{ c.label }}</button>
+      </sc-for>
+    </div>
+  </header>
+
+  <main style="max-width: 1320px; margin: 0 auto; padding: 24px clamp(16px, 3vw, 32px) 80px; display: flex; flex-direction: column; gap: 40px;">
+
+    <section style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 16px;">
+      <div style="background: #1F3D33; color: #FFF8F1; border-radius: 14px; padding: clamp(26px, 4vw, 48px); display: flex; flex-direction: column; justify-content: space-between; gap: 28px; min-height: 320px;">
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: #FFC857;">Autumn edit · Home</span>
+        <div>
+          <h1 style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 112; font-weight: 800; font-size: clamp(34px, 4.6vw, 62px); line-height: 0.96; letter-spacing: -0.025em; margin: 0 0 16px;">Independent brands.<br />At your door tomorrow.</h1>
+          <p style="font-size: 16px; line-height: 1.55; margin: 0; max-width: 42ch; color: rgba(255,248,241,0.8);">Every order packed in Poland and shipped the same day, with one basket, one checkout and one returns address.</p>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+          <button onClick="{{ shopHome }}" style="cursor: pointer; padding: 13px 22px; border: 0; border-radius: 24px; background: #FFC857; color: #1F3D33; font-size: 14px; font-weight: 600;">Shop home &amp; living</button>
+          <a href="#brands" style="padding: 13px 22px; border: 1px solid rgba(255,248,241,0.4); border-radius: 24px; color: #FFF8F1; font-size: 14px; font-weight: 500;">Meet the brands</a>
+        </div>
+      </div>
+      <div style="display: grid; grid-template-rows: minmax(0, 1fr) minmax(0, 1fr); gap: 16px;">
+        <div style="position: relative; border-radius: 14px; background: #F3E6D8; padding: 24px; display: flex; flex-direction: column; justify-content: flex-end; min-height: 190px; overflow: hidden;">
+          <img src="assets/market/cushion.jpg" alt="Luma Home wool cushion" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 70%;" />
+          <span style="position: absolute; inset: 0; background: linear-gradient(to right, rgba(255,248,241,0.94) 0%, rgba(255,248,241,0.6) 45%, rgba(255,248,241,0) 75%);"></span>
+          <span style="position: relative; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #C8553D;">Brand of the week</span>
+          <span style="position: relative; font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 110; font-weight: 800; font-size: 30px; letter-spacing: -0.02em;">Luma Home</span>
+          <span style="position: relative; font-size: 14px; color: rgba(11,12,14,0.75);">Linen, ceramics and candles · up to 20% off</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: 16px;">
+          <div style="border-radius: 14px; background: #B9D3C2; padding: 20px; display: flex; flex-direction: column; justify-content: flex-end; gap: 4px;">
+            <span style="font-family: Archivo, sans-serif; font-weight: 800; font-size: 20px;">New this week</span>
+            <span style="font-size: 13px; color: rgba(11,12,14,0.7);">38 products from 6 brands</span>
+          </div>
+          <div style="border-radius: 14px; background: #FFD98A; padding: 20px; display: flex; flex-direction: column; justify-content: flex-end; gap: 4px;">
+            <span style="font-family: Archivo, sans-serif; font-weight: 800; font-size: 20px;">Pay with BLIK</span>
+            <span style="font-size: 13px; color: rgba(11,12,14,0.7);">Or Przelewy24, cards, PayPo</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section style="display: flex; flex-direction: column; gap: 18px;">
+      <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 10px;">
+        <h2 style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 108; font-weight: 800; font-size: 28px; letter-spacing: -0.02em; margin: 0;">{{ gridTitle }}</h2>
+        <span style="font-size: 14px; color: rgba(11,12,14,0.6);">{{ resultCount }}</span>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); gap: 20px 16px;">
+        <sc-for list="{{ products }}" as="p" hint-placeholder-count="8">
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <div style="position: relative; aspect-ratio: 1; border-radius: 14px; background: {{ p.tint }}; overflow: hidden;">
+              <div role="img" aria-label="{{ p.name }}" style="position: absolute; inset: 0; background-image: {{ p.bgImg }}; background-size: cover; background-position: center; transition: transform 500ms ease;" style-hover="transform: scale(1.04);"></div>
+              <span style="position: absolute; left: 12px; top: 12px; padding: 4px 9px; border-radius: 12px; background: {{ p.badgeBg }}; color: {{ p.badgeFg }}; font-size: 11px; font-weight: 700; z-index: 1; visibility: {{ p.badgeVis }};">{{ p.badge }}</span>
+              <span style="position: absolute; inset: 0; display: grid; place-items: center; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.14em; color: rgba(11,12,14,0.35); visibility: {{ p.phVis }};">PRODUCT PHOTO</span>
+              <button onClick="{{ p.onFav }}" style="position: absolute; right: 10px; top: 10px; cursor: pointer; width: 34px; height: 34px; border-radius: 50%; border: 0; background: #FFFFFF; font-size: 16px; z-index: 1; color: {{ p.favFg }};">♥</button>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 3px;">
+              <span style="font-size: 12px; font-weight: 700; color: #C8553D;">{{ p.brand }}</span>
+              <span style="font-size: 15px; line-height: 1.35;">{{ p.name }}</span>
+              <span style="font-size: 12px; color: rgba(11,12,14,0.6);">★ {{ p.rating }} · {{ p.reviews }} reviews</span>
+            </div>
+            <div style="display: flex; align-items: baseline; gap: 8px;">
+              <span style="font-family: Archivo, sans-serif; font-weight: 800; font-size: 20px; color: {{ p.priceFg }};">{{ p.price }}</span>
+              <span style="font-size: 13px; color: rgba(11,12,14,0.5); text-decoration: line-through;">{{ p.was }}</span>
+            </div>
+            <span style="font-size: 12px; color: #2C7A57; font-weight: 600;">Delivered tomorrow · InPost or DPD</span>
+            <button onClick="{{ p.onAdd }}" style="cursor: pointer; padding: 11px; border-radius: 22px; border: 1px solid {{ p.btnBd }}; background: {{ p.btnBg }}; color: {{ p.btnFg }}; font-size: 14px; font-weight: 600;">{{ p.btn }}</button>
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.1em; color: rgba(11,12,14,0.45);">SOLD BY {{ p.brandUp }} · FULFILLED BY 2ACE</span>
+          </div>
+        </sc-for>
+      </div>
+      <sc-if value="{{ noResults }}" hint-placeholder-val="{{ false }}">
+        <p style="margin: 0; padding: 30px 0; font-size: 15px; color: rgba(11,12,14,0.6);">Nothing matches that search. Try a brand name or a category.</p>
+      </sc-if>
+    </section>
+
+    <section id="brands" style="display: flex; flex-direction: column; gap: 18px;">
+      <h2 style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 108; font-weight: 800; font-size: 28px; letter-spacing: -0.02em; margin: 0;">Shop by brand</h2>
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr)); gap: 12px;">
+        <sc-for list="{{ brands }}" as="b" hint-placeholder-count="6">
+          <button onClick="{{ b.onClick }}" style="cursor: pointer; text-align: left; padding: 18px; border-radius: 14px; border: 1px solid rgba(11,12,14,0.08); background: #FFFFFF; display: flex; flex-direction: column; gap: 4px; color: #0B0C0E;">
+            <span style="display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: {{ b.tint }}; font-family: Archivo, sans-serif; font-weight: 800; font-size: 14px; margin-bottom: 8px;">{{ b.ini }}</span>
+            <span style="font-family: Archivo, sans-serif; font-weight: 700; font-size: 17px;">{{ b.name }}</span>
+            <span style="font-size: 13px; color: rgba(11,12,14,0.6);">{{ b.from }} · {{ b.count }} products</span>
+          </button>
+        </sc-for>
+      </div>
+    </section>
+
+    <section style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 12px;">
+      <sc-for list="{{ trust }}" as="t" hint-placeholder-count="4">
+        <div style="background: {{ t.bg }}; border-radius: 14px; padding: 20px; display: flex; flex-direction: column; gap: 4px;">
+          <span style="font-family: Archivo, sans-serif; font-weight: 700; font-size: 16px;">{{ t.t }}</span>
+          <span style="font-size: 13px; line-height: 1.5; color: rgba(11,12,14,0.62);">{{ t.d }}</span>
+        </div>
+      </sc-for>
+    </section>
+
+    <section style="border-radius: 14px; background: #C8553D; color: #FFF8F1; padding: clamp(24px, 4vw, 40px); display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 20px;">
+      <div style="max-width: 60ch;">
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #FFE3A3;">For brands</span>
+        <h2 style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 108; font-weight: 800; font-size: clamp(24px, 2.6vw, 34px); letter-spacing: -0.02em; margin: 6px 0 8px;">Sell here without hiring a team.</h2>
+        <p style="font-size: 15px; line-height: 1.55; margin: 0; color: rgba(255,248,241,0.88);">We list your products, run the marketing and answer your customers. You pay a commission only when something sells.</p>
+      </div>
+      <a href="platform.html" style="padding: 14px 24px; border-radius: 24px; background: #FFF8F1; color: #C8553D; font-size: 14px; font-weight: 700;">Sell on 2ACE Market</a>
+    </section>
+  </main>
+
+  <footer style="background: #1F3D33; color: rgba(245,244,241,0.7); padding: 36px clamp(16px, 3vw, 32px);">
+    <div style="max-width: 1320px; margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 16px; font-size: 13px;">
+      <span><strong style="font-family: Archivo, sans-serif; color: #F5F4F1;">2ACE market</strong> · Operated by 2ACE sp. z o.o., Poland</span>
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em;">BLIK · PRZELEWY24 · VISA · MASTERCARD · PAYPO</span>
+    </div>
+  </footer>
+
+  <div style="position: fixed; right: 20px; bottom: 20px; z-index: 40; display: flex; flex-direction: column; align-items: flex-end; gap: 10px;">
+    <sc-if value="{{ chatOpen }}" hint-placeholder-val="{{ false }}">
+      <div style="width: min(320px, calc(100vw - 40px)); background: #FFFFFF; border-radius: 10px; box-shadow: 0 12px 40px rgba(11,12,14,0.18); overflow: hidden;">
+        <div style="background: #1F3D33; color: #FFF8F1; padding: 14px 16px; display: flex; flex-direction: column; gap: 2px;">
+          <span style="font-weight: 600; font-size: 15px;">2ACE customer care</span>
+          <span style="font-size: 12px; color: rgba(245,244,241,0.65);">Polish, English, German · replies in about 2 min</span>
+        </div>
+        <div style="padding: 14px 16px; display: flex; flex-direction: column; gap: 8px;">
+          <span style="align-self: flex-start; max-width: 85%; padding: 10px 12px; border-radius: 10px; background: #F5F4F1; font-size: 14px; line-height: 1.45;">Hi! Where is your order, or can we help you choose?</span>
+          <sc-for list="{{ quick }}" as="qk" hint-placeholder-count="3">
+            <button onClick="{{ qk.onClick }}" style="cursor: pointer; align-self: flex-end; padding: 8px 12px; border-radius: 16px; border: 1px solid rgba(11,12,14,0.2); background: #FFFFFF; font-size: 13px;">{{ qk.t }}</button>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+    <button onClick="{{ toggleChat }}" style="cursor: pointer; padding: 13px 18px; border: 0; border-radius: 26px; background: #1F3D33; color: #FFF8F1; font-size: 14px; font-weight: 600; box-shadow: 0 8px 24px rgba(11,12,14,0.18);">{{ chatLabel }}</button>
+  </div>
+
+  <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
+    <div style="position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 50; padding: 12px 18px; border-radius: 22px; background: #0B0C0E; color: #F5F4F1; font-size: 14px;">{{ toast }}</div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900}}">
+class Component extends DCLogic {
+  state = { cat: 'All', q: '', cart: {}, fav: {}, chat: false, toast: '' };
+
+  P = [
+    ['Luma Home', 'Home', 'Linen throw, Sand', 189, 229, 4.8, 312, 'Bestseller', '#F3E6D8'],
+    ['Luma Home', 'Kitchen', 'Ceramic mug set of 4', 129, 0, 4.7, 198, '', '#FAD9C4'],
+    ['Nordic Wick', 'Home', 'Soy candle, Fig & cedar', 59, 0, 4.9, 540, 'New', '#F6D9D5'],
+    ['Oaken', 'Kitchen', 'Oak serving board', 149, 179, 4.6, 87, '-17%', '#E4E9C9'],
+    ['Seoul Skin Lab', 'Beauty', 'Rice toner, 150 ml', 79, 0, 4.8, 1204, 'Bestseller', '#E9E0F0', 'toner'],
+    ['Seoul Skin Lab', 'Beauty', 'Barrier cream, 50 ml', 99, 119, 4.7, 640, '-17%', '#F6D9D5', 'cream'],
+    ['Kinder Kraft', 'Kids', 'Wooden stacking rainbow', 119, 139, 4.9, 233, '-14%', '#CFE6DA'],
+    ['Stride Co.', 'Fashion', 'Merino crew socks, 3 pairs', 89, 0, 4.6, 410, 'New', '#D6E6F2', 'socks'],
+    ['Stride Co.', 'Fashion', 'Recycled canvas tote', 69, 0, 4.5, 156, 'New', '#FFE8B8'],
+    ['Volt Gear', 'Tech accessories', 'Braided USB-C cable, 2 m', 49, 0, 4.7, 890, '', '#DCE3EA', 'cable'],
+    ['Volt Gear', 'Tech accessories', 'Magnetic phone stand', 99, 129, 4.4, 172, '-23%', '#DDE0F0'],
+    ['Luma Home', 'Home', 'Chunky wool cushion, Ochre', 99, 0, 4.8, 264, 'Bestseller', '#F3E6D8', 'cushion']
+  ].map(([brand, cat, name, price, was, rating, reviews, badge, tint, photo], i) => ({ id: i, brand, cat, name, price, was, rating, reviews, badge, tint, photo }))
+    .sort((a, b) => (b.photo ? 1 : 0) - (a.photo ? 1 : 0));
+
+  componentWillUnmount() { clearTimeout(this.t); }
+  toastMsg(m) { this.setState({ toast: m }); clearTimeout(this.t); this.t = setTimeout(() => this.setState({ toast: '' }), 2400); }
+  zl(n) { return n + ' zł'; }
+
+  renderVals() {
+    const s = this.state;
+    const q = s.q.trim().toLowerCase();
+    const list = this.P.filter((p) => (s.cat === 'All' || p.cat === s.cat) && (!q || (p.name + ' ' + p.brand + ' ' + p.cat).toLowerCase().includes(q)));
+    const count = Object.values(s.cart).reduce((a, n) => a + n, 0);
+    const brandMap = {};
+    this.P.forEach((p) => { brandMap[p.brand] = brandMap[p.brand] || { n: 0, tint: p.tint }; brandMap[p.brand].n++; });
+    const from = { 'Luma Home': 'Poland', 'Nordic Wick': 'Sweden', 'Oaken': 'Vietnam', 'Seoul Skin Lab': 'South Korea', 'Kinder Kraft': 'Germany', 'Stride Co.': 'Türkiye', 'Volt Gear': 'China' };
+    return {
+      q: s.q, onQ: (e) => this.setState({ q: e.target.value }),
+      cartCount: count,
+      openCart: () => this.toastMsg(count ? count + ' items · checkout with BLIK, Przelewy24 or card' : 'Your cart is empty'),
+      cats: ['All', 'Home', 'Kitchen', 'Beauty', 'Fashion', 'Kids', 'Tech accessories'].map((c) => {
+        const on = s.cat === c;
+        return { label: c, onClick: () => this.setState({ cat: c }), bg: on ? '#C8553D' : '#FFFFFF', fg: on ? '#FFF8F1' : '#0B0C0E', bd: on ? '#C8553D' : 'rgba(11,12,14,0.14)' };
+      }),
+      shopHome: () => this.setState({ cat: 'Home', q: '' }),
+      gridTitle: q ? 'Results for "' + s.q.trim() + '"' : s.cat === 'All' ? 'Popular right now' : s.cat,
+      resultCount: list.length + ' products',
+      noResults: list.length === 0,
+      products: list.map((p) => {
+        const inCart = s.cart[p.id] || 0;
+        return {
+          brand: p.brand, brandUp: p.brand.toUpperCase(), name: p.name, rating: p.rating, reviews: p.reviews, tint: p.tint,
+          price: this.zl(p.price), was: p.was ? this.zl(p.was) : '',
+          badge: p.badge, badgeVis: p.badge ? 'visible' : 'hidden',
+          badgeBg: p.badge.startsWith('-') ? '#C8553D' : p.badge === 'New' ? '#1F3D33' : '#FFC857',
+          badgeFg: p.badge === 'Bestseller' ? '#1F3D33' : '#FFF8F1',
+          img: p.photo ? 'assets/market/' + p.photo + '.jpg' : '', bgImg: p.photo ? 'url(assets/market/' + p.photo + '.jpg)' : 'none', phVis: p.photo ? 'hidden' : 'visible',
+          priceFg: p.was ? '#C8553D' : '#0B0C0E',
+          favFg: s.fav[p.id] ? '#B4442E' : 'rgba(11,12,14,0.3)',
+          onFav: () => this.setState({ fav: Object.assign({}, s.fav, { [p.id]: !s.fav[p.id] }) }),
+          btn: inCart ? 'In cart · ' + inCart + '  +' : 'Add to cart',
+          btnBg: inCart ? '#FFFFFF' : '#1F3D33', btnFg: inCart ? '#1F3D33' : '#FFF8F1', btnBd: '#1F3D33',
+          onAdd: () => { this.setState({ cart: Object.assign({}, s.cart, { [p.id]: inCart + 1 }) }); this.toastMsg(p.name + ' added to cart'); }
+        };
+      }),
+      brands: Object.keys(brandMap).map((b) => ({
+        name: b, count: brandMap[b].n, tint: brandMap[b].tint, from: from[b] || 'EU',
+        ini: b.split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase(),
+        onClick: () => { this.setState({ q: b, cat: 'All' }); window.scrollTo(0, 0); }
+      })),
+      trust: [
+        { bg: '#FFE3A3', t: 'Ships from Poland', d: 'Every order packed in one warehouse, so a mixed basket arrives as one parcel.' },
+        { bg: '#B9D3C2', t: 'Tomorrow to most of Poland', d: 'InPost lockers, DPD and DHL. 2–4 days to the rest of the EU.' },
+        { bg: '#F6D9D5', t: '30-day free returns', d: 'One returns address for every brand on the market.' },
+        { bg: '#D6E6F2', t: 'Real people on support', d: 'Our team answers in Polish, English and German, 7 days a week.' }
+      ],
+      chatOpen: s.chat, chatLabel: s.chat ? 'Close' : 'Chat with us',
+      toggleChat: () => this.setState({ chat: !s.chat }),
+      quick: ['Where is my order?', 'Start a return', 'Talk to a person'].map((t) => ({ t, onClick: () => this.toastMsg('Support demo: "' + t + '"') })),
+      hasToast: !!s.toast, toast: s.toast
+    };
+  }
+}
+</script>
+</body>
+</html>

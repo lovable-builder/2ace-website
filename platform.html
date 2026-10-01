@@ -1,0 +1,1803 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..900&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  body { margin: 0; background: #F5F4F1; color: #0B0C0E; font-family: "IBM Plex Sans", system-ui, sans-serif; -webkit-font-smoothing: antialiased; text-wrap: pretty; }
+  a { color: #0B0C0E; text-decoration: none; }
+  a:hover { color: #A8701A; }
+  button { font: inherit; }
+  input[type=range] { accent-color: #E39A2B; }
+  ::selection { background: #E39A2B; color: #0B0C0E; }
+</style>
+</helmet>
+
+<div style="min-height: 100vh; background: #F5F4F1;">
+
+  <header style="position: sticky; top: 0; z-index: 40; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; padding: 12px clamp(16px, 3vw, 32px); background: #0B0C0E; color: #F5F4F1;">
+    <div style="display: flex; align-items: baseline; gap: 10px;">
+      <a href="index.html" style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 118; font-weight: 800; font-size: 21px; letter-spacing: 0.02em; color: #F5F4F1;">2ACE</a>
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.18em; color: #E39A2B;">PLATFORM</span>
+    </div>
+    <div style="display: flex; gap: 2px; padding: 3px; border: 1px solid rgba(245,244,241,0.18); border-radius: 3px;">
+      <sc-for list="{{ viewTabs }}" as="v" hint-placeholder-count="2">
+        <button onClick="{{ v.onClick }}" style="border: 0; cursor: pointer; padding: 8px 16px; border-radius: 2px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; background: {{ v.bg }}; color: {{ v.fg }};">{{ v.label }}</button>
+      </sc-for>
+    </div>
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.08em; color: rgba(245,244,241,0.75);">Plan · {{ monthlyFmt }} / mo</span>
+      <span style="display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: #E39A2B; color: #0B0C0E; font-family: Archivo, sans-serif; font-weight: 800; font-size: 13px;">{{ initials }}</span>
+    </div>
+  </header>
+
+  <sc-if value="{{ isBuild }}" hint-placeholder-val="{{ true }}">
+    <main style="max-width: 1280px; margin: 0 auto; padding: clamp(28px, 4vw, 52px) clamp(16px, 3vw, 32px) 96px;">
+      <p style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; color: #A8701A; margin: 0 0 14px;">Build your 2ACE plan</p>
+      <h1 style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 110; font-weight: 800; font-size: clamp(30px, 4.2vw, 56px); line-height: 0.98; letter-spacing: -0.025em; margin: 0 0 14px; max-width: 20ch;">Space, service, storefront and sales. Priced in front of you.</h1>
+      <p style="font-size: 17px; line-height: 1.55; color: rgba(11,12,14,0.66); margin: 0 0 34px; max-width: 58ch;">No quote calls. Every choice updates your price live, and you can change anything later from the dashboard.</p>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 118px), 1fr)); gap: 8px; margin-bottom: 36px;">
+        <sc-for list="{{ steps }}" as="s" hint-placeholder-count="5">
+          <button onClick="{{ s.onClick }}" style="text-align: left; cursor: pointer; background: transparent; border: 0; border-top: 3px solid {{ s.bar }}; padding: 12px 2px 0; color: {{ s.fg }};">
+            <span style="display: block; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em;">{{ s.n }}</span>
+            <span style="display: block; font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 106; font-weight: 700; font-size: 17px; margin-top: 4px;">{{ s.label }}</span>
+          </button>
+        </sc-for>
+      </div>
+
+      <div style="display: flex; flex-wrap: wrap; gap: 32px; align-items: flex-start;">
+        <div style="flex: 1 1 580px; min-width: 0; display: flex; flex-direction: column; gap: 18px;">
+
+          <sc-if value="{{ step0 }}" hint-placeholder-val="{{ true }}">
+            <div style="display: flex; flex-direction: column; gap: 18px;">
+              <div>
+                <h2 style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 108; font-weight: 700; font-size: 28px; letter-spacing: -0.015em; margin: 0 0 6px;">How much space do your goods need?</h2>
+                <p style="font-size: 15px; line-height: 1.55; color: rgba(11,12,14,0.62); margin: 0;">Pay for the space you use. Scale up or down month to month.</p>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr)); gap: 12px;">
+                <sc-for list="{{ storageOpts }}" as="o" hint-placeholder-count="3">
+                  <button onClick="{{ o.onClick }}" style="text-align: left; cursor: pointer; padding: 18px; border-radius: 4px; border: 1px solid {{ o.bd }}; background: {{ o.bg }}; color: {{ o.fg }}; display: flex; flex-direction: column; gap: 8px;">
+                    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; color: #E39A2B;">{{ o.price }}</span>
+                    <span style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 106; font-weight: 700; font-size: 19px;">{{ o.name }}</span>
+                    <span style="font-size: 14px; line-height: 1.5; color: {{ o.sub }};">{{ o.desc }}</span>
+                  </button>
+                </sc-for>
+              </div>
+              <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 22px;">
+                <div style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 14px;">
+                  <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(11,12,14,0.55);">{{ qtyTitle }}</span>
+                  <span style="display: flex; align-items: baseline; gap: 8px;"><input type="number" min="{{ qtyMin }}" max="{{ qtyMax }}" value="{{ qtyDraft }}" onChange="{{ onQtyType }}" onInput="{{ onQtyType }}" onBlur="{{ onQtyCommit }}" onKeyDown="{{ onQtyKey }}" style="width: 150px; text-align: right; border: 0; border-bottom: 2px solid #E39A2B; background: transparent; font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 116; font-weight: 800; font-size: 38px; letter-spacing: -0.02em; line-height: 1; color: #0B0C0E; outline: none; padding: 0;" /><span style="font-size: 16px; font-weight: 600; color: rgba(11,12,14,0.55);">{{ qtyUnit }}</span></span>
+                </div>
+                <input type="range" min="{{ qtyMin }}" max="{{ qtyMax }}" step="{{ qtyStep }}" value="{{ qty }}" onChange="{{ onQty }}" style="width: 100%;" />
+                <div style="display: grid; grid-template-columns: repeat(20, minmax(0, 1fr)); gap: 3px; margin-top: 20px;">
+                  <sc-for list="{{ cells }}" as="c" hint-placeholder-count="80">
+                    <span style="display: block; aspect-ratio: 1; border-radius: 1px; background: {{ c.bg }}; transition: background 220ms ease;"></span>
+                  </sc-for>
+                </div>
+                <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; margin-top: 14px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.06em; color: rgba(11,12,14,0.6);">
+                  <span>{{ footprint }} m² reserved · 1 000 zł / m² storage</span>
+                  <span style="color: #0B0C0E;">{{ storageFmt }} / month</span>
+                </div>
+              </div>
+              <div style="background: #FFFFFF; border: 1px dashed rgba(11,12,14,0.24); border-radius: 4px; padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #A8701A;">Not sure? Estimate from your stock</span>
+                <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px;">
+                  <input type="number" min="0" value="{{ estUnits }}" onChange="{{ onEstUnits }}" onInput="{{ onEstUnits }}" style="width: 130px; padding: 11px 12px; border: 1px solid rgba(11,12,14,0.2); border-radius: 3px; font-size: 15px; background: #F5F4F1;" />
+                  <span style="font-size: 14px; color: rgba(11,12,14,0.6);">units, mostly</span>
+                  <div style="display: flex; gap: 6px;">
+                    <sc-for list="{{ estSizes }}" as="z" hint-placeholder-count="3">
+                      <button onClick="{{ z.onClick }}" style="cursor: pointer; padding: 9px 13px; border-radius: 3px; border: 1px solid {{ z.bd }}; background: {{ z.bg }}; color: {{ z.fg }}; font-size: 13px;">{{ z.label }}</button>
+                    </sc-for>
+                  </div>
+                </div>
+                <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px;">
+                  <span style="font-size: 15px;">That is roughly <strong>{{ estPallets }} pallets</strong>.</span>
+                  <button onClick="{{ useEstimate }}" style="cursor: pointer; padding: 10px 16px; border: 1px solid #0B0C0E; background: transparent; border-radius: 3px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;" style-hover="background: #0B0C0E; color: #F5F4F1;">Use {{ estPallets }} pallets</button>
+                </div>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ stepSvc }}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; flex-direction: column; gap: 18px;">
+              <div>
+                <p style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: #A8701A; margin: 0 0 10px;">{{ svc.kicker }}</p>
+                <h2 style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 108; font-weight: 700; font-size: 28px; letter-spacing: -0.015em; margin: 0 0 6px;">{{ svc.title }}</h2>
+                <p style="font-size: 15px; line-height: 1.55; color: rgba(11,12,14,0.62); margin: 0; max-width: 60ch;">{{ svc.lead }}</p>
+              </div>
+              <div style="background: #FFFFFF; border: 1px solid {{ svc.bd }}; border-radius: 4px; padding: 24px; display: flex; flex-direction: column; gap: 16px;">
+                <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 10px;">
+                  <span style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 106; font-weight: 700; font-size: 21px;">{{ svc.name }}</span>
+                  <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #A8701A;">{{ svc.price }}</span>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                  <sc-for list="{{ svc.points }}" as="pt" hint-placeholder-count="4">
+                    <div style="display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 10px; font-size: 15px; line-height: 1.5;">
+                      <span style="color: #E39A2B; font-weight: 700;">✓</span>
+                      <span>{{ pt.t }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 12px;">
+                <button onClick="{{ svc.add }}" style="cursor: pointer; padding: 15px; border: 0; border-radius: 3px; background: {{ svc.addBg }}; color: {{ svc.addFg }}; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;">{{ svc.addLabel }}</button>
+                <button onClick="{{ svc.skip }}" style="cursor: pointer; padding: 15px; border: 1px solid rgba(11,12,14,0.25); border-radius: 3px; background: transparent; color: #0B0C0E; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;" style-hover="border-color: #0B0C0E;">{{ svc.skipLabel }}</button>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ step4 }}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+              <div>
+                <h2 style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 108; font-weight: 700; font-size: 28px; letter-spacing: -0.015em; margin: 0 0 6px;">A .pl storefront, wired to your stock.</h2>
+                <p style="font-size: 15px; line-height: 1.55; color: rgba(11,12,14,0.62); margin: 0;">We design, build and host it. Orders drop straight into fulfillment, stock counts come straight back.</p>
+              </div>
+              <button onClick="{{ toggleStore }}" style="text-align: left; cursor: pointer; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 18px; border-radius: 4px; border: 1px solid rgba(11,12,14,0.14); background: #FFFFFF; color: #0B0C0E;">
+                <span style="display: flex; flex-direction: column; gap: 4px;">
+                  <span style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 106; font-weight: 700; font-size: 18px;">Build my storefront</span>
+                  <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: rgba(11,12,14,0.6);">2 950 zł setup incl. domain · 199 zł / month hosting and care</span>
+                </span>
+                <span style="position: relative; display: block; width: 46px; height: 26px; border-radius: 13px; background: {{ storeTrack }}; transition: background 200ms ease;">
+                  <span style="position: absolute; top: 3px; left: {{ storeKnob }}; width: 20px; height: 20px; border-radius: 50%; background: #FFFFFF; transition: left 200ms ease;"></span>
+                </span>
+              </button>
+
+              <sc-if value="{{ storeOn }}" hint-placeholder-val="{{ true }}">
+                <div style="display: flex; flex-direction: column; gap: 16px;">
+                  <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px;">
+                    <span style="display: block; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(11,12,14,0.55); margin-bottom: 12px;">Domain</span>
+                    <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                      <div style="flex: 1 1 240px; display: flex; align-items: stretch; border: 1px solid rgba(11,12,14,0.22); border-radius: 3px; overflow: hidden; background: #F5F4F1;">
+                        <input type="text" value="{{ domain }}" onChange="{{ onDomain }}" placeholder="yourbrand" style="flex: 1; min-width: 0; border: 0; padding: 12px; font-size: 16px; background: transparent; outline: none;" />
+                        <span style="display: grid; place-items: center; padding: 0 14px; font-family: 'IBM Plex Mono', monospace; font-size: 15px; background: #EAE8E3;">.pl</span>
+                      </div>
+                      <button onClick="{{ checkDomain }}" style="cursor: pointer; padding: 12px 20px; border: 0; border-radius: 3px; background: #0B0C0E; color: #F5F4F1; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;" style-hover="background: #2A2D33;">Check</button>
+                    </div>
+                    <p style="font-size: 14px; margin: 10px 0 0; color: {{ domainColor }};">{{ domainMsg }}</p>
+                  </div>
+
+                  <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px;">
+                    <span style="display: block; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(11,12,14,0.55); margin-bottom: 12px;">Starting look</span>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: 10px;">
+                      <sc-for list="{{ themes }}" as="t" hint-placeholder-count="3">
+                        <button onClick="{{ t.onClick }}" style="cursor: pointer; text-align: left; padding: 10px; border-radius: 4px; border: 2px solid {{ t.bd }}; background: #FFFFFF;">
+                          <span style="display: grid; grid-template-columns: 2fr 1fr; grid-template-rows: 36px 20px; gap: 4px; margin-bottom: 10px;">
+                            <span style="grid-row: span 2; border-radius: 2px; background: {{ t.c1 }};"></span>
+                            <span style="border-radius: 2px; background: {{ t.c2 }};"></span>
+                            <span style="border-radius: 2px; background: {{ t.c3 }};"></span>
+                          </span>
+                          <span style="display: block; font-family: Archivo, sans-serif; font-weight: 700; font-size: 15px;">{{ t.name }}</span>
+                          <span style="display: block; font-size: 12px; color: rgba(11,12,14,0.6); margin-top: 2px;">{{ t.desc }}</span>
+                        </button>
+                      </sc-for>
+                    </div>
+                  </div>
+
+                  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 16px;">
+                    <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px;">
+                      <span style="display: block; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(11,12,14,0.55); margin-bottom: 12px;">Languages</span>
+                      <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                        <sc-for list="{{ langChips }}" as="c" hint-placeholder-count="4">
+                          <button onClick="{{ c.onClick }}" style="cursor: pointer; padding: 8px 13px; border-radius: 20px; border: 1px solid {{ c.bd }}; background: {{ c.bg }}; color: {{ c.fg }}; font-size: 13px;">{{ c.label }}</button>
+                        </sc-for>
+                      </div>
+                    </div>
+                    <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px;">
+                      <span style="display: block; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(11,12,14,0.55); margin-bottom: 12px;">Payments</span>
+                      <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                        <sc-for list="{{ payChips }}" as="c" hint-placeholder-count="5">
+                          <button onClick="{{ c.onClick }}" style="cursor: pointer; padding: 8px 13px; border-radius: 20px; border: 1px solid {{ c.bd }}; background: {{ c.bg }}; color: {{ c.fg }}; font-size: 13px;">{{ c.label }}</button>
+                        </sc-for>
+                      </div>
+                    </div>
+                  </div>
+                  <p style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 1.7; letter-spacing: 0.03em; color: rgba(11,12,14,0.6); margin: 0;">Included: hosting and SSL · live stock sync · Polish VAT invoices · GDPR and cookie consent · InPost and DPD checkout</p>
+                </div>
+              </sc-if>
+              <sc-if value="{{ storeOff }}" hint-placeholder-val="{{ false }}">
+                <p style="font-size: 15px; line-height: 1.55; color: rgba(11,12,14,0.66); margin: 0; padding: 18px; background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px;">Already selling on Shopify, WooCommerce or Allegro? We connect it during onboarding and sync stock the same way.</p>
+              </sc-if>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ step5 }}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+              <div>
+                <h2 style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 108; font-weight: 700; font-size: 28px; letter-spacing: -0.015em; margin: 0 0 6px;">Sell where your buyers scroll.</h2>
+                <p style="font-size: 15px; line-height: 1.55; color: rgba(11,12,14,0.62); margin: 0;">We open the shops, list your catalogue and connect orders to the warehouse. Choose setup only, or let our team run it.</p>
+              </div>
+              <sc-for list="{{ channels }}" as="ch" hint-placeholder-count="2">
+                <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+                  <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px;">
+                    <div style="display: flex; flex-direction: column; gap: 4px; max-width: 46ch;">
+                      <span style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 106; font-weight: 700; font-size: 19px;">{{ ch.name }}</span>
+                      <span style="font-size: 14px; line-height: 1.5; color: rgba(11,12,14,0.62);">{{ ch.desc }}</span>
+                    </div>
+                    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #A8701A;">{{ ch.price }}</span>
+                  </div>
+                  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 3px; background: #F5F4F1; border-radius: 3px;">
+                    <sc-for list="{{ ch.opts }}" as="o" hint-placeholder-count="3">
+                      <button onClick="{{ o.onClick }}" style="cursor: pointer; border: 0; padding: 10px 8px; border-radius: 2px; background: {{ o.bg }}; color: {{ o.fg }}; font-size: 13px; font-weight: 500;">{{ o.label }}</button>
+                    </sc-for>
+                  </div>
+                  <span style="font-size: 13px; color: rgba(11,12,14,0.6);">{{ ch.note }}</span>
+                </div>
+              </sc-for>
+              <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 22px;">
+                <div style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 14px;">
+                  <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(11,12,14,0.55);">Monthly ad budget</span>
+                  <span style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 116; font-weight: 800; font-size: 38px; letter-spacing: -0.02em; line-height: 1;">{{ budgetFmt }}</span>
+                </div>
+                <input type="range" min="0" max="40000" step="1000" value="{{ budget }}" onChange="{{ onBudget }}" style="width: 100%;" />
+                <p style="font-size: 13px; color: rgba(11,12,14,0.6); margin: 12px 0 0;">Paid directly to TikTok and Meta. It is not part of your 2ACE invoice.</p>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ step6 }}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+              <div>
+                <p style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #A8701A; margin: 0 0 10px;">New · 2ACE Market</p>
+                <h2 style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 108; font-weight: 700; font-size: 28px; letter-spacing: -0.015em; margin: 0 0 6px;">Skip the website. Skip the marketing bill.</h2>
+                <p style="font-size: 15px; line-height: 1.55; color: rgba(11,12,14,0.62); margin: 0; max-width: 62ch;">Instead of building your own store and paying for marketing, sell on 2ACE Market. We run the store, the listings and the promotion. No setup, no monthly fee, 15% only when something sells.</p>
+              </div>
+              <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+                <div style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 12px;">
+                  <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(11,12,14,0.55);">Expected monthly sales</span>
+                  <span style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 116; font-weight: 800; letter-spacing: -0.02em; line-height: 1; font-size: 38px;">{{ mkSalesFmt }}</span>
+                </div>
+                <input type="range" min="5000" max="300000" step="5000" value="{{ mkSales }}" onChange="{{ onMkSales }}" style="width: 100%;" />
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 12px;">
+                <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px;">
+                  <span style="display: block; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #A8701A; color: rgba(11,12,14,0.55); margin-bottom: 10px;">Your own store + marketing</span>
+                  <sc-for list="{{ diyRows }}" as="r" hint-placeholder-count="3">
+                    <div style="display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid rgba(11,12,14,0.07); font-size: 14px;">
+                      <span style="color: rgba(11,12,14,0.7);">{{ r.k }}</span><span style="font-family: 'IBM Plex Mono', monospace;">{{ r.v }}</span>
+                    </div>
+                  </sc-for>
+                  <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding-top: 12px;">
+                    <span style="font-weight: 600;">Fixed per month</span><span style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 116; font-weight: 800; letter-spacing: -0.02em; line-height: 1; font-size: 26px;">{{ diyFmt }}</span>
+                  </div>
+                </div>
+                <div style="background: #0B0C0E; color: #F5F4F1; border-radius: 4px; padding: 20px; display: flex; flex-direction: column;">
+                  <span style="display: block; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #A8701A; color: #E39A2B; margin-bottom: 10px;">With 2ACE Market</span>
+                  <sc-for list="{{ mkIncl }}" as="r" hint-placeholder-count="5">
+                    <div style="display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid rgba(245,244,241,0.12); font-size: 14px;">
+                      <span style="color: rgba(245,244,241,0.8);">{{ r.t }}</span><span style="font-family: 'IBM Plex Mono', monospace; color: #E39A2B;">✓</span>
+                    </div>
+                  </sc-for>
+                  <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding-top: 12px; margin-top: auto;">
+                    <span style="font-weight: 600;">{{ mkRateLabel }}</span><span style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 116; font-weight: 800; letter-spacing: -0.02em; line-height: 1; font-size: 26px;">{{ mkCommFmt }}</span>
+                  </div>
+                </div>
+              </div>
+              <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; padding: 16px 20px; border-radius: 4px; background: rgba(47,125,85,0.1);">
+                <span style="font-size: 15px; color: #1F5C3D;"><strong>No website or marketing bill.</strong> You skip {{ setupFmt }} setup and {{ diyFmt }} a month.</span>
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #1F5C3D;">At {{ mkSalesFmt }} sales you pay {{ mkCommFmt }}</span>
+              </div>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 12px;">
+                <button onClick="{{ mkAdd }}" style="cursor: pointer; padding: 15px; border: 0; border-radius: 3px; background: {{ mkAddBg }}; color: {{ mkAddFg }}; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;">{{ mkAddLabel }}</button>
+                <a href="market.html" style="display: grid; place-items: center; padding: 15px; border: 1px solid rgba(11,12,14,0.25); border-radius: 3px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: #0B0C0E;">Preview 2ACE Market →</a>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ step7 }}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+              <div>
+                <h2 style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 108; font-weight: 700; font-size: 28px; letter-spacing: -0.015em; margin: 0 0 6px;">Review and activate.</h2>
+                <p style="font-size: 15px; line-height: 1.55; color: rgba(11,12,14,0.62); margin: 0;">Monthly, no minimum term. Your account manager calls within one working day to book your first inbound.</p>
+              </div>
+              <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; overflow-x: auto;">
+                <div style="min-width: 520px;">
+                  <div style="display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 2fr) 110px 110px; gap: 12px; padding: 12px 18px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.5); border-bottom: 1px solid rgba(11,12,14,0.1);">
+                    <span>Item</span><span>Detail</span><span style="text-align: right;">Monthly</span><span style="text-align: right;">One-time</span>
+                  </div>
+                  <sc-for list="{{ reviewLines }}" as="l" hint-placeholder-count="6">
+                    <div style="display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 2fr) 110px 110px; gap: 12px; padding: 14px 18px; border-bottom: 1px solid rgba(11,12,14,0.07); font-size: 14px;">
+                      <span style="font-weight: 600;">{{ l.label }}</span>
+                      <span style="color: rgba(11,12,14,0.6);">{{ l.detail }}</span>
+                      <span style="text-align: right; font-family: 'IBM Plex Mono', monospace;">{{ l.monthly }}</span>
+                      <span style="text-align: right; font-family: 'IBM Plex Mono', monospace;">{{ l.once }}</span>
+                    </div>
+                  </sc-for>
+                  <div style="display: grid; grid-template-columns: minmax(0, 4fr) 110px 110px; gap: 12px; padding: 16px 18px; font-weight: 700; font-size: 16px;">
+                    <span>Total</span>
+                    <span style="text-align: right; font-family: 'IBM Plex Mono', monospace;">{{ monthlyFmt }}</span>
+                    <span style="text-align: right; font-family: 'IBM Plex Mono', monospace;">{{ onceFmt }}</span>
+                  </div>
+                </div>
+              </div>
+              <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 12px;">
+                <span style="grid-column: 1 / -1; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #A8701A;">Your company</span>
+                <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.55);">Country of registration
+                  <select value="{{ country }}" onChange="{{ onCountry }}" style="padding: 12px; border-radius: 3px; font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; letter-spacing: 0; text-transform: none; background: #F5F4F1; color: #0B0C0E; border: 1px solid rgba(11,12,14,0.2); cursor: pointer;">
+                    <sc-for list="{{ countries }}" as="c" hint-placeholder-count="12">
+                      <option value="{{ c.code }}">{{ c.name }}</option>
+                    </sc-for>
+                  </select>
+                </label>
+                <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.55);">Company name
+                  <input type="text" value="{{ company }}" onChange="{{ onCompany }}" placeholder="Registered company name" style="padding: 12px; border-radius: 3px; font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; letter-spacing: 0; text-transform: none; background: #F5F4F1; color: #0B0C0E; border: 1px solid {{ companyBd }};" />
+                </label>
+                <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.55);">{{ numLabel }}
+                  <input type="text" value="{{ vat }}" onChange="{{ onVat }}" placeholder="{{ numPh }}" style="padding: 12px; border-radius: 3px; font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; letter-spacing: 0; text-transform: none; background: #F5F4F1; color: #0B0C0E; border: 1px solid {{ vatBd }};" />
+                </label>
+                <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.55);">Work email
+                  <input type="email" value="{{ email }}" onChange="{{ onEmail }}" placeholder="name@yourcompany.com" style="padding: 12px; border-radius: 3px; font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; letter-spacing: 0; text-transform: none; background: #F5F4F1; color: #0B0C0E; border: 1px solid {{ emailBd }};" />
+                </label>
+              </div>
+              <sc-if value="{{ showFormError }}" hint-placeholder-val="{{ false }}">
+                <p style="margin: 0; font-size: 14px; color: #B4442E;">Add your company name, business number and a valid email to activate.</p>
+              </sc-if>
+            </div>
+          </sc-if>
+
+          <div style="display: flex; justify-content: space-between; gap: 12px; margin-top: 8px;">
+            <button onClick="{{ back }}" style="cursor: pointer; padding: 13px 20px; border: 1px solid rgba(11,12,14,0.25); background: transparent; border-radius: 3px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: #0B0C0E; visibility: {{ backVis }};" style-hover="border-color: #0B0C0E;">Back</button>
+            <button onClick="{{ next }}" style="cursor: pointer; padding: 13px 24px; border: 0; background: #E39A2B; border-radius: 3px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: #0B0C0E;" style-hover="background: #F0AE47;">{{ ctaLabel }}</button>
+          </div>
+        </div>
+
+        <aside style="flex: 1 1 300px; max-width: 420px; position: sticky; top: 84px; background: #0B0C0E; color: #F5F4F1; border-radius: 4px; padding: 24px; display: flex; flex-direction: column; gap: 14px;">
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: #E39A2B;">Your plan</span>
+          <div style="display: flex; flex-direction: column;">
+            <sc-for list="{{ sumLines }}" as="l" hint-placeholder-count="5">
+              <div style="display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(245,244,241,0.12); font-size: 14px;">
+                <span style="color: rgba(245,244,241,0.8);">{{ l.label }}</span>
+                <span style="font-family: 'IBM Plex Mono', monospace;">{{ l.amount }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div>
+            <span style="display: block; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; color: rgba(245,244,241,0.6);">MONTHLY</span>
+            <span style="display: block; font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 116; font-weight: 800; font-size: 46px; letter-spacing: -0.025em; line-height: 1.05;">{{ monthlyFmt }}</span>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: rgba(245,244,241,0.7);">
+            <span>One-time setup · {{ onceFmt }}</span>
+            <span>Ad budget, paid to platforms · {{ budgetFmt }}</span>
+          </div>
+          <button onClick="{{ next }}" style="cursor: pointer; margin-top: 6px; padding: 14px; border: 0; background: #E39A2B; border-radius: 3px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: #0B0C0E;" style-hover="background: #F0AE47;">{{ ctaLabel }}</button>
+        </aside>
+      </div>
+    </main>
+  </sc-if>
+
+  <sc-if value="{{ isCheckout }}" hint-placeholder-val="{{ false }}">
+    <main style="max-width: 1180px; margin: 0 auto; padding: clamp(28px, 4vw, 52px) clamp(16px, 3vw, 32px) 96px;">
+      <p style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #A8701A; margin: 0 0 14px;">Activate your plan</p>
+      <h1 style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 110; font-weight: 800; font-size: clamp(28px, 3.6vw, 48px); line-height: 1; letter-spacing: -0.025em; margin: 0 0 30px;">{{ coTitle }}</h1>
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 32px; max-width: 640px;">
+        <sc-for list="{{ coSteps }}" as="c" hint-placeholder-count="3">
+          <button onClick="{{ c.onClick }}" style="text-align: left; cursor: pointer; background: transparent; border: 0; border-top: 3px solid {{ c.bar }}; padding: 12px 2px 0; color: {{ c.fg }};">
+            <span style="display: block; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em;">{{ c.n }}</span>
+            <span style="display: block; font-family: Archivo, sans-serif; font-weight: 700; font-size: 17px; margin-top: 4px;">{{ c.label }}</span>
+          </button>
+        </sc-for>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 32px; align-items: flex-start;">
+        <div style="flex: 1 1 540px; min-width: 0; display: flex; flex-direction: column; gap: 16px;">
+
+          <sc-if value="{{ co0 }}" hint-placeholder-val="{{ true }}">
+            <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px; display: flex; flex-direction: column; gap: 16px;">
+              <button onClick="{{ onGoogle }}" style="cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 12px; padding: 13px; border: 1px solid rgba(11,12,14,0.25); border-radius: 3px; background: #FFFFFF; font-size: 15px; font-weight: 500; color: #0B0C0E;" style-hover="border-color: #0B0C0E;"><span style="display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; border: 1px solid rgba(11,12,14,0.2); font-family: Archivo, sans-serif; font-weight: 800; font-size: 13px;">G</span>Continue with Google</button>
+              <div style="display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 12px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; color: rgba(11,12,14,0.45);"><span style="height: 1px; background: rgba(11,12,14,0.12);"></span>OR WITH EMAIL<span style="height: 1px; background: rgba(11,12,14,0.12);"></span></div>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 12px;">
+                <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.55);">Work email
+                  <input type="email" value="{{ acctEmail }}" onChange="{{ onAcctEmail }}" placeholder="name@yourcompany.com" style="padding: 12px; border-radius: 3px; font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; letter-spacing: 0; text-transform: none; background: #F5F4F1; color: #0B0C0E; min-width: 0; border: 1px solid {{ acctEmailBd }};" />
+                </label>
+                <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.55);">Password
+                  <input type="password" value="{{ pw }}" onChange="{{ onPw }}" placeholder="At least 8 characters" style="padding: 12px; border-radius: 3px; font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; letter-spacing: 0; text-transform: none; background: #F5F4F1; color: #0B0C0E; min-width: 0; border: 1px solid {{ pwBd }};" />
+                </label>
+              </div>
+              <span style="font-size: 13px; color: {{ pwHintColor }};">{{ pwHint }}</span>
+              <p style="font-size: 14px; line-height: 1.55; color: rgba(11,12,14,0.62); margin: 0;">You sign in as the account owner. Invite operations, finance and marketing colleagues from the dashboard.</p>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ co1 }}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+              <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px; display: flex; flex-direction: column;">
+                <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; margin-bottom: 6px;">
+                  <span style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 106; font-weight: 700; font-size: 19px; margin: 0;">2ACE service agreement</span>
+                  <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: rgba(11,12,14,0.55);">v1.0 · draft</span>
+                </div>
+                <sc-for list="{{ terms }}" as="t" hint-placeholder-count="6">
+                  <div style="display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); gap: 16px; padding: 13px 0; border-bottom: 1px solid rgba(11,12,14,0.07); font-size: 14px;">
+                    <span style="font-weight: 600;">{{ t.k }}</span>
+                    <span style="color: rgba(11,12,14,0.68); line-height: 1.5;">{{ t.v }}</span>
+                  </div>
+                </sc-for>
+                <button onClick="{{ openTerms }}" style="align-self: flex-start; cursor: pointer; border: 0; background: transparent; padding: 14px 0 0; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #A8701A;">Read the full agreement (PDF) →</button>
+              </div>
+              <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+                <button onClick="{{ toggleAccept }}" style="cursor: pointer; display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 12px; align-items: start; text-align: left; border: 0; background: transparent; padding: 0; color: #0B0C0E; font-size: 15px; line-height: 1.5;">
+                  <span style="display: grid; place-items: center; width: 22px; height: 22px; border-radius: 3px; border: 1.5px solid {{ acceptBd }}; background: {{ acceptBg }}; font-size: 14px; font-weight: 700;">{{ acceptTick }}</span>
+                  <span>I accept the 2ACE service agreement and confirm I can sign for {{ companyName }}.</span>
+                </button>
+                <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.55);">Type your full name to sign
+                  <input type="text" value="{{ signName }}" onChange="{{ onSignName }}" placeholder="First and last name" style="padding: 12px; border-radius: 3px; font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; letter-spacing: 0; text-transform: none; background: #F5F4F1; color: #0B0C0E; min-width: 0; border: 1px solid {{ signBd }};" />
+                </label>
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: rgba(11,12,14,0.6);">Signing for {{ companyName }} · {{ countryName }} · {{ vatShow }}</span>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ co2 }}" hint-placeholder-val="{{ false }}">
+            <div style="display: flex; flex-direction: column; gap: 16px;">
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 12px;">
+                <sc-for list="{{ payOpts }}" as="o" hint-placeholder-count="2">
+                  <button onClick="{{ o.onClick }}" style="text-align: left; cursor: pointer; padding: 18px; border-radius: 4px; border: 1px solid {{ o.bd }}; background: {{ o.bg }}; color: {{ o.fg }}; display: flex; flex-direction: column; gap: 6px;">
+                    <span style="font-family: Archivo, sans-serif; font-weight: 700; font-size: 18px;">{{ o.name }}</span>
+                    <span style="font-size: 13px; line-height: 1.5; color: {{ o.sub }};">{{ o.desc }}</span>
+                  </button>
+                </sc-for>
+              </div>
+              <sc-if value="{{ payCard }}" hint-placeholder-val="{{ true }}">
+                <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: 12px;">
+                  <div style="grid-column: 1 / -1;"><label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.55);">Card number
+                  <input type="text" value="{{ cardNo }}" onChange="{{ onCardNo }}" placeholder="4242 4242 4242 4242" style="padding: 12px; border-radius: 3px; font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; letter-spacing: 0; text-transform: none; background: #F5F4F1; color: #0B0C0E; min-width: 0; border: 1px solid {{ cardNoBd }};" />
+                </label></div>
+                  <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.55);">Expiry
+                  <input type="text" value="{{ cardExp }}" onChange="{{ onCardExp }}" placeholder="MM / YY" style="padding: 12px; border-radius: 3px; font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; letter-spacing: 0; text-transform: none; background: #F5F4F1; color: #0B0C0E; min-width: 0; border: 1px solid {{ cardExpBd }};" />
+                </label>
+                  <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.55);">CVC
+                  <input type="text" value="{{ cardCvc }}" onChange="{{ onCardCvc }}" placeholder="123" style="padding: 12px; border-radius: 3px; font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; letter-spacing: 0; text-transform: none; background: #F5F4F1; color: #0B0C0E; min-width: 0; border: 1px solid {{ cardCvcBd }};" />
+                </label>
+                  <span style="grid-column: 1 / -1; font-size: 13px; color: rgba(11,12,14,0.6);">Charged today for the first month and setup. Then monthly on the 1st, from this card.</span>
+                </div>
+              </sc-if>
+              <sc-if value="{{ payBank }}" hint-placeholder-val="{{ false }}">
+                <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px; display: flex; flex-direction: column; gap: 10px;">
+                  <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #A8701A;">Transfer details</span>
+                  <sc-for list="{{ bankRows }}" as="b" hint-placeholder-count="4">
+                    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid rgba(11,12,14,0.07); font-size: 14px;">
+                      <span style="color: rgba(11,12,14,0.6);">{{ b.k }}</span>
+                      <span style="font-family: 'IBM Plex Mono', monospace;">{{ b.v }}</span>
+                    </div>
+                  </sc-for>
+                  <span style="font-size: 13px; color: rgba(11,12,14,0.6);">Your plan goes live when the transfer lands, usually the same day from Polish banks.</span>
+                </div>
+              </sc-if>
+              <div style="padding: 14px 16px; border-radius: 3px; background: rgba(227,154,43,0.12); font-size: 14px; line-height: 1.5;"><strong>{{ vatLabel }}.</strong> {{ vatNote }}</div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ coErr }}" hint-placeholder-val="{{ false }}">
+            <p style="margin: 0; font-size: 14px; color: #B4442E;">{{ coErrMsg }}</p>
+          </sc-if>
+          <div style="display: flex; justify-content: space-between; gap: 12px; margin-top: 4px;">
+            <button onClick="{{ coBack }}" style="cursor: pointer; padding: 11px 16px; border: 1px solid rgba(11,12,14,0.25); background: transparent; border-radius: 3px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #0B0C0E; padding: 13px 20px;">Back</button>
+            <button onClick="{{ coNext }}" style="cursor: pointer; padding: 13px 22px; border: 0; background: #E39A2B; border-radius: 3px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: #0B0C0E;" style-hover="background: #F0AE47;">{{ coCta }}</button>
+          </div>
+        </div>
+
+        <aside style="flex: 1 1 300px; max-width: 420px; position: sticky; top: 84px; background: #0B0C0E; color: #F5F4F1; border-radius: 4px; padding: 24px; display: flex; flex-direction: column; gap: 12px;">
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: #E39A2B;">Pro-forma · {{ pfNo }}</span>
+          <span style="font-size: 13px; color: rgba(245,244,241,0.65);">{{ companyName }} · {{ countryName }}</span>
+          <div>
+            <sc-for list="{{ invLines }}" as="l" hint-placeholder-count="4">
+              <div style="display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-bottom: 1px solid rgba(245,244,241,0.12); font-size: 14px;">
+                <span style="color: rgba(245,244,241,0.8);">{{ l.label }}</span>
+                <span style="font-family: 'IBM Plex Mono', monospace;">{{ l.amount }}</span>
+              </div>
+            </sc-for>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-size: 14px;"><span style="color: rgba(245,244,241,0.7);">Net</span><span style="font-family: 'IBM Plex Mono', monospace;">{{ netFmt }}</span></div>
+          <div style="display: flex; justify-content: space-between; gap: 12px; font-size: 14px;"><span style="color: rgba(245,244,241,0.7);">{{ vatLabel }}</span><span style="font-family: 'IBM Plex Mono', monospace;">{{ vatFmt }}</span></div>
+          <div>
+            <span style="display: block; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; color: rgba(245,244,241,0.6);">DUE TODAY</span>
+            <span style="display: block; font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 116; font-weight: 800; font-size: 42px; letter-spacing: -0.025em; line-height: 1.05;">{{ grossFmt }}</span>
+          </div>
+          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: rgba(245,244,241,0.65);">Then {{ monthlyFmt }} net / month</span>
+        </aside>
+      </div>
+    </main>
+  </sc-if>
+
+  <sc-if value="{{ isDash }}" hint-placeholder-val="{{ false }}">
+    <div style="display: flex; flex-wrap: wrap; min-height: calc(100vh - 57px);">
+      <nav style="flex: 1 1 200px; max-width: 232px; background: #14161A; padding: 22px 12px; display: flex; flex-direction: column; gap: 2px;">
+        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.2em; color: rgba(245,244,241,0.45); padding: 0 12px 12px;">{{ customer }}</span>
+        <sc-for list="{{ navItems }}" as="n" hint-placeholder-count="6">
+          <button onClick="{{ n.onClick }}" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 10px; text-align: left; border: 0; padding: 11px 12px; border-radius: 3px; background: {{ n.bg }}; color: {{ n.fg }}; font-size: 14px; font-weight: 500;">
+            <span>{{ n.label }}</span>
+            <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: {{ n.badgeFg }};">{{ n.badge }}</span>
+          </button>
+        </sc-for>
+      </nav>
+
+      <main style="flex: 1 1 620px; min-width: 0; padding: clamp(20px, 3vw, 36px);">
+
+        <sc-if value="{{ tabOverview }}" hint-placeholder-val="{{ true }}">
+          <div style="display: flex; flex-direction: column; gap: 20px;">
+            <sc-if value="{{ activated }}" hint-placeholder-val="{{ false }}">
+              <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px; background: #0B0C0E; color: #F5F4F1; border-radius: 4px;">
+                <span style="font-size: 15px;"><strong style="color: #E39A2B;">Your plan is live.</strong> Your account manager will call to book the first inbound slot.</span>
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: rgba(245,244,241,0.7);">{{ monthlyFmt }} / month</span>
+              </div>
+            </sc-if>
+            <div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px;">
+              <div>
+                <p style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: rgba(11,12,14,0.5); margin: 0 0 6px;">Wednesday 30 September</p>
+                <h1 style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 108; font-weight: 800; font-size: clamp(26px, 3vw, 36px); letter-spacing: -0.02em; margin: 0;">Good afternoon, {{ customer }}</h1>
+              </div>
+              <button onClick="{{ goBuild }}" style="cursor: pointer; padding: 10px 16px; border: 1px solid rgba(11,12,14,0.25); background: transparent; border-radius: 3px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;" style-hover="border-color: #0B0C0E;">Change plan</button>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 190px), 1fr)); gap: 12px;">
+              <sc-for list="{{ kpis }}" as="k" hint-placeholder-count="4">
+                <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 18px 20px;">
+                  <span style="display: block; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.55);">{{ k.label }}</span>
+                  <span style="display: block; font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 116; font-weight: 800; font-size: 34px; letter-spacing: -0.02em; margin: 8px 0 4px;">{{ k.value }}</span>
+                  <span style="display: block; font-size: 13px; color: rgba(11,12,14,0.6);">{{ k.sub }}</span>
+                </div>
+              </sc-for>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr)); gap: 20px;">
+              <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px;">
+                <span style="display: block; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #A8701A; margin-bottom: 8px;">Needs your action</span>
+                <sc-for list="{{ tasks }}" as="t" hint-placeholder-count="3">
+                  <div style="display: flex; justify-content: space-between; align-items: center; gap: 14px; padding: 14px 0; border-bottom: 1px solid rgba(11,12,14,0.08);">
+                    <div style="display: flex; flex-direction: column; gap: 3px; min-width: 0;">
+                      <span style="font-size: 15px; font-weight: 600;">{{ t.title }}</span>
+                      <span style="font-size: 13px; color: rgba(11,12,14,0.6);">{{ t.sub }}</span>
+                    </div>
+                    <button onClick="{{ t.onClick }}" style="flex: none; cursor: pointer; padding: 9px 14px; border: 0; border-radius: 3px; background: #0B0C0E; color: #F5F4F1; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;" style-hover="background: #2A2D33;">{{ t.cta }}</button>
+                  </div>
+                </sc-for>
+              </div>
+              <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px; display: flex; flex-direction: column;">
+                <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 16px;">
+                  <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(11,12,14,0.55);">Orders, last 14 days</span>
+                  <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #2F7D55;">+18% vs prior</span>
+                </div>
+                <div style="flex: 1; min-height: 160px; display: grid; grid-template-columns: repeat(14, minmax(0, 1fr)); gap: 6px; align-items: end;">
+                  <sc-for list="{{ bars }}" as="b" hint-placeholder-count="14">
+                    <div style="display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 6px; height: 100%;">
+                      <span style="display: block; width: 100%; height: {{ b.h }}; min-height: 4px; border-radius: 2px 2px 0 0; background: {{ b.bg }};"></span>
+                      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: rgba(11,12,14,0.5);">{{ b.d }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </div>
+
+            <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px;">
+              <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 6px;">
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(11,12,14,0.55);">Inbound to the warehouse</span>
+                <button onClick="{{ goImports }}" style="cursor: pointer; border: 0; background: transparent; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #A8701A; padding: 0;">All imports →</button>
+              </div>
+              <sc-for list="{{ shipRows }}" as="s" hint-placeholder-count="4">
+                <button onClick="{{ s.onClick }}" style="cursor: pointer; width: 100%; text-align: left; background: transparent; border: 0; border-bottom: 1px solid rgba(11,12,14,0.08); padding: 14px 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)); gap: 10px 18px; align-items: center; color: #0B0C0E;">
+                  <span style="display: flex; flex-direction: column; gap: 2px;">
+                    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 500;">{{ s.id }}</span>
+                    <span style="font-size: 13px; color: rgba(11,12,14,0.6);">{{ s.from }} · {{ s.mode }}</span>
+                  </span>
+                  <span style="display: flex; flex-direction: column; gap: 6px;">
+                    <span style="display: block; height: 4px; border-radius: 2px; background: rgba(11,12,14,0.1); overflow: hidden;"><span style="display: block; height: 4px; width: {{ s.pct }}; background: {{ s.color }};"></span></span>
+                    <span style="font-size: 13px; color: {{ s.color }}; font-weight: 500;">{{ s.status }}</span>
+                  </span>
+                  <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; text-align: right; color: rgba(11,12,14,0.7);">{{ s.eta }}</span>
+                </button>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ tabImports }}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; flex-direction: column; gap: 20px;">
+            <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px;">
+              <h1 style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 108; font-weight: 800; font-size: clamp(26px, 3vw, 36px); letter-spacing: -0.02em; margin: 0;">Imports</h1>
+              <button onClick="{{ bookShipment }}" style="cursor: pointer; padding: 11px 18px; border: 0; border-radius: 3px; background: #E39A2B; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;" style-hover="background: #F0AE47;">Book a shipment</button>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start;">
+              <div style="flex: 1 1 260px; max-width: 360px; display: flex; flex-direction: column; gap: 8px;">
+                <sc-for list="{{ shipRows }}" as="s" hint-placeholder-count="4">
+                  <button onClick="{{ s.onClick }}" style="cursor: pointer; text-align: left; padding: 14px 16px; border-radius: 4px; border: 1px solid {{ s.bd }}; background: {{ s.bg }}; color: #0B0C0E; display: flex; flex-direction: column; gap: 6px;">
+                    <span style="display: flex; justify-content: space-between; gap: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 13px;"><span>{{ s.id }}</span><span style="color: rgba(11,12,14,0.6);">{{ s.eta }}</span></span>
+                    <span style="font-size: 13px; color: rgba(11,12,14,0.62);">{{ s.from }} · {{ s.mode }}</span>
+                    <span style="font-size: 13px; font-weight: 600; color: {{ s.color }};">{{ s.status }}</span>
+                  </button>
+                </sc-for>
+              </div>
+              <div style="flex: 2 1 420px; min-width: 0; background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 22px; display: flex; flex-direction: column; gap: 22px;">
+                <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px;">
+                  <div>
+                    <span style="display: block; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: rgba(11,12,14,0.55);">{{ sel.ref }}</span>
+                    <span style="display: block; font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 106; font-weight: 800; font-size: 24px; margin-top: 4px;">{{ sel.from }} → 2ACE hub, PL</span>
+                    <span style="display: block; font-size: 14px; color: rgba(11,12,14,0.62); margin-top: 4px;">{{ sel.mode }} · {{ sel.units }}</span>
+                  </div>
+                  <div style="text-align: right;">
+                    <span style="display: block; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; color: rgba(11,12,14,0.55);">ETA</span>
+                    <span style="display: block; font-family: Archivo, sans-serif; font-weight: 800; font-size: 24px;">{{ sel.eta }}</span>
+                  </div>
+                </div>
+                <sc-if value="{{ sel.flag }}" hint-placeholder-val="{{ false }}">
+                  <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 3px; background: rgba(180,68,46,0.08); border: 1px solid rgba(180,68,46,0.3);">
+                    <span style="font-size: 14px; color: #8E3321;"><strong>Customs is holding this shipment.</strong> Upload the commercial invoice and we re-submit the same day.</span>
+                    <button onClick="{{ uploadInvoice }}" style="cursor: pointer; padding: 9px 14px; border: 0; border-radius: 3px; background: #B4442E; color: #FFFFFF; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;">Upload invoice</button>
+                  </div>
+                </sc-if>
+                <div style="border: 1px solid rgba(11,12,14,0.12); border-radius: 4px; overflow: hidden;">
+                  <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 16px; background: #0B0C0E; color: #F5F4F1;">
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #E39A2B;">Live tracking</span>
+                      <span style="font-size: 15px; font-weight: 600;">{{ trk.carrier }} · <span style="font-family: 'IBM Plex Mono', monospace; font-weight: 500;">{{ trk.no }}</span></span>
+                    </div>
+                    <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px;">
+                      <span style="display: flex; align-items: center; gap: 7px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: rgba(245,244,241,0.72);"><span style="display: block; width: 8px; height: 8px; border-radius: 50%; background: #4FBF85;"></span>{{ trk.api }} · {{ trk.synced }}</span>
+                      <button onClick="{{ trk.refresh }}" style="cursor: pointer; padding: 8px 13px; border: 1px solid rgba(245,244,241,0.3); border-radius: 3px; background: transparent; color: #F5F4F1; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;" style-hover="border-color: #E39A2B; color: #E39A2B;">{{ trk.btn }}</button>
+                    </div>
+                  </div>
+                  <div style="padding: 18px 16px 6px; background: #FFFFFF;">
+                    <div style="display: flex; justify-content: space-between; gap: 10px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: rgba(11,12,14,0.6); margin-bottom: 8px;">
+                      <span>{{ trk.origin }}</span><span>{{ trk.now }}</span><span>2ACE hub, PL</span>
+                    </div>
+                    <div style="position: relative; height: 6px; border-radius: 3px; background: rgba(11,12,14,0.1); margin-bottom: 18px;">
+                      <span style="position: absolute; left: 0; top: 0; bottom: 0; width: {{ trk.pct }}; border-radius: 3px; background: #E39A2B; transition: width 500ms ease;"></span>
+                      <span style="position: absolute; top: -4px; left: {{ trk.pct }}; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%; background: #0B0C0E; border: 2px solid #E39A2B; transition: left 500ms ease;"></span>
+                    </div>
+                    <sc-for list="{{ trkEvents }}" as="ev" hint-placeholder-count="4">
+                      <div style="display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 14px; padding: 12px 0; border-top: 1px solid rgba(11,12,14,0.07);">
+                        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: rgba(11,12,14,0.6);">{{ ev.time }}</span>
+                        <span style="display: flex; flex-direction: column; gap: 2px;">
+                          <span style="font-size: 14px; font-weight: 600; color: {{ ev.fg }};">{{ ev.text }}</span>
+                          <span style="font-size: 13px; color: rgba(11,12,14,0.6);">{{ ev.place }}</span>
+                        </span>
+                      </div>
+                    </sc-for>
+                  </div>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 24px;">
+                  <div>
+                    <span style="display: block; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(11,12,14,0.55); margin-bottom: 12px;">Milestones</span>
+                    <sc-for list="{{ selSteps }}" as="m" hint-placeholder-count="7">
+                      <div style="display: grid; grid-template-columns: 14px minmax(0, 1fr) auto; gap: 12px; align-items: start; padding-bottom: 14px;">
+                        <span style="display: block; width: 12px; height: 12px; margin-top: 3px; border-radius: 50%; background: {{ m.dot }}; border: 2px solid {{ m.ring }};"></span>
+                        <span style="font-size: 14px; font-weight: {{ m.weight }}; color: {{ m.fg }};">{{ m.label }}</span>
+                        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: rgba(11,12,14,0.55);">{{ m.date }}</span>
+                      </div>
+                    </sc-for>
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: 22px;">
+                    <div>
+                      <span style="display: block; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(11,12,14,0.55); margin-bottom: 8px;">Documents</span>
+                      <sc-for list="{{ selDocs }}" as="d" hint-placeholder-count="4">
+                        <div style="display: flex; justify-content: space-between; gap: 10px; padding: 10px 0; border-bottom: 1px solid rgba(11,12,14,0.08); font-size: 14px;">
+                          <span>{{ d.name }}</span>
+                          <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: {{ d.color }};">{{ d.state }}</span>
+                        </div>
+                      </sc-for>
+                    </div>
+                    <div>
+                      <span style="display: block; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(11,12,14,0.55); margin-bottom: 8px;">Landed cost estimate</span>
+                      <sc-for list="{{ selCost }}" as="c" hint-placeholder-count="4">
+                        <div style="display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; font-size: 14px;">
+                          <span style="color: rgba(11,12,14,0.65);">{{ c.label }}</span>
+                          <span style="font-family: 'IBM Plex Mono', monospace;">{{ c.value }}</span>
+                        </div>
+                      </sc-for>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ tabTracking }}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; flex-direction: column; gap: 20px;">
+            <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px;">
+              <div>
+                <h1 style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 108; font-weight: 800; font-size: clamp(26px, 3vw, 36px); letter-spacing: -0.02em; margin: 0 0 6px;">Shipment tracking</h1>
+                <p style="font-size: 14px; color: rgba(11,12,14,0.6); margin: 0;">Live events from carriers, airlines and truck GPS for every inbound shipment.</p>
+              </div>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); gap: 10px;">
+              <sc-for list="{{ trackRows }}" as="s" hint-placeholder-count="4">
+                <button onClick="{{ s.onClick }}" style="cursor: pointer; text-align: left; padding: 14px 16px; border-radius: 4px; border: 1px solid {{ s.bd }}; background: {{ s.bg }}; color: #0B0C0E; display: flex; flex-direction: column; gap: 6px;">
+                  <span style="display: flex; justify-content: space-between; gap: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 13px;"><span>{{ s.id }}</span><span style="color: rgba(11,12,14,0.6);">{{ s.eta }}</span></span>
+                  <span style="font-size: 13px; color: rgba(11,12,14,0.62);">{{ s.from }} · {{ s.mode }}</span>
+                  <span style="display: block; height: 4px; border-radius: 2px; background: rgba(11,12,14,0.1); overflow: hidden;"><span style="display: block; height: 4px; width: {{ s.pct }}; background: {{ s.color }};"></span></span>
+                  <span style="font-size: 13px; font-weight: 600; color: {{ s.color }};">{{ s.status }}</span>
+                </button>
+              </sc-for>
+            </div>
+            <div style="border: 1px solid rgba(11,12,14,0.12); border-radius: 4px; overflow: hidden;">
+                  <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; padding: 14px 16px; background: #0B0C0E; color: #F5F4F1;">
+                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                      <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #E39A2B;">Live tracking</span>
+                      <span style="font-size: 15px; font-weight: 600;">{{ trk.carrier }} · <span style="font-family: 'IBM Plex Mono', monospace; font-weight: 500;">{{ trk.no }}</span></span>
+                    </div>
+                    <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px;">
+                      <span style="display: flex; align-items: center; gap: 7px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: rgba(245,244,241,0.72);"><span style="display: block; width: 8px; height: 8px; border-radius: 50%; background: #4FBF85;"></span>{{ trk.api }} · {{ trk.synced }}</span>
+                      <button onClick="{{ trk.refresh }}" style="cursor: pointer; padding: 8px 13px; border: 1px solid rgba(245,244,241,0.3); border-radius: 3px; background: transparent; color: #F5F4F1; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;" style-hover="border-color: #E39A2B; color: #E39A2B;">{{ trk.btn }}</button>
+                    </div>
+                  </div>
+                  <div style="padding: 18px 16px 6px; background: #FFFFFF;">
+                    <div style="display: flex; justify-content: space-between; gap: 10px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: rgba(11,12,14,0.6); margin-bottom: 8px;">
+                      <span>{{ trk.origin }}</span><span>{{ trk.now }}</span><span>2ACE hub, PL</span>
+                    </div>
+                    <div style="position: relative; height: 6px; border-radius: 3px; background: rgba(11,12,14,0.1); margin-bottom: 18px;">
+                      <span style="position: absolute; left: 0; top: 0; bottom: 0; width: {{ trk.pct }}; border-radius: 3px; background: #E39A2B; transition: width 500ms ease;"></span>
+                      <span style="position: absolute; top: -4px; left: {{ trk.pct }}; width: 14px; height: 14px; margin-left: -7px; border-radius: 50%; background: #0B0C0E; border: 2px solid #E39A2B; transition: left 500ms ease;"></span>
+                    </div>
+                    <sc-for list="{{ trkEvents }}" as="ev" hint-placeholder-count="4">
+                      <div style="display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 14px; padding: 12px 0; border-top: 1px solid rgba(11,12,14,0.07);">
+                        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: rgba(11,12,14,0.6);">{{ ev.time }}</span>
+                        <span style="display: flex; flex-direction: column; gap: 2px;">
+                          <span style="font-size: 14px; font-weight: 600; color: {{ ev.fg }};">{{ ev.text }}</span>
+                          <span style="font-size: 13px; color: rgba(11,12,14,0.6);">{{ ev.place }}</span>
+                        </span>
+                      </div>
+                    </sc-for>
+                  </div>
+                </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ tabInbound }}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; flex-direction: column; gap: 20px;">
+            <div>
+              <h1 style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 108; font-weight: 800; font-size: clamp(26px, 3vw, 36px); letter-spacing: -0.02em; margin: 0; margin-bottom: 6px;">Book an inbound delivery</h1>
+              <p style="font-size: 14px; color: rgba(11,12,14,0.6); margin: 0;">Pick a dock slot and tell us what is arriving. We send you the ASN and pallet labels.</p>
+            </div>
+            <sc-if value="{{ ibDone }}" hint-placeholder-val="{{ false }}">
+              <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 14px; padding: 18px 20px; border-radius: 4px; background: #0B0C0E; color: #F5F4F1;">
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                  <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em; color: #E39A2B;">BOOKED · {{ lastIb.id }}</span>
+                  <span style="font-size: 15px;">{{ lastIb.slot }} · {{ lastIb.summary }}</span>
+                </div>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                  <button onClick="{{ printLabels }}" style="cursor: pointer; padding: 13px 22px; border: 0; background: #E39A2B; border-radius: 3px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: #0B0C0E; padding: 10px 14px; font-size: 11px;">Print pallet labels</button>
+                  <button onClick="{{ newInbound }}" style="cursor: pointer; padding: 11px 16px; border: 1px solid rgba(11,12,14,0.25); background: transparent; border-radius: 3px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #0B0C0E; color: #F5F4F1; border-color: rgba(245,244,241,0.3);">Book another</button>
+                </div>
+              </div>
+            </sc-if>
+            <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px;">
+              <span style="display: block; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #A8701A; margin-bottom: 14px;">1 · Dock slot</span>
+              <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px;">
+                <sc-for list="{{ slotDays }}" as="d" hint-placeholder-count="10">
+                  <div style="display: flex; flex-direction: column; gap: 5px;">
+                    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: rgba(11,12,14,0.7); padding: 0 2px 2px;">{{ d.label }}</span>
+                    <sc-for list="{{ d.times }}" as="t" hint-placeholder-count="3">
+                      <button onClick="{{ t.onClick }}" style="cursor: {{ t.cursor }}; padding: 9px 6px; border-radius: 3px; border: 1px solid {{ t.bd }}; background: {{ t.bg }}; color: {{ t.fg }}; font-family: 'IBM Plex Mono', monospace; font-size: 12px; text-decoration: {{ t.deco }};">{{ t.time }}</button>
+                    </sc-for>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+            <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #A8701A;">2 · What is arriving</span>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: 12px;">
+                <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.55);">Arrives as
+                  <select value="{{ ibUnits }}" onChange="{{ onIbUnits }}" style="padding: 12px; border-radius: 3px; font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; letter-spacing: 0; text-transform: none; background: #F5F4F1; color: #0B0C0E; min-width: 0; border: 1px solid rgba(11,12,14,0.2); cursor: pointer;">
+                    <option value="pallets">Pallets</option><option value="cartons">Loose cartons</option><option value="container">Container (floor loaded)</option>
+                  </select>
+                </label>
+                <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.55);">How many
+                  <input type="number" value="{{ ibCount }}" onChange="{{ onIbCount }}" placeholder="4" style="padding: 12px; border-radius: 3px; font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; letter-spacing: 0; text-transform: none; background: #F5F4F1; color: #0B0C0E; min-width: 0; border: 1px solid {{ ibCountBd }};" />
+                </label>
+                <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.55);">Carrier
+                  <input type="text" value="{{ ibCarrier }}" onChange="{{ onIbCarrier }}" placeholder="e.g. DSV, Raben, own truck" style="padding: 12px; border-radius: 3px; font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; letter-spacing: 0; text-transform: none; background: #F5F4F1; color: #0B0C0E; min-width: 0; border: 1px solid {{ plainBd }};" />
+                </label>
+                <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.55);">Tracking / reference
+                  <input type="text" value="{{ ibRef }}" onChange="{{ onIbRef }}" placeholder="Optional" style="padding: 12px; border-radius: 3px; font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; letter-spacing: 0; text-transform: none; background: #F5F4F1; color: #0B0C0E; min-width: 0; border: 1px solid {{ plainBd }};" />
+                </label>
+              </div>
+              <div style="border: 1px solid rgba(11,12,14,0.1); border-radius: 3px;">
+                <div style="display: grid; grid-template-columns: 90px minmax(0, 1fr) 120px; gap: 12px; padding: 12px 18px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(11,12,14,0.5); border-bottom: 1px solid rgba(11,12,14,0.1);"><span>SKU</span><span>Product</span><span style="text-align: right;">Units</span></div>
+                <sc-for list="{{ ibLines }}" as="l" hint-placeholder-count="6">
+                  <div style="display: grid; grid-template-columns: 90px minmax(0, 1fr) 120px; gap: 12px; align-items: center; padding: 8px 18px; border-bottom: 1px solid rgba(11,12,14,0.06); font-size: 14px;">
+                    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px;">{{ l.sku }}</span>
+                    <span>{{ l.name }}</span>
+                    <input type="number" min="0" value="{{ l.qty }}" onChange="{{ l.onQty }}" placeholder="0" style="padding: 12px; border-radius: 3px; font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; letter-spacing: 0; text-transform: none; background: #F5F4F1; color: #0B0C0E; min-width: 0; padding: 8px 10px; text-align: right; border: 1px solid rgba(11,12,14,0.18);" />
+                  </div>
+                </sc-for>
+              </div>
+              <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px;">
+                <span style="font-size: 14px; color: {{ ibMsgColor }};">{{ ibMsg }}</span>
+                <button onClick="{{ bookInbound }}" style="cursor: pointer; padding: 13px 22px; border: 0; background: #E39A2B; border-radius: 3px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: #0B0C0E;" style-hover="background: #F0AE47;">Confirm booking</button>
+              </div>
+            </div>
+            <sc-if value="{{ hasInbounds }}" hint-placeholder-val="{{ false }}">
+              <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px;">
+                <span style="display: block; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #A8701A; margin-bottom: 6px;">Booked deliveries</span>
+                <sc-for list="{{ inboundRows }}" as="r" hint-placeholder-count="2">
+                  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: 8px 16px; padding: 12px 0; border-bottom: 1px solid rgba(11,12,14,0.07); font-size: 14px; align-items: center;">
+                    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px;">{{ r.id }}</span>
+                    <span>{{ r.slot }}</span>
+                    <span style="color: rgba(11,12,14,0.65);">{{ r.summary }}</span>
+                    <span style="justify-self: end; padding: 4px 9px; border-radius: 12px; font-size: 12px; font-weight: 600; background: rgba(227,154,43,0.18); color: #8A5A12;">Booked</span>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ tabProducts }}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; flex-direction: column; gap: 20px;">
+            <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px;">
+              <div>
+                <h1 style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 108; font-weight: 800; font-size: clamp(26px, 3vw, 36px); letter-spacing: -0.02em; margin: 0; margin-bottom: 6px;">Products</h1>
+                <p style="font-size: 14px; color: rgba(11,12,14,0.6); margin: 0;">Dimensions and HS codes drive your space estimate and customs quotes.</p>
+              </div>
+              <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                <button onClick="{{ dlTemplate }}" style="cursor: pointer; padding: 11px 16px; border: 1px solid rgba(11,12,14,0.25); background: transparent; border-radius: 3px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #0B0C0E;">CSV template</button>
+                <label style="cursor: pointer; padding: 11px 16px; border: 1px solid rgba(11,12,14,0.25); background: transparent; border-radius: 3px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #0B0C0E; display: inline-flex; align-items: center;">Import CSV<input type="file" accept=".csv,text/csv" onChange="{{ onCsv }}" style="display: none;" /></label>
+                <button onClick="{{ toggleAdd }}" style="cursor: pointer; padding: 11px 16px; border: 0; background: #0B0C0E; border-radius: 3px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #F5F4F1;">{{ addLabel }}</button>
+              </div>
+            </div>
+            <sc-if value="{{ csvShow }}" hint-placeholder-val="{{ false }}">
+              <p style="margin: 0; padding: 12px 16px; border-radius: 3px; background: {{ csvBg }}; font-size: 14px; color: {{ csvFg }};">{{ csvMsg }}</p>
+            </sc-if>
+            <sc-if value="{{ hasMissing }}" hint-placeholder-val="{{ false }}">
+              <div style="padding: 14px 16px; border-radius: 3px; background: rgba(227,154,43,0.14); font-size: 14px; line-height: 1.5;"><strong>{{ missingCount }} products are missing data.</strong> Add dimensions and HS codes so we can quote customs and reserve the right space.</div>
+            </sc-if>
+            <sc-if value="{{ showAdd }}" hint-placeholder-val="{{ false }}">
+              <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #A8701A;">New product</span>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: 12px;">
+                  <div style="grid-column: span 2; min-width: 0;"><label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.55);">Product name
+                  <input type="text" value="{{ pf.name }}" onChange="{{ pfOn.name }}" placeholder="Linen throw, Olive" style="padding: 12px; border-radius: 3px; font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; letter-spacing: 0; text-transform: none; background: #F5F4F1; color: #0B0C0E; min-width: 0; border: 1px solid {{ pfBd.name }};" />
+                </label></div>
+                  <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.55);">SKU
+                  <input type="text" value="{{ pf.sku }}" onChange="{{ pfOn.sku }}" placeholder="LH-150" style="padding: 12px; border-radius: 3px; font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; letter-spacing: 0; text-transform: none; background: #F5F4F1; color: #0B0C0E; min-width: 0; border: 1px solid {{ pfBd.sku }};" />
+                </label>
+                  <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.55);">EAN barcode
+                  <input type="text" value="{{ pf.ean }}" onChange="{{ pfOn.ean }}" placeholder="590…" style="padding: 12px; border-radius: 3px; font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; letter-spacing: 0; text-transform: none; background: #F5F4F1; color: #0B0C0E; min-width: 0; border: 1px solid {{ pfBd.ean }};" />
+                </label>
+                  <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.55);">Length cm
+                  <input type="number" value="{{ pf.l }}" onChange="{{ pfOn.l }}" placeholder="40" style="padding: 12px; border-radius: 3px; font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; letter-spacing: 0; text-transform: none; background: #F5F4F1; color: #0B0C0E; min-width: 0; border: 1px solid {{ pfBd.l }};" />
+                </label>
+                  <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.55);">Width cm
+                  <input type="number" value="{{ pf.w }}" onChange="{{ pfOn.w }}" placeholder="30" style="padding: 12px; border-radius: 3px; font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; letter-spacing: 0; text-transform: none; background: #F5F4F1; color: #0B0C0E; min-width: 0; border: 1px solid {{ pfBd.w }};" />
+                </label>
+                  <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.55);">Height cm
+                  <input type="number" value="{{ pf.h }}" onChange="{{ pfOn.h }}" placeholder="8" style="padding: 12px; border-radius: 3px; font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; letter-spacing: 0; text-transform: none; background: #F5F4F1; color: #0B0C0E; min-width: 0; border: 1px solid {{ pfBd.h }};" />
+                </label>
+                  <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.55);">Weight kg
+                  <input type="number" value="{{ pf.kg }}" onChange="{{ pfOn.kg }}" placeholder="1.1" style="padding: 12px; border-radius: 3px; font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; letter-spacing: 0; text-transform: none; background: #F5F4F1; color: #0B0C0E; min-width: 0; border: 1px solid {{ pfBd.kg }};" />
+                </label>
+                  <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.55);">HS code
+                  <input type="text" value="{{ pf.hs }}" onChange="{{ pfOn.hs }}" placeholder="6301.90" style="padding: 12px; border-radius: 3px; font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; letter-spacing: 0; text-transform: none; background: #F5F4F1; color: #0B0C0E; min-width: 0; border: 1px solid {{ pfBd.hs }};" />
+                </label>
+                  <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.55);">Made in
+                  <input type="text" value="{{ pf.origin }}" onChange="{{ pfOn.origin }}" placeholder="CN" style="padding: 12px; border-radius: 3px; font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; letter-spacing: 0; text-transform: none; background: #F5F4F1; color: #0B0C0E; min-width: 0; border: 1px solid {{ pfBd.origin }};" />
+                </label>
+                </div>
+                <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px;">
+                  <span style="font-size: 13px; color: {{ pfMsgColor }};">{{ pfMsg }}</span>
+                  <button onClick="{{ saveProduct }}" style="cursor: pointer; padding: 13px 22px; border: 0; background: #E39A2B; border-radius: 3px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: #0B0C0E;" style-hover="background: #F0AE47;">Save product</button>
+                </div>
+              </div>
+            </sc-if>
+            <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; overflow-x: auto;">
+              <div style="min-width: 900px;">
+                <div style="display: grid; grid-template-columns: 44px 84px minmax(0, 1.6fr) 120px 110px 70px 86px 84px 96px; gap: 12px; padding: 12px 18px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(11,12,14,0.5); border-bottom: 1px solid rgba(11,12,14,0.1);">
+                  <span></span><span>SKU</span><span>Product</span><span>EAN</span><span>L×W×H cm</span><span style="text-align: right;">kg</span><span>HS code</span><span style="text-align: right;">Per pallet</span><span style="text-align: right;">Data</span>
+                </div>
+                <sc-for list="{{ prodRows }}" as="p" hint-placeholder-count="8">
+                  <div style="display: grid; grid-template-columns: 44px 84px minmax(0, 1.6fr) 120px 110px 70px 86px 84px 96px; gap: 12px; align-items: center; padding: 10px 18px; border-bottom: 1px solid rgba(11,12,14,0.07); font-size: 14px;">
+                    <span style="display: grid; place-items: center; width: 36px; height: 36px; border-radius: 3px; background: {{ p.swatch }}; font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: rgba(11,12,14,0.6);">{{ p.ini }}</span>
+                    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px;">{{ p.sku }}</span>
+                    <span>{{ p.name }}</span>
+                    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: rgba(11,12,14,0.65);">{{ p.ean }}</span>
+                    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: {{ p.dimFg }};">{{ p.dims }}</span>
+                    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; text-align: right;">{{ p.kg }}</span>
+                    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: {{ p.hsFg }};">{{ p.hs }}</span>
+                    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; text-align: right;">{{ p.perPallet }}</span>
+                    <span style="justify-self: end; padding: 4px 9px; border-radius: 12px; font-size: 12px; font-weight: 600; background: {{ p.pillBg }}; color: {{ p.pillFg }};">{{ p.status }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ tabTeam }}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; flex-direction: column; gap: 20px;">
+            <div>
+              <h1 style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 108; font-weight: 800; font-size: clamp(26px, 3vw, 36px); letter-spacing: -0.02em; margin: 0; margin-bottom: 6px;">Team</h1>
+              <p style="font-size: 14px; color: rgba(11,12,14,0.6); margin: 0;">Give each colleague only what they need.</p>
+            </div>
+            <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+              <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #A8701A;">Invite a colleague</span>
+              <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end;">
+                <div style="flex: 2 1 240px;"><label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.55);">Email
+                  <input type="email" value="{{ invEmail }}" onChange="{{ onInvEmail }}" placeholder="colleague@yourcompany.com" style="padding: 12px; border-radius: 3px; font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; letter-spacing: 0; text-transform: none; background: #F5F4F1; color: #0B0C0E; min-width: 0; border: 1px solid {{ invBd }};" />
+                </label></div>
+                <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.55); flex: 1 1 160px;">Role
+                  <select value="{{ invRole }}" onChange="{{ onInvRole }}" style="padding: 12px; border-radius: 3px; font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; letter-spacing: 0; text-transform: none; background: #F5F4F1; color: #0B0C0E; min-width: 0; border: 1px solid rgba(11,12,14,0.2); cursor: pointer;">
+                    <sc-for list="{{ roleOpts }}" as="r" hint-placeholder-count="4"><option value="{{ r.name }}">{{ r.name }}</option></sc-for>
+                  </select>
+                </label>
+                <button onClick="{{ sendInvite }}" style="cursor: pointer; padding: 11px 16px; border: 0; background: #0B0C0E; border-radius: 3px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #F5F4F1; padding: 13px 18px;">Send invite</button>
+              </div>
+              <span style="font-size: 13px; color: rgba(11,12,14,0.6);">{{ invRoleDesc }}</span>
+            </div>
+            <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px; padding-top: 8px; padding-bottom: 8px;">
+              <sc-for list="{{ teamRows }}" as="m" hint-placeholder-count="2">
+                <div style="display: grid; grid-template-columns: 38px minmax(0, 1fr) auto auto; gap: 14px; align-items: center; padding: 12px 0; border-bottom: 1px solid rgba(11,12,14,0.07);">
+                  <span style="display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: {{ m.av }}; font-family: Archivo, sans-serif; font-weight: 800; font-size: 12px;">{{ m.ini }}</span>
+                  <span style="display: flex; flex-direction: column; gap: 2px; min-width: 0;"><span style="font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis;">{{ m.email }}</span><span style="font-size: 12px; color: rgba(11,12,14,0.55);">{{ m.state }}</span></span>
+                  <span style="padding: 4px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; background: rgba(11,12,14,0.06);">{{ m.role }}</span>
+                  <button onClick="{{ m.onRemove }}" style="cursor: pointer; border: 0; background: transparent; font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #B4442E; visibility: {{ m.rmVis }};">Remove</button>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ tabMarket }}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; flex-direction: column; gap: 20px;">
+            <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px;">
+              <div>
+                <h1 style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 108; font-weight: 800; font-size: clamp(26px, 3vw, 36px); letter-spacing: -0.02em; margin: 0; margin-bottom: 6px;">2ACE Market</h1>
+                <p style="font-size: 14px; color: rgba(11,12,14,0.6); margin: 0;">{{ mkStatusLine }}</p>
+              </div>
+              <a href="market.html" style="padding: 11px 16px; border: 1px solid #0B0C0E; border-radius: 3px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;">Open the market →</a>
+            </div>
+            <sc-if value="{{ mkOff }}" hint-placeholder-val="{{ false }}">
+              <div style="display: flex; flex-direction: column; gap: 16px;">
+                <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+                  <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #A8701A;">Cut your website and marketing costs</span>
+                  <span style="font-family: Archivo, sans-serif; font-weight: 700; font-size: 22px;">No store to build, no marketing to pay for.</span>
+                  <div style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 12px;">
+                    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(11,12,14,0.55);">Expected monthly sales</span>
+                    <span style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 116; font-weight: 800; letter-spacing: -0.02em; line-height: 1; font-size: 32px;">{{ mkSalesFmt }}</span>
+                  </div>
+                  <input type="range" min="5000" max="300000" step="5000" value="{{ mkSales }}" onChange="{{ onMkSales }}" style="width: 100%; accent-color: #E39A2B;" />
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 12px;">
+                <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px;">
+                  <span style="display: block; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #A8701A; color: rgba(11,12,14,0.55); margin-bottom: 10px;">Your own store + marketing</span>
+                  <sc-for list="{{ diyRows }}" as="r" hint-placeholder-count="3">
+                    <div style="display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid rgba(11,12,14,0.07); font-size: 14px;">
+                      <span style="color: rgba(11,12,14,0.7);">{{ r.k }}</span><span style="font-family: 'IBM Plex Mono', monospace;">{{ r.v }}</span>
+                    </div>
+                  </sc-for>
+                  <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding-top: 12px;">
+                    <span style="font-weight: 600;">Fixed per month</span><span style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 116; font-weight: 800; letter-spacing: -0.02em; line-height: 1; font-size: 26px;">{{ diyFmt }}</span>
+                  </div>
+                </div>
+                <div style="background: #0B0C0E; color: #F5F4F1; border-radius: 4px; padding: 20px; display: flex; flex-direction: column;">
+                  <span style="display: block; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #A8701A; color: #E39A2B; margin-bottom: 10px;">With 2ACE Market</span>
+                  <sc-for list="{{ mkIncl }}" as="r" hint-placeholder-count="5">
+                    <div style="display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid rgba(245,244,241,0.12); font-size: 14px;">
+                      <span style="color: rgba(245,244,241,0.8);">{{ r.t }}</span><span style="font-family: 'IBM Plex Mono', monospace; color: #E39A2B;">✓</span>
+                    </div>
+                  </sc-for>
+                  <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px; padding-top: 12px; margin-top: auto;">
+                    <span style="font-weight: 600;">{{ mkRateLabel }}</span><span style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 116; font-weight: 800; letter-spacing: -0.02em; line-height: 1; font-size: 26px;">{{ mkCommFmt }}</span>
+                  </div>
+                </div>
+              </div>
+              <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; padding: 16px 20px; border-radius: 4px; background: rgba(47,125,85,0.1);">
+                <span style="font-size: 15px; color: #1F5C3D;"><strong>No website or marketing bill.</strong> You skip {{ setupFmt }} setup and {{ diyFmt }} a month.</span>
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #1F5C3D;">At {{ mkSalesFmt }} sales you pay {{ mkCommFmt }}</span>
+              </div>
+                <button onClick="{{ mkJoin }}" style="align-self: flex-start; cursor: pointer; padding: 14px 24px; border: 0; border-radius: 3px; background: #E39A2B; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: #0B0C0E;">Join 2ACE Market</button>
+              </div>
+            </sc-if>
+            <sc-if value="{{ mkOn }}" hint-placeholder-val="{{ false }}">
+              <div style="display: flex; flex-direction: column; gap: 20px;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: 12px;">
+                  <sc-for list="{{ mkKpis }}" as="k" hint-placeholder-count="4">
+                    <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px;">
+                      <span style="display: block; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.55);">{{ k.l }}</span>
+                      <span style="display: block; font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 116; font-weight: 800; letter-spacing: -0.02em; line-height: 1; font-size: 30px; margin: 8px 0 4px;">{{ k.v }}</span>
+                      <span style="display: block; font-size: 13px; color: rgba(11,12,14,0.6);">{{ k.s }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr)); gap: 20px;">
+                  <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px;">
+                    <span style="display: block; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #A8701A; margin-bottom: 8px;">Your listings</span>
+                    <sc-for list="{{ mkListings }}" as="l" hint-placeholder-count="6">
+                      <div style="display: grid; grid-template-columns: 80px minmax(0, 1fr) auto auto; gap: 12px; align-items: center; padding: 11px 0; border-bottom: 1px solid rgba(11,12,14,0.07); font-size: 14px;">
+                        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px;">{{ l.sku }}</span>
+                        <span>{{ l.name }}</span>
+                        <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: rgba(11,12,14,0.65);">{{ l.sold }}</span>
+                        <span style="padding: 4px 9px; border-radius: 12px; font-size: 12px; font-weight: 600; background: {{ l.pillBg }}; color: {{ l.pillFg }};">{{ l.status }}</span>
+                      </div>
+                    </sc-for>
+                  </div>
+                  <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px;">
+                    <span style="display: block; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #A8701A; margin-bottom: 8px;">Customer care, handled by 2ACE</span>
+                    <sc-for list="{{ mkTickets }}" as="t" hint-placeholder-count="4">
+                      <div style="display: flex; flex-direction: column; gap: 3px; padding: 11px 0; border-bottom: 1px solid rgba(11,12,14,0.07);">
+                        <span style="display: flex; justify-content: space-between; gap: 10px; font-size: 14px; font-weight: 600;"><span>{{ t.t }}</span><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 500; color: #2F7D55;">{{ t.st }}</span></span>
+                        <span style="font-size: 13px; color: rgba(11,12,14,0.6);">{{ t.d }}</span>
+                      </div>
+                    </sc-for>
+                  </div>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ tabInventory }}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; flex-direction: column; gap: 20px;">
+            <h1 style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 108; font-weight: 800; font-size: clamp(26px, 3vw, 36px); letter-spacing: -0.02em; margin: 0;">Inventory</h1>
+            <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 18px; padding: 18px 20px; background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px;">
+              <div style="flex: 1 1 260px;">
+                <div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px;"><span>Space used</span><span style="font-family: 'IBM Plex Mono', monospace;">{{ spaceUsed }}</span></div>
+                <span style="display: block; height: 8px; border-radius: 4px; background: rgba(11,12,14,0.1); overflow: hidden;"><span style="display: block; height: 8px; width: {{ spacePct }}; background: #E39A2B;"></span></span>
+              </div>
+              <button onClick="{{ goBuild }}" style="cursor: pointer; padding: 10px 16px; border: 1px solid #0B0C0E; background: transparent; border-radius: 3px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;" style-hover="background: #0B0C0E; color: #F5F4F1;">Add space</button>
+            </div>
+            <input type="text" value="{{ invQ }}" onChange="{{ onInvQ }}" placeholder="Search SKU or product" style="max-width: 360px; padding: 12px 14px; border: 1px solid rgba(11,12,14,0.2); border-radius: 3px; font-size: 15px; background: #FFFFFF;" />
+            <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; overflow-x: auto;">
+              <div style="min-width: 720px;">
+                <div style="display: grid; grid-template-columns: 90px minmax(0, 2.4fr) repeat(4, minmax(0, 1fr)) 110px; gap: 12px; padding: 12px 18px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(11,12,14,0.5); border-bottom: 1px solid rgba(11,12,14,0.1);">
+                  <span>SKU</span><span>Product</span><span style="text-align: right;">On hand</span><span style="text-align: right;">Reserved</span><span style="text-align: right;">Inbound</span><span style="text-align: right;">Cover</span><span style="text-align: right;">Status</span>
+                </div>
+                <sc-for list="{{ invRows }}" as="r" hint-placeholder-count="8">
+                  <div style="display: grid; grid-template-columns: 90px minmax(0, 2.4fr) repeat(4, minmax(0, 1fr)) 110px; gap: 12px; padding: 13px 18px; border-bottom: 1px solid rgba(11,12,14,0.07); font-size: 14px; align-items: center;">
+                    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px;">{{ r.sku }}</span>
+                    <span>{{ r.name }}</span>
+                    <span style="text-align: right; font-family: 'IBM Plex Mono', monospace;">{{ r.onHand }}</span>
+                    <span style="text-align: right; font-family: 'IBM Plex Mono', monospace; color: rgba(11,12,14,0.6);">{{ r.reserved }}</span>
+                    <span style="text-align: right; font-family: 'IBM Plex Mono', monospace; color: rgba(11,12,14,0.6);">{{ r.inbound }}</span>
+                    <span style="text-align: right; font-family: 'IBM Plex Mono', monospace;">{{ r.cover }}</span>
+                    <span style="justify-self: end; padding: 4px 9px; border-radius: 12px; font-size: 12px; font-weight: 600; background: {{ r.pillBg }}; color: {{ r.pillFg }};">{{ r.status }}</span>
+                  </div>
+                </sc-for>
+                <sc-if value="{{ invEmpty }}" hint-placeholder-val="{{ false }}">
+                  <p style="margin: 0; padding: 22px 18px; font-size: 14px; color: rgba(11,12,14,0.6);">No products match that search.</p>
+                </sc-if>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ tabOrders }}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; flex-direction: column; gap: 20px;">
+            <h1 style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 108; font-weight: 800; font-size: clamp(26px, 3vw, 36px); letter-spacing: -0.02em; margin: 0;">Orders</h1>
+            <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+              <sc-for list="{{ chanChips }}" as="c" hint-placeholder-count="5">
+                <button onClick="{{ c.onClick }}" style="cursor: pointer; padding: 8px 14px; border-radius: 20px; border: 1px solid {{ c.bd }}; background: {{ c.bg }}; color: {{ c.fg }}; font-size: 13px;">{{ c.label }}</button>
+              </sc-for>
+            </div>
+            <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; overflow-x: auto;">
+              <div style="min-width: 680px;">
+                <div style="display: grid; grid-template-columns: 110px minmax(0, 1.3fr) minmax(0, 1.6fr) 80px 80px 110px; gap: 12px; padding: 12px 18px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(11,12,14,0.5); border-bottom: 1px solid rgba(11,12,14,0.1);">
+                  <span>Order</span><span>Channel</span><span>Customer</span><span style="text-align: right;">Value</span><span style="text-align: right;">Placed</span><span style="text-align: right;">Status</span>
+                </div>
+                <sc-for list="{{ orderRows }}" as="o" hint-placeholder-count="8">
+                  <div style="display: grid; grid-template-columns: 110px minmax(0, 1.3fr) minmax(0, 1.6fr) 80px 80px 110px; gap: 12px; padding: 13px 18px; border-bottom: 1px solid rgba(11,12,14,0.07); font-size: 14px; align-items: center;">
+                    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px;">{{ o.id }}</span>
+                    <span>{{ o.chan }}</span>
+                    <span style="color: rgba(11,12,14,0.7);">{{ o.cust }}</span>
+                    <span style="text-align: right; font-family: 'IBM Plex Mono', monospace;">{{ o.val }}</span>
+                    <span style="text-align: right; font-family: 'IBM Plex Mono', monospace; color: rgba(11,12,14,0.6);">{{ o.time }}</span>
+                    <span style="justify-self: end; padding: 4px 9px; border-radius: 12px; font-size: 12px; font-weight: 600; background: {{ o.pillBg }}; color: {{ o.pillFg }};">{{ o.status }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ tabReturns }}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; flex-direction: column; gap: 20px;">
+            <h1 style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 108; font-weight: 800; font-size: clamp(26px, 3vw, 36px); letter-spacing: -0.02em; margin: 0;">Returns</h1>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: 12px;">
+              <sc-for list="{{ retKpis }}" as="k" hint-placeholder-count="3">
+                <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 18px 20px;">
+                  <span style="display: block; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.55);">{{ k.label }}</span>
+                  <span style="display: block; font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 116; font-weight: 800; font-size: 32px; margin-top: 8px;">{{ k.value }}</span>
+                </div>
+              </sc-for>
+            </div>
+            <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; overflow-x: auto;">
+              <div style="min-width: 680px;">
+                <sc-for list="{{ retRows }}" as="r" hint-placeholder-count="6">
+                  <div style="display: grid; grid-template-columns: 100px minmax(0, 2fr) minmax(0, 1.3fr) 120px 110px; gap: 12px; padding: 14px 18px; border-bottom: 1px solid rgba(11,12,14,0.07); font-size: 14px; align-items: center;">
+                    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px;">{{ r.id }}</span>
+                    <span>{{ r.item }}</span>
+                    <span style="color: rgba(11,12,14,0.65);">{{ r.reason }}</span>
+                    <span style="justify-self: start; padding: 4px 9px; border-radius: 12px; font-size: 12px; font-weight: 600; background: {{ r.pillBg }}; color: {{ r.pillFg }};">{{ r.grade }}</span>
+                    <span style="text-align: right; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: rgba(11,12,14,0.65);">{{ r.state }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ tabGrowth }}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; flex-direction: column; gap: 20px;">
+            <h1 style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 108; font-weight: 800; font-size: clamp(26px, 3vw, 36px); letter-spacing: -0.02em; margin: 0;">Storefront &amp; marketing</h1>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr)); gap: 16px;">
+              <sc-for list="{{ growthCards }}" as="g" hint-placeholder-count="3">
+                <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px; display: flex; flex-direction: column; gap: 16px;">
+                  <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 10px;">
+                    <span style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 106; font-weight: 700; font-size: 19px;">{{ g.name }}</span>
+                    <span style="padding: 4px 9px; border-radius: 12px; font-size: 12px; font-weight: 600; background: {{ g.pillBg }}; color: {{ g.pillFg }};">{{ g.status }}</span>
+                  </div>
+                  <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: rgba(11,12,14,0.55);">{{ g.sub }}</span>
+                  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px;">
+                    <sc-for list="{{ g.stats }}" as="st" hint-placeholder-count="3">
+                      <div>
+                        <span style="display: block; font-family: Archivo, sans-serif; font-weight: 800; font-size: 22px;">{{ st.v }}</span>
+                        <span style="display: block; font-size: 12px; color: rgba(11,12,14,0.55);">{{ st.l }}</span>
+                      </div>
+                    </sc-for>
+                  </div>
+                  <button onClick="{{ g.onClick }}" style="cursor: pointer; margin-top: auto; padding: 10px 14px; border: 1px solid #0B0C0E; background: transparent; border-radius: 3px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;" style-hover="background: #0B0C0E; color: #F5F4F1;">{{ g.cta }}</button>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+
+      </main>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ hasToast }}" hint-placeholder-val="{{ false }}">
+    <div style="position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 80; padding: 13px 20px; border-radius: 3px; background: #0B0C0E; color: #F5F4F1; font-size: 14px; box-shadow: 0 8px 30px rgba(0,0,0,0.25);">{{ toast }}</div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900}}">
+class Component extends DCLogic {
+  state = {
+    view: 'build', step: 0,
+    storageType: 'pallet', qty: 12, estUnits: 6000, estSize: 'medium',
+    pkgs: { ful: false, ret: false, imp: false }, orders: 1500,
+    storeOn: false, domain: 'lumahome', domainStatus: null, theme: 'mono',
+    langs: { Polish: true, English: true, German: false, Czech: false },
+    pays: { BLIK: true, Przelewy24: true, Cards: true, 'Apple Pay': false, PayPo: false },
+    tt: 'off', meta: 'off', budget: 0,
+    country: 'DE', company: '', vat: '', email: '', tried: false, activated: false,
+    acctEmail: '', pw: '', google: false, checkout: 0, coTried: false, accept: false, signName: '', payMethod: 'card', cardNo: '', cardExp: '', cardCvc: '', paying: false,
+    ibSlot: null, ibUnits: 'pallets', ibCount: 4, ibCarrier: '', ibRef: '', ibQty: {}, ibTried: false, inbounds: [], ibDone: false,
+    showAdd: false, pf: { name: '', sku: '', ean: '', l: '', w: '', h: '', kg: '', hs: '', origin: '' }, pfTried: false, csvMsg: '', csvOk: true,
+    team: [], invEmail: '', invRole: 'Operations', invTried: false,
+    products: [
+      { sku: 'LH-101', name: 'Linen throw, Sand', ean: '5901234101019', l: 40, w: 30, h: 8, kg: 1.1, hs: '6301.90', origin: 'CN' },
+      { sku: 'LH-102', name: 'Linen throw, Clay', ean: '5901234101026', l: 40, w: 30, h: 8, kg: 1.1, hs: '6301.90', origin: 'CN' },
+      { sku: 'LH-104', name: 'Ceramic mug set', ean: '5901234104010', l: 26, w: 18, h: 12, kg: 1.6, hs: '6912.00', origin: 'CN' },
+      { sku: 'LH-110', name: 'Oak serving board', ean: '5901234110011', l: 45, w: 25, h: 3, kg: 1.4, hs: '4419.19', origin: 'VN' },
+      { sku: 'LH-115', name: 'Glass carafe', ean: '5901234115016', l: 14, w: 14, h: 28, kg: 0.9, hs: '7013.37', origin: 'TR' },
+      { sku: 'LH-120', name: 'Wool cushion cover', ean: '5901234120010', l: 45, w: 45, h: 2, kg: 0.4, hs: '6304.92', origin: 'TR' },
+      { sku: 'LH-131', name: 'Candle, Fig', ean: '5901234131016', l: 9, w: 9, h: 11, kg: 0.5, hs: '', origin: 'PL' },
+      { sku: 'LH-140', name: 'Table runner, Natural', ean: '5901234140018', l: 0, w: 0, h: 0, kg: 0.3, hs: '6302.31', origin: 'CN' }
+    ],
+    marketOn: false, mkSales: 40000,
+    tab: 'overview', ship: 'SHP-2422', invQ: '', chan: 'All', toast: '', invoiceUp: false, extraEv: {}, synced: {}, syncing: false
+  };
+
+  STORAGE = {
+    shelf: { name: 'Shelf bins', unit: 'bins', price: 300, min: 10, max: 2000, step: 5, m2: 0.3, def: 40, desc: 'Small items, many SKUs. Picked by hand from racked bins.' },
+    pallet: { name: 'Pallets', unit: 'pallets', price: 1200, min: 1, max: 1000, step: 1, m2: 1.2, def: 12, desc: 'Cartons and bulk stock on standard EUR pallets.' },
+    zone: { name: 'Private zone', unit: '× 50 m²', price: 50000, min: 1, max: 40, step: 1, m2: 50, def: 1, desc: 'A fenced area of the floor with your own racking and team.' }
+  };
+
+  COUNTRIES = [
+    ['DE', 'Germany', 'USt-IdNr. (VAT)', 'DE123456789'], ['PL', 'Poland', 'NIP', '1234567890'], ['CZ', 'Czechia', 'DIČ (VAT)', 'CZ12345678'],
+    ['SK', 'Slovakia', 'IČ DPH (VAT)', 'SK1234567890'], ['LT', 'Lithuania', 'PVM code (VAT)', 'LT123456789'], ['NL', 'Netherlands', 'BTW-id (VAT)', 'NL123456789B01'],
+    ['FR', 'France', 'TVA intracom (VAT)', 'FR12345678901'], ['IT', 'Italy', 'Partita IVA', 'IT12345678901'], ['ES', 'Spain', 'NIF-IVA (VAT)', 'ESX1234567X'],
+    ['UA', 'Ukraine', 'EDRPOU code', '12345678'], ['TR', 'Türkiye', 'Vergi No (tax ID)', '1234567890'], ['GB', 'United Kingdom', 'VAT / Company No.', 'GB123456789'],
+    ['US', 'United States', 'EIN', '12-3456789'], ['CN', 'China', 'Unified Social Credit Code', '91310000MA1FL0000X'], ['AE', 'United Arab Emirates', 'TRN (tax ID)', '100123456700003'],
+    ['OTHER', 'Other country', 'Business registration number', 'Registration number']
+  ].map(([code, name, label, ph]) => ({ code, name, label, ph }));
+
+  componentWillUnmount() { clearTimeout(this.toastT); clearTimeout(this.domT); clearTimeout(this.syncT); clearTimeout(this.payT); }
+
+  fmt(n) { return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' zł'; }
+  num(n) { return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
+  sel(on) {
+    return on
+      ? { bg: '#0B0C0E', fg: '#F5F4F1', sub: 'rgba(245,244,241,0.72)', bd: '#0B0C0E' }
+      : { bg: '#FFFFFF', fg: '#0B0C0E', sub: 'rgba(11,12,14,0.62)', bd: 'rgba(11,12,14,0.14)' };
+  }
+  showToast(msg) {
+    this.setState({ toast: msg });
+    clearTimeout(this.toastT);
+    this.toastT = setTimeout(() => this.setState({ toast: '' }), 2800);
+  }
+
+  pricing() {
+    const s = this.state, st = this.STORAGE[s.storageType];
+    const returns = Math.round(s.orders * 0.08);
+    const m = [], o = [];
+    const storage = s.qty * st.price;
+    m.push({ key: 'storage', label: st.name, detail: s.qty + ' ' + st.unit + ' at ' + this.fmt(st.price), v: storage });
+    const fp = s.qty * st.m2;
+    if (s.pkgs.ful) m.push({ label: 'Fulfillment', detail: this.num(fp) + ' m² at 350 zł', v: fp * 350 });
+    if (s.pkgs.ret) m.push({ label: 'Returns handling', detail: this.num(fp) + ' m² at 150 zł', v: fp * 150 });
+    if (s.pkgs.imp) m.push({ label: 'Import & customs', detail: 'Quoted per shipment', v: 0, quote: true });
+    if (s.storeOn) { m.push({ label: 'Storefront ' + (s.domain || 'yourbrand') + '.pl', detail: 'Hosting and care', v: 199, once: 2950 }); }
+    const ch = [['tt', 'TikTok Shop', 1690, 1890], ['meta', 'Meta Business', 1190, 1690]];
+    ch.forEach(([k, name, setup, managed]) => {
+      if (s[k] === 'setup') m.push({ label: name, detail: 'Shop setup and catalogue', v: 0, once: setup });
+      if (s[k] === 'managed') m.push({ label: name, detail: 'Setup, then run by our team', v: managed, once: setup });
+    });
+    if (s.marketOn) m.push({ label: '2ACE Market', detail: '15% commission on market sales', v: 0, comm: true });
+    const monthly = m.reduce((a, l) => a + l.v, 0);
+    const once = m.reduce((a, l) => a + (l.once || 0), 0);
+    return { lines: m, monthly, once, storage, returns };
+  }
+
+  renderVals() {
+    const s = this.state, st = this.STORAGE[s.storageType];
+    const P = this.pricing();
+    const set = (o) => () => this.setState(o);
+    const stepNames = ['Space', 'Fulfillment', 'Returns', 'Import', 'Storefront', 'Marketing', '2ACE Market', 'Review'];
+    const customer = s.company.trim() ? s.company.trim().replace(/\s+sp\. z o\.o\.$/i, '') : 'Luma Home';
+    const emailOk = /.+@.+\..+/.test(s.email);
+    const C = this.COUNTRIES, cc = C.find((c) => c.code === s.country) || C[0];
+    const formOk = s.company.trim() && s.vat.trim().length >= 5 && emailOk;
+
+    const next = () => {
+      if (s.step < 7) { this.setState({ step: s.step + 1 }); window.scrollTo(0, 0); return; }
+      if (!formOk) { this.setState({ tried: true }); return; }
+      this.setState({ view: 'checkout', checkout: 0, coTried: false, acctEmail: s.acctEmail || s.email });
+      window.scrollTo(0, 0);
+    };
+
+    const frac = (s.qty - st.min) / (st.max - st.min);
+    const filled = Math.max(1, Math.round((0.04 + frac * 0.96) * 80));
+    const cells = Array.from({ length: 80 }, (_, i) => ({ bg: i < filled ? '#E39A2B' : 'rgba(11,12,14,0.08)' }));
+    const upp = { small: 1200, medium: 400, large: 120 }[s.estSize];
+    const estPallets = Math.max(1, Math.ceil((s.estUnits || 0) / upp));
+
+    const domainMsg = {
+      null: 'We register the domain and host the store for you.',
+      checking: 'Checking ' + s.domain + '.pl…',
+      free: s.domain + '.pl is available. It is yours once you activate.',
+      taken: s.domain + '.pl is taken. Try another name.'
+    }[String(s.domainStatus)];
+    const domainColor = s.domainStatus === 'free' ? '#2F7D55' : s.domainStatus === 'taken' ? '#B4442E' : 'rgba(11,12,14,0.6)';
+
+    const chip = (on) => on ? { bg: '#0B0C0E', fg: '#F5F4F1', bd: '#0B0C0E' } : { bg: 'transparent', fg: '#0B0C0E', bd: 'rgba(11,12,14,0.22)' };
+
+    const channelDefs = [
+      { k: 'tt', name: 'TikTok Shop', desc: 'Shop tab, product showcase and affiliate creators. Orders route to our pick line automatically.', setup: 1690, managed: 1890 },
+      { k: 'meta', name: 'Meta Business', desc: 'Facebook and Instagram shops, catalogue sync, pixel and conversion tracking.', setup: 1190, managed: 1690 }
+    ];
+    const channels = channelDefs.map((c) => ({
+      name: c.name, desc: c.desc,
+      price: this.fmt(c.setup) + ' setup · ' + this.fmt(c.managed) + ' / mo managed',
+      note: s[c.k] === 'off' ? 'Not included.' : s[c.k] === 'setup' ? 'We open and connect the shop. Your team runs it.' : 'We open it, then run content, creators and ads each month.',
+      opts: [['off', 'Off'], ['setup', 'Setup only'], ['managed', 'Managed']].map(([v, l]) => {
+        const on = s[c.k] === v;
+        return { label: l, bg: on ? '#0B0C0E' : 'transparent', fg: on ? '#F5F4F1' : '#0B0C0E', onClick: set({ [c.k]: v }) };
+      })
+    }));
+
+    const svcDefs = [
+      { k: 'ful', name: 'E-commerce fulfillment', rate: 350, title: 'Want us to ship your orders?', lead: 'Connect your store and we pick, pack and dispatch every order from your space. Priced on your space, with no per-order fees.', addLabel: 'Add fulfillment', points: ['Same-day dispatch on a 15:00 cut-off', 'InPost, DPD, DHL and GLS at 2ACE rates', 'Shopify, WooCommerce, Allegro and TikTok Shop connected', 'Live tracking pushed to your customers'] },
+      { k: 'ret', name: 'Returns handling', rate: 150, title: 'Add returns handling?', lead: 'Returned parcels come back to us, get graded and go straight back on sale. You see every result in the dashboard.', addLabel: 'Add returns', points: ['Inspected and graded within 48 hours', 'A-grade stock restocked automatically', 'Photos on every rejected item', 'Branded returns portal for your buyers'] },
+      { k: 'imp', name: 'Import & customs', price: 'Quoted per shipment', title: 'Importing from outside the EU?', lead: 'We book the freight and clear customs into Poland. Cost depends on the value, origin and route of each shipment, so we quote every one before it moves.', addLabel: 'Add import & customs', points: ['Air, sea and road freight booked for you', 'Customs clearance, duty and import VAT handled', 'CE and EU labelling checks before goods ship', 'Every milestone tracked in your dashboard'] }
+    ];
+
+    // Dashboard data
+    const M = ['Booked', 'Picked up', 'Departed origin', 'Arrived in the EU', 'Customs clearance', 'At 2ACE dock', 'Received & stocked'];
+    const ships = this.ships();
+    const shipRows = ships.map((x) => {
+      const color = x.flag && !s.invoiceUp ? '#B4442E' : x.stage >= 6 ? '#2F7D55' : '#A8701A';
+      const on = s.ship === x.id;
+      return {
+        id: x.id, from: x.from, mode: x.mode, eta: x.eta, color,
+        status: x.flag && s.invoiceUp ? 'Customs · re-submitted' : x.status,
+        pct: Math.round((x.stage / 6) * 100) + '%',
+        bg: on ? '#FFFFFF' : 'transparent', bd: on ? '#0B0C0E' : 'rgba(11,12,14,0.14)',
+        onClick: () => this.setState({ ship: x.id, tab: 'imports', view: 'dash' })
+      };
+    });
+    const cur = ships.find((x) => x.id === s.ship) || ships[0];
+    const selSteps = M.map((label, i) => {
+      const done = i < cur.stage, now = i === cur.stage;
+      const alert = now && cur.flag && !s.invoiceUp;
+      return {
+        label, date: cur.dates[i] || '',
+        dot: done ? '#0B0C0E' : now ? (alert ? '#B4442E' : '#E39A2B') : '#FFFFFF',
+        ring: done ? '#0B0C0E' : now ? (alert ? '#B4442E' : '#E39A2B') : 'rgba(11,12,14,0.25)',
+        fg: done || now ? '#0B0C0E' : 'rgba(11,12,14,0.45)', weight: now ? '700' : '400'
+      };
+    });
+    const extra = s.extraEv[cur.id] || [];
+    const trkEvents = extra.concat(cur.ev).map(([time, text, place, kind], i) => ({ time, text, place, fg: kind === 1 && !s.invoiceUp ? '#B4442E' : kind === 2 ? '#2F7D55' : i === 0 ? '#0B0C0E' : 'rgba(11,12,14,0.75)' }));
+    const trk = {
+      carrier: cur.carrier, no: cur.trk, api: cur.api, origin: cur.from.split(',')[0], now: cur.now,
+      synced: s.syncing ? 'syncing…' : s.synced[cur.id] ? 'synced just now' : 'synced 4 min ago',
+      btn: s.syncing ? 'Syncing…' : 'Refresh',
+      pct: Math.min(100, Math.round((cur.stage + (cur.stage < 6 ? 0.5 : 0)) / 6 * 100) + extra.length * 4) + '%',
+      refresh: () => {
+        if (s.syncing) return;
+        this.setState({ syncing: true });
+        clearTimeout(this.syncT);
+        this.syncT = setTimeout(() => {
+          const have = (this.state.extraEv[cur.id] || []).length, nx = cur.next[have];
+          this.setState((st) => ({ syncing: false, synced: Object.assign({}, st.synced, { [cur.id]: true }), extraEv: nx ? Object.assign({}, st.extraEv, { [cur.id]: [nx].concat(st.extraEv[cur.id] || []) }) : st.extraEv }));
+          this.showToast(nx ? 'New tracking event: ' + nx[1] : 'No new events since last sync.');
+        }, 900);
+      }
+    };
+    const selDocs = cur.docs.map(([name, ok]) => {
+      const good = ok || (cur.flag && s.invoiceUp);
+      return { name, state: good ? 'Verified' : 'Missing', color: good ? '#2F7D55' : '#B4442E' };
+    });
+    const duty = cur.value * cur.duty, vat = (cur.value + duty) * 0.23;
+    const selCost = [
+      { label: 'Goods value', value: this.fmt(cur.value) },
+      { label: 'Duty · HS ' + cur.hs + ' · ' + (cur.duty * 100).toFixed(1) + '%', value: this.fmt(duty) },
+      { label: 'Import VAT 23% (reclaimable)', value: this.fmt(vat) },
+      { label: 'Freight & clearance', value: this.fmt(cur.freight) }
+    ];
+
+    const inv = this.inventory();
+    const q = s.invQ.trim().toLowerCase();
+    const pill = { Healthy: ['rgba(47,125,85,0.12)', '#2F7D55'], Reorder: ['rgba(227,154,43,0.18)', '#8A5A12'], Critical: ['rgba(180,68,46,0.12)', '#B4442E'] };
+    const invRows = inv.filter((r) => !q || (r.sku + ' ' + r.name).toLowerCase().includes(q)).map((r) => {
+      const status = r.cover < 5 ? 'Critical' : r.cover < 10 ? 'Reorder' : 'Healthy';
+      return { sku: r.sku, name: r.name, onHand: this.num(r.onHand), reserved: this.num(r.reserved), inbound: r.inbound ? this.num(r.inbound) : '—', cover: r.cover + ' d', status, pillBg: pill[status][0], pillFg: pill[status][1] };
+    });
+    const totalUnits = inv.reduce((a, r) => a + r.onHand, 0);
+    const lowCount = inv.filter((r) => r.cover < 10).length;
+    const used = Math.round(s.qty * 0.82);
+
+    const ostat = { Picking: ['rgba(227,154,43,0.18)', '#8A5A12'], Packed: ['rgba(11,12,14,0.07)', '#0B0C0E'], Shipped: ['rgba(47,125,85,0.12)', '#2F7D55'], Delivered: ['rgba(11,12,14,0.05)', 'rgba(11,12,14,0.6)'] };
+    const orders = this.orderData().filter((o) => s.chan === 'All' || o[1] === s.chan);
+    const orderRows = orders.map(([id, chan, cust, val, time, status]) => ({ id, chan, cust, val, time, status, pillBg: ostat[status][0], pillFg: ostat[status][1] }));
+    const chanChips = ['All', 'lumahome.pl', 'TikTok Shop', 'Instagram', 'Facebook'].map((c) => Object.assign({ label: c, onClick: set({ chan: c }) }, chip(s.chan === c)));
+
+    const gpill = { A: ['rgba(47,125,85,0.12)', '#2F7D55'], B: ['rgba(227,154,43,0.18)', '#8A5A12'], R: ['rgba(180,68,46,0.12)', '#B4442E'] };
+    const retRows = [
+      ['RMA-3318', 'LH-101 Linen throw, Sand', 'Wrong colour', 'A', 'A · resell', 'Restocked'],
+      ['RMA-3317', 'LH-104 Ceramic mug set', 'Arrived damaged', 'R', 'Reject', 'Photos sent'],
+      ['RMA-3315', 'LH-120 Wool cushion cover', 'Changed mind', 'A', 'A · resell', 'Restocked'],
+      ['RMA-3314', 'LH-115 Glass carafe', 'Scratched', 'B', 'B · outlet', 'Outlet listing'],
+      ['RMA-3312', 'LH-102 Linen throw, Clay', 'Too small', 'A', 'A · resell', 'Grading'],
+      ['RMA-3309', 'LH-131 Candle, Fig', 'Late delivery', 'A', 'A · resell', 'Restocked']
+    ].map(([id, item, reason, g, grade, st2]) => ({ id, item, reason, grade, state: st2, pillBg: gpill[g][0], pillFg: gpill[g][1] }));
+
+    const bars = [148, 162, 171, 155, 190, 204, 188, 176, 199, 221, 236, 214, 242, 258];
+    const days = ['17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30'];
+    const bmax = Math.max(...bars);
+
+    const missingCount = s.products.filter((p) => !p.hs || !(p.l && p.w && p.h)).length;
+    const tabs = [
+      ['overview', 'Overview', ''], ['imports', 'Imports', s.invoiceUp ? '4' : '1 !'], ['tracking', 'Shipment tracking', '3 live'], ['inbound', 'Book inbound', s.inbounds.length ? String(s.inbounds.length) : 'New'], ['products', 'Products', missingCount ? missingCount + ' !' : String(s.products.length)], ['inventory', 'Inventory', lowCount + ' low'],
+      ['orders', 'Orders', '214'], ['returns', 'Returns', '23'], ['growth', 'Storefront & marketing', ''], ['market', '2ACE Market', s.marketOn ? 'Live' : 'New'], ['team', 'Team', String(s.team.length + 1)]
+    ];
+    const tabSet = (t) => () => { this.setState({ tab: t }); window.scrollTo(0, 0); };
+
+    const X = this.extraVals(s, P, customer, cc, tabSet);
+    return Object.assign(X, {
+      viewTabs: [['build', 'Build plan'], ['dash', 'Dashboard']].map(([v, l]) => ({
+        label: l, bg: s.view === v ? '#F5F4F1' : 'transparent', fg: s.view === v ? '#0B0C0E' : 'rgba(245,244,241,0.75)',
+        onClick: () => { this.setState({ view: v }); window.scrollTo(0, 0); }
+      })),
+      isBuild: s.view === 'build', isDash: s.view === 'dash', isCheckout: s.view === 'checkout',
+      initials: customer.split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase(),
+      customer,
+      monthlyFmt: this.fmt(P.monthly), onceFmt: this.fmt(P.once), budgetFmt: this.fmt(s.budget), budget: s.budget,
+
+      steps: stepNames.map((label, i) => ({
+        n: '0' + (i + 1), label,
+        bar: i === s.step ? '#E39A2B' : i < s.step ? '#0B0C0E' : 'rgba(11,12,14,0.14)',
+        fg: i <= s.step ? '#0B0C0E' : 'rgba(11,12,14,0.45)',
+        onClick: set({ step: i })
+      })),
+      step0: s.step === 0, step4: s.step === 4, step5: s.step === 5, step6: s.step === 6, step7: s.step === 7, stepSvc: s.step >= 1 && s.step <= 3,
+      next, back: () => this.setState({ step: Math.max(0, s.step - 1) }),
+      backVis: s.step === 0 ? 'hidden' : 'visible',
+      ctaLabel: s.step === 7 ? 'Continue to sign-up' : 'Continue to ' + stepNames[s.step + 1].toLowerCase(),
+
+      storageOpts: Object.keys(this.STORAGE).map((k) => {
+        const o = this.STORAGE[k];
+        return Object.assign({ name: o.name, desc: o.desc, price: this.fmt(o.price) + ' / ' + (k === 'zone' ? '50 m²' : o.unit.replace(/s$/, '')) + ' / mo', onClick: set({ storageType: k, qty: o.def, qtyDraft: null }) }, this.sel(s.storageType === k));
+      }),
+      qty: s.qty, qtyUnit: st.unit, qtyMin: st.min, qtyMax: st.max, qtyStep: st.step,
+      qtyTitle: 'How many ' + (s.storageType === 'zone' ? 'zone blocks' : st.unit),
+      onQty: (e) => this.setState({ qty: Number(e.target.value), qtyDraft: null }),
+      qtyDraft: s.qtyDraft != null ? s.qtyDraft : s.qty,
+      onQtyType: (e) => {
+        const raw = e.target.value, v = Number(raw);
+        const upd = { qtyDraft: raw };
+        if (raw !== '' && v >= st.min && v <= st.max) upd.qty = Math.round(v);
+        this.setState(upd);
+      },
+      onQtyCommit: () => {
+        const v = Number(this.state.qtyDraft);
+        const q = this.state.qtyDraft == null || this.state.qtyDraft === '' || !v ? this.state.qty : Math.min(st.max, Math.max(st.min, Math.round(v)));
+        this.setState({ qty: q, qtyDraft: null });
+      },
+      onQtyKey: (e) => { if (e.key === 'Enter') e.target.blur(); },
+      cells, footprint: this.num(s.qty * st.m2), storageFmt: this.fmt(P.storage),
+      estUnits: s.estUnits, onEstUnits: (e) => { const v = e.target.value; this.setState({ estUnits: v === '' ? '' : Math.max(0, Number(v) || 0) }); },
+      estSizes: [['small', 'Small'], ['medium', 'Shoebox'], ['large', 'Bulky']].map(([v, l]) => Object.assign({ label: l, onClick: set({ estSize: v }) }, this.sel(s.estSize === v))),
+      estPallets,
+      useEstimate: () => {
+        const cs = this.state, u = { small: 1200, medium: 400, large: 120 }[cs.estSize];
+        const n = Math.min(this.STORAGE.pallet.max, Math.max(this.STORAGE.pallet.min, Math.ceil((Number(cs.estUnits) || 0) / u)));
+        this.setState({ storageType: 'pallet', qty: n, qtyDraft: null });
+        this.showToast('Set to ' + n + ' pallets · ' + this.num(n * 1.2) + ' m².');
+      },
+
+      svc: (() => {
+        const d = svcDefs[Math.min(2, Math.max(0, s.step - 1))], on = !!s.pkgs[d.k];
+        const setOn = (v, adv) => () => { this.setState({ pkgs: Object.assign({}, s.pkgs, { [d.k]: v }), step: adv ? s.step + 1 : s.step }); if (adv) window.scrollTo(0, 0); };
+        return {
+          kicker: 'Add-on ' + Math.max(1, s.step) + ' of 3', title: d.title, lead: d.lead, name: d.name, price: d.rate ? '+ ' + this.fmt(d.rate) + ' / m² · ' + this.fmt(s.qty * st.m2 * d.rate) + ' / month' : d.price,
+          points: d.points.map((t) => ({ t })), bd: on ? '#0B0C0E' : 'rgba(11,12,14,0.12)',
+          addLabel: on ? 'Added ✓' : d.addLabel, addBg: on ? '#0B0C0E' : '#E39A2B', addFg: on ? '#F5F4F1' : '#0B0C0E',
+          add: on ? setOn(false, false) : setOn(true, true),
+          skipLabel: on ? 'Remove' : 'Skip for now', skip: on ? setOn(false, false) : setOn(false, true)
+        };
+      })(),
+      needsOrders: s.pkgs.ful || s.pkgs.ret || s.pkgs.pack,
+      orders: s.orders, ordersFmt: this.num(s.orders), returnsEst: this.num(P.returns),
+      onOrders: (e) => this.setState({ orders: Number(e.target.value) }),
+
+      storeOn: s.storeOn, storeOff: !s.storeOn,
+      storeTrack: s.storeOn ? '#E39A2B' : 'rgba(11,12,14,0.2)', storeKnob: s.storeOn ? '23px' : '3px',
+      toggleStore: () => this.setState({ storeOn: !s.storeOn }),
+      domain: s.domain, domainMsg, domainColor,
+      onDomain: (e) => this.setState({ domain: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''), domainStatus: null }),
+      checkDomain: () => {
+        const d = s.domain; if (!d) return;
+        this.setState({ domainStatus: 'checking' });
+        clearTimeout(this.domT);
+        this.domT = setTimeout(() => this.setState({ domainStatus: ['luma', 'home', 'shop', 'sklep', 'moda', 'dom'].includes(d) ? 'taken' : 'free' }), 700);
+      },
+      themes: [
+        { k: 'mono', name: 'Mono', desc: 'Quiet, product first', c1: '#E7E4DE', c2: '#0B0C0E', c3: '#BFB9AE' },
+        { k: 'market', name: 'Market', desc: 'Bold, promo ready', c1: '#E39A2B', c2: '#0B0C0E', c3: '#F4D9A8' },
+        { k: 'editorial', name: 'Editorial', desc: 'Story led, big imagery', c1: '#3F4A44', c2: '#D9D2C3', c3: '#8C7B62' }
+      ].map((t) => Object.assign(t, { bd: s.theme === t.k ? '#0B0C0E' : 'rgba(11,12,14,0.1)', onClick: set({ theme: t.k }) })),
+      langChips: Object.keys(s.langs).map((k) => Object.assign({ label: k, onClick: () => this.setState({ langs: Object.assign({}, s.langs, { [k]: !s.langs[k] }) }) }, chip(s.langs[k]))),
+      payChips: Object.keys(s.pays).map((k) => Object.assign({ label: k, onClick: () => this.setState({ pays: Object.assign({}, s.pays, { [k]: !s.pays[k] }) }) }, chip(s.pays[k]))),
+
+      channels, onBudget: (e) => this.setState({ budget: Number(e.target.value) }),
+
+      reviewLines: P.lines.map((l) => ({ label: l.label, detail: l.detail, monthly: l.comm ? '15% / sale' : l.incl ? 'Included' : l.quote ? 'On quote' : l.v ? this.fmt(l.v) : '—', once: l.once ? this.fmt(l.once) : '—' })),
+      sumLines: P.lines.map((l, i) => ({ label: (i ? '+ ' : '') + l.label, amount: l.comm ? '15% / sale' : l.incl ? 'Included' : l.quote ? 'On quote' : l.v ? this.fmt(l.v) : this.fmt(l.once) + ' once' })),
+      company: s.company, vat: s.vat, email: s.email,
+      onCompany: (e) => this.setState({ company: e.target.value }),
+      onVat: (e) => this.setState({ vat: e.target.value.toUpperCase() }),
+      onEmail: (e) => this.setState({ email: e.target.value }),
+      companyBd: s.tried && !s.company.trim() ? '#B4442E' : 'rgba(11,12,14,0.2)',
+      emailBd: s.tried && !emailOk ? '#B4442E' : 'rgba(11,12,14,0.2)',
+      showFormError: s.tried && !formOk,
+      countries: C, country: s.country, numLabel: cc.label, numPh: cc.ph,
+      onCountry: (e) => this.setState({ country: e.target.value, vat: '' }),
+      vatBd: s.tried && s.vat.trim().length < 5 ? '#B4442E' : 'rgba(11,12,14,0.2)',
+
+      navItems: tabs.map(([k, l, b]) => ({
+        label: l, badge: b, onClick: tabSet(k),
+        bg: s.tab === k ? 'rgba(245,244,241,0.1)' : 'transparent',
+        fg: s.tab === k ? '#F5F4F1' : 'rgba(245,244,241,0.66)',
+        badgeFg: b.includes('!') || b.includes('low') ? '#E39A2B' : 'rgba(245,244,241,0.45)'
+      })),
+      tabOverview: s.tab === 'overview', tabTracking: s.tab === 'tracking', tabImports: s.tab === 'imports', tabInventory: s.tab === 'inventory',
+      tabOrders: s.tab === 'orders', tabReturns: s.tab === 'returns', tabGrowth: s.tab === 'growth',
+      activated: s.activated,
+      goBuild: () => { this.setState({ view: 'build', step: 0 }); window.scrollTo(0, 0); },
+      goImports: tabSet('imports'),
+      kpis: [
+        { label: 'Units in stock', value: this.num(totalUnits), sub: inv.length + ' SKUs · ' + lowCount + ' need reorder' },
+        { label: 'Inbound', value: '3', sub: '6 900 units on the way' },
+        { label: 'Orders today', value: '214', sub: '188 shipped · cut-off 15:00' },
+        { label: 'Returns open', value: '23', sub: '48 h to restock' }
+      ],
+      tasks: [
+        s.inbounds.length ? null : { title: 'Book your first inbound delivery', sub: 'Pick a dock slot and tell us what is arriving.', cta: 'Book', onClick: tabSet('inbound') },
+        missingCount ? { title: missingCount + ' products are missing dimensions or HS codes', sub: 'Needed for customs quotes and space planning.', cta: 'Fix', onClick: tabSet('products') } : null,
+        s.invoiceUp ? null : { title: 'Upload the commercial invoice for SHP-2422', sub: 'Customs is holding 1 200 units at Warsaw airport.', cta: 'Upload', onClick: () => this.setState({ tab: 'imports', ship: 'SHP-2422' }) },
+        { title: 'LH-104 Ceramic mug set runs out in 4 days', sub: 'Next inbound SHP-2417 lands 14 Oct.', cta: 'Plan reorder', onClick: tabSet('inventory') },
+        { title: 'Approve the lumahome.pl homepage', sub: 'The draft is ready for your review.', cta: 'Review', onClick: tabSet('growth') }
+      ].filter(Boolean),
+      bars: bars.map((v, i) => ({ h: Math.round((v / bmax) * 100) + '%', d: days[i], bg: i === bars.length - 1 ? '#E39A2B' : '#0B0C0E' })),
+      shipRows,
+      sel: { ref: cur.id + ' · ' + cur.ref, from: cur.from, mode: cur.mode, units: cur.units, eta: cur.eta, flag: cur.flag && !s.invoiceUp },
+      selSteps, selDocs, selCost, trk, trkEvents,
+      trackRows: shipRows.map((r) => Object.assign({}, r, { onClick: () => this.setState({ ship: r.id, tab: 'tracking', view: 'dash' }) })),
+      uploadInvoice: () => { this.setState({ invoiceUp: true }); this.showToast('Invoice received. Re-submitted to customs.'); },
+      bookShipment: () => this.showToast('Our freight team will send a quote within 2 hours.'),
+
+      spaceUsed: used + ' of ' + s.qty + ' ' + st.unit, spacePct: Math.round((used / s.qty) * 100) + '%',
+      invQ: s.invQ, onInvQ: (e) => this.setState({ invQ: e.target.value }), invRows, invEmpty: invRows.length === 0,
+      chanChips, orderRows,
+      retKpis: [{ label: 'Open returns', value: '23' }, { label: 'Resold', value: '81%' }, { label: 'Avg. restock time', value: '31 h' }],
+      retRows,
+      growthCards: [
+        { name: (s.domain || 'lumahome') + '.pl', status: s.storeOn ? 'Draft ready' : 'Not in plan', sub: 'Theme · ' + s.theme + ' · stock synced live', pillBg: 'rgba(227,154,43,0.18)', pillFg: '#8A5A12', stats: [{ v: '4 812', l: 'Visitors · 30 d' }, { v: '2.4%', l: 'Conversion' }, { v: '163k zł', l: 'Revenue' }], cta: 'Open editor', onClick: () => this.showToast('Opening the storefront editor…') },
+        { name: 'TikTok Shop', status: s.tt === 'off' ? 'Off' : 'Live', sub: s.tt === 'managed' ? 'Managed by 2ACE' : 'Setup only', pillBg: 'rgba(47,125,85,0.12)', pillFg: '#2F7D55', stats: [{ v: '90k zł', l: 'GMV · 30 d' }, { v: '612', l: 'Orders' }, { v: '38', l: 'Creators' }], cta: 'View campaigns', onClick: () => this.showToast('Campaign report sent to your inbox.') },
+        { name: 'Meta Business', status: s.meta === 'off' ? 'Off' : 'Live', sub: 'Facebook + Instagram shops', pillBg: 'rgba(47,125,85,0.12)', pillFg: '#2F7D55', stats: [{ v: '3.6×', l: 'ROAS' }, { v: this.fmt(Math.round(s.budget * 0.62)), l: 'Spent of ' + this.fmt(s.budget) }, { v: '1.9%', l: 'CTR' }], cta: 'Adjust budget', onClick: () => this.setState({ view: 'build', step: 5 }) }
+      ],
+      hasToast: !!s.toast, toast: s.toast
+    });
+  }
+
+  extraVals(s, P, customer, cc, tabSet) {
+    const fld = (k) => (e) => this.setState({ [k]: e.target.value });
+    const bd = (bad) => bad ? '#B4442E' : 'rgba(11,12,14,0.2)';
+    const EU = ['PL', 'DE', 'CZ', 'SK', 'LT', 'NL', 'FR', 'IT', 'ES'];
+    const isPL = s.country === 'PL', isEU = EU.includes(s.country);
+    const net = P.monthly + P.once, vat = isPL ? Math.round(net * 0.23) : 0;
+    const vatLabel = isPL ? 'VAT 23%' : isEU ? 'Reverse charge, 0% VAT' : '0% VAT, outside the EU';
+    const vatNote = isPL ? 'Polish company, so 23% VAT is added to the invoice.' : isEU ? 'EU company with a VAT number: you account for the VAT in ' + cc.name + '. We check your number in VIES.' : 'Invoiced without Polish VAT. Import VAT on your goods is handled per shipment.';
+    const emailOk = /.+@.+\..+/.test(s.acctEmail || '');
+    const pwOk = (s.pw || '').length >= 8;
+    const cardOk = s.cardNo.replace(/\s/g, '').length >= 15 && /^\d{2}\s?\/\s?\d{2}$/.test(s.cardExp.trim()) && s.cardCvc.trim().length >= 3;
+    const t = s.coTried;
+    const errs = [
+      !(s.google || (emailOk && pwOk)) ? 'Add a valid email and a password of at least 8 characters, or continue with Google.' : '',
+      !(s.accept && s.signName.trim().length > 2) ? 'Accept the agreement and type your full name to sign.' : '',
+      s.payMethod === 'card' && !cardOk ? 'Check the card number, expiry (MM / YY) and CVC.' : ''
+    ];
+    const coNext = () => {
+      if (errs[s.checkout]) { this.setState({ coTried: true }); return; }
+      if (s.checkout < 2) { this.setState({ checkout: s.checkout + 1, coTried: false }); window.scrollTo(0, 0); return; }
+      if (s.paying) return;
+      this.setState({ paying: true });
+      clearTimeout(this.payT);
+      this.payT = setTimeout(() => {
+        this.setState({ paying: false, activated: true, view: 'dash', tab: 'inbound' });
+        window.scrollTo(0, 0);
+        this.showToast(s.payMethod === 'card' ? 'Payment received. Your plan is live.' : 'Pro-forma sent. Your plan goes live when the transfer lands.');
+      }, 1200);
+    };
+    const sel = (on) => this.sel(on);
+
+    const DIY = [['.pl storefront, hosting and care', 199], ['TikTok Shop, managed', 1890], ['Meta Business, managed', 1690]];
+    const diy = DIY.reduce((a, r) => a + r[1], 0), comm = s.mkSales * 0.15;
+    // inbound
+    const days = [];
+    const d0 = new Date(2026, 9, 1);
+    for (let i = 0; days.length < 10; i++) {
+      const d = new Date(d0.getTime() + i * 86400000);
+      if (d.getDay() === 0 || d.getDay() === 6) continue;
+      days.push(d);
+    }
+    const DN = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const lab = (d) => DN[d.getDay()] + ' ' + String(d.getDate()).padStart(2, '0') + ' Oct';
+    const taken = s.inbounds.map((b) => b.slotKey);
+    const slotDays = days.map((d, di) => ({
+      label: lab(d),
+      times: ['08:00', '11:00', '14:00'].map((tm, ti) => {
+        const key = di + '-' + ti, full = (di * 3 + ti) % 4 === 1 || taken.includes(key), on = s.ibSlot === key;
+        return { time: tm, cursor: full ? 'not-allowed' : 'pointer', deco: full ? 'line-through' : 'none',
+          bg: on ? '#0B0C0E' : full ? '#F0EEEA' : '#FFFFFF', fg: on ? '#F5F4F1' : full ? 'rgba(11,12,14,0.35)' : '#0B0C0E',
+          bd: on ? '#0B0C0E' : 'rgba(11,12,14,0.14)', onClick: full ? () => {} : () => this.setState({ ibSlot: key, ibDone: false }) };
+      })
+    }));
+    const slotLabel = (key) => { if (!key) return ''; const [di, ti] = key.split('-').map(Number); return lab(days[di]) + ', ' + ['08:00', '11:00', '14:00'][ti]; };
+    const totalUnits = Object.values(s.ibQty).reduce((a, v) => a + (Number(v) || 0), 0);
+    const skuCount = Object.values(s.ibQty).filter((v) => Number(v) > 0).length;
+    const ibErr = !s.ibSlot ? 'Pick a dock slot.' : !(Number(s.ibCount) > 0) ? 'Tell us how many ' + s.ibUnits + ' are coming.' : !totalUnits ? 'Add units for at least one product.' : '';
+    const unitWord = { pallets: 'pallets', cartons: 'cartons', container: 'container' }[s.ibUnits];
+    const bookInbound = () => {
+      if (ibErr) { this.setState({ ibTried: true }); return; }
+      const id = 'ASN-' + (10031 + s.inbounds.length);
+      const rec = { id, slotKey: s.ibSlot, slot: slotLabel(s.ibSlot), summary: s.ibCount + ' ' + unitWord + ' · ' + this.num(totalUnits) + ' units · ' + skuCount + ' SKUs' + (s.ibCarrier ? ' · ' + s.ibCarrier : '') };
+      this.setState({ inbounds: [rec].concat(s.inbounds), ibDone: true, ibSlot: null, ibQty: {}, ibTried: false, ibRef: '', ibCarrier: '' });
+      window.scrollTo(0, 0);
+      this.showToast(id + ' booked. Labels and ASN sent to ' + (s.acctEmail || s.email || 'your email') + '.');
+    };
+
+    // products
+    const pp = (p) => (p.l && p.w && p.h) ? Math.floor((120 * 80 * 150 * 0.85) / (p.l * p.w * p.h)) : 0;
+    const swatches = ['#EAE3D6', '#E3D9CF', '#E9E6E1', '#DCD6CC', '#E6E1D8'];
+    const prodRows = s.products.map((p, i) => {
+      const dimsOk = p.l && p.w && p.h, ok = dimsOk && p.hs;
+      return { sku: p.sku, name: p.name, ean: p.ean || '—', kg: p.kg ? String(p.kg) : '—',
+        dims: dimsOk ? p.l + '×' + p.w + '×' + p.h : 'Missing', dimFg: dimsOk ? '#0B0C0E' : '#B4442E',
+        hs: p.hs || 'Missing', hsFg: p.hs ? '#0B0C0E' : '#B4442E', perPallet: dimsOk ? this.num(pp(p)) : '—',
+        status: ok ? 'Complete' : 'Missing', pillBg: ok ? 'rgba(47,125,85,0.12)' : 'rgba(180,68,46,0.12)', pillFg: ok ? '#2F7D55' : '#B4442E',
+        ini: p.name.split(/[\s,]+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase(), swatch: swatches[i % swatches.length] };
+    });
+    const f = s.pf, ft = s.pfTried;
+    const pfBad = { name: !f.name.trim(), sku: !f.sku.trim() || s.products.some((p) => p.sku.toLowerCase() === f.sku.trim().toLowerCase()), ean: false,
+      l: !(Number(f.l) > 0), w: !(Number(f.w) > 0), h: !(Number(f.h) > 0), kg: false, hs: false, origin: false };
+    const pfErr = Object.values(pfBad).some(Boolean);
+    const pfOn = {}, pfBd = {};
+    Object.keys(f).forEach((k) => { pfOn[k] = (e) => { const v = e.target.value; this.setState((st) => ({ pf: Object.assign({}, st.pf, { [k]: v }) })); }; pfBd[k] = bd(ft && pfBad[k]); });
+    const parseCsv = (text) => {
+      const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean);
+      if (lines.length < 2) return { err: 'That file has no product rows.' };
+      const head = lines[0].split(/[;,]/).map((x) => x.trim().toLowerCase());
+      const ix = (n) => head.indexOf(n);
+      if (ix('sku') < 0 || ix('name') < 0) return { err: 'The first row needs at least "sku" and "name" columns. Download the template.' };
+      const out = [];
+      lines.slice(1).forEach((l) => {
+        const c = l.split(/[;,]/).map((x) => x.trim().replace(/^"|"$/g, ''));
+        const g = (n) => ix(n) >= 0 ? c[ix(n)] || '' : '';
+        if (!g('sku') || !g('name')) return;
+        out.push({ sku: g('sku'), name: g('name'), ean: g('ean'), l: Number(g('length_cm')) || 0, w: Number(g('width_cm')) || 0, h: Number(g('height_cm')) || 0, kg: Number(g('weight_kg')) || 0, hs: g('hs_code'), origin: g('origin') });
+      });
+      return { rows: out };
+    };
+
+    // team
+    const ROLES = [
+      { name: 'Owner', desc: 'Everything, including billing, contract and team.' },
+      { name: 'Operations', desc: 'Imports, inbound bookings, inventory, orders and returns. No billing.' },
+      { name: 'Finance', desc: 'Invoices, payment methods and landed-cost reports. Read-only operations.' },
+      { name: 'Marketing', desc: 'Storefront, TikTok Shop and Meta dashboards, plus stock levels.' }
+    ];
+    const invOk = /.+@.+\..+/.test(s.invEmail);
+    const owner = s.acctEmail || s.email || 'owner@yourcompany.com';
+    const avs = ['#E39A2B', '#D9D2C3', '#C9D6CE', '#E3D0C4'];
+    const teamRows = [{ email: owner, role: 'Owner', state: 'You · account owner', rm: false }].concat(s.team.map((m) => Object.assign({ rm: true }, m))).map((m, i) => ({
+      email: m.email, role: m.role, state: m.state, ini: m.email.slice(0, 2).toUpperCase(), av: avs[i % avs.length], rmVis: m.rm ? 'visible' : 'hidden',
+      onRemove: () => this.setState((st) => ({ team: st.team.filter((x) => x.email !== m.email) }))
+    }));
+
+    return {
+      coTitle: ['Create your account', 'Sign the agreement', 'Pay and go live'][s.checkout],
+      coSteps: ['Account', 'Agreement', 'Payment'].map((label, i) => ({ n: '0' + (i + 1), label,
+        bar: i === s.checkout ? '#E39A2B' : i < s.checkout ? '#0B0C0E' : 'rgba(11,12,14,0.14)', fg: i <= s.checkout ? '#0B0C0E' : 'rgba(11,12,14,0.45)',
+        onClick: () => { if (i <= s.checkout) this.setState({ checkout: i, coTried: false }); } })),
+      co0: s.checkout === 0, co1: s.checkout === 1, co2: s.checkout === 2,
+      acctEmail: s.acctEmail, pw: s.pw, onAcctEmail: fld('acctEmail'), onPw: fld('pw'),
+      acctEmailBd: bd(t && !s.google && !emailOk), pwBd: bd(t && !s.google && !pwOk),
+      pwHint: s.google ? 'Signed in with Google as ' + (s.acctEmail || 'your Google account') + '.' : pwOk ? 'Strong enough.' : 'At least 8 characters.',
+      pwHintColor: s.google || pwOk ? '#2F7D55' : 'rgba(11,12,14,0.55)',
+      onGoogle: () => { this.setState({ google: true, acctEmail: s.acctEmail || s.email || 'you@yourcompany.com', checkout: 1, coTried: false }); this.showToast('Connected with Google.'); },
+      terms: [
+        { k: 'Term', v: 'Monthly, rolling. Cancel or resize with 30 days notice.' },
+        { k: 'Billing', v: 'Space billed on reserved m² in advance on the 1st. Add-ons from the day they start.' },
+        { k: 'Service levels', v: 'Orders before 15:00 ship the same day. Returns graded within 48 h. 99.5% stock accuracy.' },
+        { k: 'Insurance', v: 'Goods on our floor insured at declared purchase value.' },
+        { k: 'Customs', v: 'We act as your indirect customs representative for imports into Poland.' },
+        { k: 'Law', v: 'Polish law. Disputes settled in Warsaw.' }
+      ],
+      openTerms: () => this.showToast('The full agreement PDF opens here.'),
+      toggleAccept: () => this.setState({ accept: !s.accept }),
+      acceptTick: s.accept ? '✓' : '', acceptBg: s.accept ? '#E39A2B' : 'transparent', acceptBd: t && !s.accept ? '#B4442E' : '#0B0C0E',
+      signName: s.signName, onSignName: fld('signName'), signBd: bd(t && s.checkout === 1 && s.signName.trim().length <= 2),
+      companyName: s.company.trim() || customer, countryName: cc.name, vatShow: s.vat || '—',
+      payOpts: [['card', 'Card', 'Visa, Mastercard, Amex. Goes live immediately.'], ['bank', 'Bank transfer', 'Pay the pro-forma. Live once the transfer lands.']].map(([k, name, desc]) => Object.assign({ name, desc, onClick: () => this.setState({ payMethod: k, coTried: false }) }, sel(s.payMethod === k))),
+      payCard: s.payMethod === 'card', payBank: s.payMethod === 'bank',
+      cardNo: s.cardNo, cardExp: s.cardExp, cardCvc: s.cardCvc,
+      onCardNo: (e) => this.setState({ cardNo: e.target.value.replace(/[^\d]/g, '').slice(0, 19).replace(/(\d{4})(?=\d)/g, '$1 ') }),
+      onCardExp: (e) => { let v = e.target.value.replace(/[^\d]/g, '').slice(0, 4); if (v.length > 2) v = v.slice(0, 2) + ' / ' + v.slice(2); this.setState({ cardExp: v }); },
+      onCardCvc: (e) => this.setState({ cardCvc: e.target.value.replace(/[^\d]/g, '').slice(0, 4) }),
+      cardNoBd: bd(t && s.cardNo.replace(/\s/g, '').length < 15), cardExpBd: bd(t && !/^\d{2}\s?\/\s?\d{2}$/.test(s.cardExp.trim())), cardCvcBd: bd(t && s.cardCvc.length < 3),
+      pfNo: 'PF/2026/10/0142',
+      bankRows: [{ k: 'Recipient', v: '2ACE sp. z o.o.' }, { k: 'IBAN (PLN)', v: 'PL00 0000 0000 0000 0000 0000 0000' }, { k: 'SWIFT', v: 'XXXXPLPW' }, { k: 'Reference', v: 'PF/2026/10/0142' }],
+      vatLabel, vatNote,
+      invLines: P.lines.filter((l) => l.v || l.once || l.quote).map((l) => ({ label: l.label, amount: l.quote ? 'On quote' : this.fmt((l.v || 0) + (l.once || 0)) })),
+      netFmt: this.fmt(net), vatFmt: this.fmt(vat), grossFmt: this.fmt(net + vat),
+      coErr: t && !!errs[s.checkout], coErrMsg: errs[s.checkout],
+      coBack: () => { if (s.checkout === 0) this.setState({ view: 'build', step: 7 }); else this.setState({ checkout: s.checkout - 1, coTried: false }); window.scrollTo(0, 0); },
+      coNext, coCta: s.checkout < 2 ? 'Continue' : s.paying ? 'Processing…' : s.payMethod === 'card' ? 'Pay ' + this.fmt(net + vat) + ' and go live' : 'Send me the pro-forma',
+
+      tabMarket: s.tab === 'market', mkOn: s.marketOn, mkOff: !s.marketOn,
+      mkSales: s.mkSales, onMkSales: (e) => this.setState({ mkSales: Number(e.target.value) }),
+      diyRows: DIY.map(([k, v]) => ({ k, v: this.fmt(v) })), diyFmt: this.fmt(diy),
+      mkIncl: ['Store, checkout and payments', 'Listings, photos and product copy', 'Marketing and promotions', 'No setup fee'].map((t) => ({ t })), setupFmt: this.fmt(2950 + 1690 + 1190),
+      mkRateLabel: '15% of ' + this.fmt(s.mkSales), mkCommFmt: this.fmt(comm), mkSalesFmt: this.fmt(s.mkSales),
+      mkSaveFmt: this.fmt(Math.max(0, diy - comm)), mkSavePct: Math.max(0, Math.round((1 - comm / diy) * 100)) + '% saved',
+      mkAddLabel: s.marketOn ? 'Added ✓ · click to remove' : 'Add 2ACE Market', mkAddBg: s.marketOn ? '#0B0C0E' : '#E39A2B', mkAddFg: s.marketOn ? '#F5F4F1' : '#0B0C0E',
+      mkAdd: () => { if (s.marketOn) { this.setState({ marketOn: false }); return; } this.setState({ marketOn: true, step: 7 }); window.scrollTo(0, 0); },
+      mkJoin: () => { this.setState({ marketOn: true }); this.showToast('Welcome to 2ACE Market. We start listing your products today.'); },
+      mkStatusLine: s.marketOn ? 'Live · we handle listing, marketing and customer care · 15% commission' : 'Not joined yet',
+      mkKpis: [{ l: 'Market sales · 30 d', v: '46 180 zł', s: '+22% vs last month' }, { l: 'Orders', v: '392', s: 'Avg. basket 118 zł' }, { l: 'Commission', v: this.fmt(46180 * 0.15), s: '15% of sales' }, { l: 'Tickets solved', v: '57', s: 'Median reply 2 min' }],
+      mkListings: s.products.map((p, i) => {
+        const st = !p.hs || !(p.l && p.w && p.h) ? ['Needs data', 'rgba(180,68,46,0.12)', '#B4442E'] : i === 5 ? ['In review', 'rgba(227,154,43,0.18)', '#8A5A12'] : ['Live', 'rgba(47,125,85,0.12)', '#2F7D55'];
+        return { sku: p.sku, name: p.name, sold: st[0] === 'Live' ? (40 + i * 13) + ' sold' : '—', status: st[0], pillBg: st[1], pillFg: st[2] };
+      }),
+      mkTickets: [
+        { t: 'Where is my order?', d: 'Answered with InPost tracking · #M-20931', st: 'Solved · 3 min' },
+        { t: 'Mug arrived chipped', d: 'Replacement sent, reject photo logged', st: 'Solved · 1 h' },
+        { t: 'Throw colour question', d: 'Answered with product photos', st: 'Solved · 6 min' },
+        { t: 'Invoice with NIP', d: 'VAT invoice re-issued to buyer', st: 'Solved · 12 min' }
+      ],
+      tabInbound: s.tab === 'inbound', tabProducts: s.tab === 'products', tabTeam: s.tab === 'team',
+      slotDays, ibUnits: s.ibUnits, onIbUnits: fld('ibUnits'), ibCount: s.ibCount, onIbCount: fld('ibCount'),
+      ibCarrier: s.ibCarrier, onIbCarrier: fld('ibCarrier'), ibRef: s.ibRef, onIbRef: fld('ibRef'),
+      ibCountBd: bd(s.ibTried && !(Number(s.ibCount) > 0)), plainBd: 'rgba(11,12,14,0.2)',
+      ibLines: s.products.map((p) => ({ sku: p.sku, name: p.name, qty: s.ibQty[p.sku] || '', onQty: (e) => { const v = e.target.value; this.setState((st) => ({ ibQty: Object.assign({}, st.ibQty, { [p.sku]: v }) })); } })),
+      ibMsg: s.ibTried && ibErr ? ibErr : s.ibSlot ? slotLabel(s.ibSlot) + ' · ' + this.num(totalUnits) + ' units across ' + skuCount + ' SKUs' : 'Choose a slot to continue.',
+      ibMsgColor: s.ibTried && ibErr ? '#B4442E' : 'rgba(11,12,14,0.65)',
+      bookInbound, ibDone: s.ibDone && s.inbounds.length > 0, lastIb: s.inbounds[0] || { id: '', slot: '', summary: '' },
+      printLabels: () => this.showToast('Pallet labels PDF generated for ' + (s.inbounds[0] ? s.inbounds[0].id : '') + '.'),
+      newInbound: () => this.setState({ ibDone: false }),
+      hasInbounds: s.inbounds.length > 0, inboundRows: s.inbounds,
+
+      prodRows, missingCount: s.products.filter((p) => !p.hs || !(p.l && p.w && p.h)).length,
+      hasMissing: s.products.some((p) => !p.hs || !(p.l && p.w && p.h)),
+      showAdd: s.showAdd, addLabel: s.showAdd ? 'Close' : 'Add product', toggleAdd: () => this.setState({ showAdd: !s.showAdd, pfTried: false }),
+      pf: f, pfOn, pfBd, pfMsg: ft && pfErr ? 'Fill in name, a unique SKU and all three dimensions.' : 'Units per pallet is estimated from the dimensions (EUR pallet, 1.5 m high).',
+      pfMsgColor: ft && pfErr ? '#B4442E' : 'rgba(11,12,14,0.6)',
+      saveProduct: () => {
+        if (pfErr) { this.setState({ pfTried: true }); return; }
+        const np = { sku: f.sku.trim().toUpperCase(), name: f.name.trim(), ean: f.ean.trim(), l: Number(f.l), w: Number(f.w), h: Number(f.h), kg: Number(f.kg) || 0, hs: f.hs.trim(), origin: f.origin.trim().toUpperCase() };
+        this.setState({ products: s.products.concat([np]), showAdd: false, pfTried: false, pf: { name: '', sku: '', ean: '', l: '', w: '', h: '', kg: '', hs: '', origin: '' } });
+        this.showToast(np.sku + ' added · ' + this.num(pp(np)) + ' units per pallet.');
+      },
+      onCsv: (e) => {
+        const file = e.target.files && e.target.files[0]; const input = e.target;
+        if (!file) return;
+        file.text().then((txt) => {
+          const r = parseCsv(txt);
+          if (r.err) { this.setState({ csvMsg: r.err, csvOk: false }); input.value = ''; return; }
+          this.setState((st) => {
+            const bySku = {}; st.products.forEach((p) => { bySku[p.sku] = p; });
+            let added = 0, updated = 0;
+            r.rows.forEach((p) => { if (bySku[p.sku]) { updated++; bySku[p.sku] = Object.assign({}, bySku[p.sku], p); } else { added++; bySku[p.sku] = p; } });
+            return { products: Object.values(bySku), csvOk: true, csvMsg: 'Imported ' + file.name + ': ' + added + ' new, ' + updated + ' updated.' };
+          });
+          input.value = '';
+        });
+      },
+      dlTemplate: () => {
+        const csv = 'sku,name,ean,length_cm,width_cm,height_cm,weight_kg,hs_code,origin\nLH-150,Linen throw Olive,5901234150017,40,30,8,1.1,6301.90,CN\n';
+        const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' })); a.download = '2ace-products-template.csv'; a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      },
+      csvShow: !!s.csvMsg, csvMsg: s.csvMsg, csvBg: s.csvOk ? 'rgba(47,125,85,0.1)' : 'rgba(180,68,46,0.1)', csvFg: s.csvOk ? '#2F7D55' : '#B4442E',
+
+      roleOpts: ROLES.filter((r) => r.name !== 'Owner'), invRole: s.invRole, onInvRole: fld('invRole'),
+      invRoleDesc: (ROLES.find((r) => r.name === s.invRole) || ROLES[1]).desc,
+      invEmail: s.invEmail, onInvEmail: fld('invEmail'), invBd: bd(s.invTried && !invOk),
+      sendInvite: () => {
+        if (!invOk || s.team.some((m) => m.email === s.invEmail.trim())) { this.setState({ invTried: true }); if (invOk) this.showToast('Already invited.'); return; }
+        this.setState({ team: s.team.concat([{ email: s.invEmail.trim(), role: s.invRole, state: 'Invite sent · pending' }]), invEmail: '', invTried: false });
+        this.showToast('Invite sent to ' + s.invEmail.trim() + '.');
+      },
+      teamRows
+    };
+  }
+
+  ships() {
+    return [
+      { id: 'SHP-2422', carrier: 'Air cargo · LH Cargo', api: 'Airline API', trk: 'AWB 176-4410 2931', now: 'Warsaw WAW', ev: [['29 Sep 14:20', 'Held by customs · invoice required', 'Warsaw Chopin WAW, PL', 1], ['29 Sep 06:05', 'Arrived, handed to customs broker', 'Warsaw Chopin WAW, PL'], ['28 Sep 21:40', 'Departed transit hub', 'Frankfurt FRA, DE'], ['26 Sep 02:15', 'Departed on flight LH8401', 'Shenzhen SZX, CN'], ['22 Sep 10:30', 'Picked up from supplier', 'Shenzhen, CN']], next: [['30 Sep', 'Customs documents under review', 'Warsaw Chopin WAW, PL']], from: 'Shenzhen, CN', mode: 'Air', ref: 'AWB 176-4410 2931', units: '1 200 units · 4 SKUs', eta: '03 Oct', stage: 4, status: 'Customs hold · invoice needed', flag: true, dates: ['18 Sep', '22 Sep', '26 Sep', '28 Sep', '29 Sep'], docs: [['Commercial invoice', false], ['Packing list', true], ['Air waybill', true], ['CE declaration', true]], hs: '6912.00', value: 79000, duty: 0.07, freight: 13300 },
+      { id: 'SHP-2417', carrier: 'Ocean · Maersk', api: 'Carrier API', trk: 'MSKU 481 220 7 · Maersk Kinloss', now: 'Red Sea', ev: [['29 Sep 08:00', 'Vessel position · 14.2 kn, on schedule', 'Red Sea, 18.4°N 39.8°E'], ['21 Sep 17:10', 'Transshipment completed', 'Colombo, LK'], ['06 Sep 22:00', 'Vessel departed', 'Ningbo-Zhoushan, CN'], ['02 Sep 09:30', 'Container gated in at terminal', 'Ningbo-Zhoushan, CN']], next: [['30 Sep 11:45', 'Suez Canal transit started', 'Suez, EG']], from: 'Ningbo, CN', mode: 'Sea · LCL', ref: 'MSKU 481 220 7', units: '4 800 units · 12 SKUs', eta: '14 Oct', stage: 2, status: 'At sea · on schedule', flag: false, dates: ['29 Aug', '02 Sep', '06 Sep'], docs: [['Commercial invoice', true], ['Packing list', true], ['Bill of lading', true], ['Certificate of origin', true]], hs: '6302.31', value: 180000, duty: 0.12, freight: 20000 },
+      { id: 'SHP-2425', carrier: 'Road · Mars Logistics', api: 'GPS telematics', trk: 'TIR 34 KL 8812', now: 'Bulgaria', ev: [['30 Sep 09:10', 'Crossed into the EU', 'Kapitan Andreevo border, BG'], ['29 Sep 16:00', 'Loaded and departed', 'Istanbul, TR']], next: [['30 Sep 12:30', 'GPS position · 78 km/h', 'Plovdiv, BG']], from: 'Istanbul, TR', mode: 'Road', ref: 'TIR 34 KL 8812', units: '900 units · 3 SKUs', eta: '09 Oct', stage: 1, status: 'Picked up from supplier', flag: false, dates: ['25 Sep', '29 Sep'], docs: [['Commercial invoice', true], ['Packing list', true], ['A.TR certificate', true], ['CMR', true]], hs: '6304.92', value: 41700, duty: 0, freight: 5400 },
+      { id: 'SHP-2409', carrier: 'Ocean · CMA CGM', api: 'Carrier API', trk: 'CMAU 702 118 4', now: 'Delivered', ev: [['22 Sep 13:30', 'Received and stocked · 6 400 units', '2ACE hub, PL', 2], ['19 Sep 08:15', 'Container delivered to 2ACE', 'Gdańsk DCT, PL'], ['15 Sep 04:40', 'Discharged from vessel', 'Gdańsk DCT, PL'], ['09 Aug 20:00', 'Vessel departed', 'Cat Lai, VN']], next: [], from: 'Ho Chi Minh, VN', mode: 'Sea · FCL', ref: 'CMAU 702 118 4', units: '6 400 units · 9 SKUs', eta: 'Stocked 22 Sep', stage: 6, status: 'Received & stocked', flag: false, dates: ['02 Aug', '06 Aug', '09 Aug', '12 Sep', '15 Sep', '19 Sep', '22 Sep'], docs: [['Commercial invoice', true], ['Packing list', true], ['Bill of lading', true], ['EUR.1 (EVFTA)', true]], hs: '4419.19', value: 225000, duty: 0, freight: 25400 }
+    ];
+  }
+
+  inventory() {
+    return [
+      { sku: 'LH-101', name: 'Linen throw, Sand', onHand: 2140, reserved: 96, inbound: 1200, cover: 38 },
+      { sku: 'LH-102', name: 'Linen throw, Clay', onHand: 1680, reserved: 71, inbound: 1200, cover: 31 },
+      { sku: 'LH-104', name: 'Ceramic mug set', onHand: 312, reserved: 58, inbound: 1800, cover: 4 },
+      { sku: 'LH-110', name: 'Oak serving board', onHand: 940, reserved: 22, inbound: 0, cover: 27 },
+      { sku: 'LH-115', name: 'Glass carafe', onHand: 520, reserved: 41, inbound: 600, cover: 8 },
+      { sku: 'LH-120', name: 'Wool cushion cover', onHand: 3310, reserved: 104, inbound: 0, cover: 46 },
+      { sku: 'LH-131', name: 'Candle, Fig', onHand: 6420, reserved: 188, inbound: 900, cover: 52 },
+      { sku: 'LH-140', name: 'Table runner, Natural', onHand: 2918, reserved: 63, inbound: 1200, cover: 40 }
+    ];
+  }
+
+  orderData() {
+    return [
+      ['#LH-10492', 'lumahome.pl', 'Anna K. · Kraków', '359 zł', '10:42', 'Picking'],
+      ['#LH-10491', 'TikTok Shop', 'Marta W. · Gdańsk', '125 zł', '10:38', 'Picking'],
+      ['#LH-10490', 'Instagram', 'Jonas B. · Berlin', '479 zł', '10:21', 'Packed'],
+      ['#LH-10489', 'lumahome.pl', 'Petra N. · Brno', '239 zł', '09:57', 'Packed'],
+      ['#LH-10488', 'TikTok Shop', 'Kasia L. · Warszawa', '125 zł', '09:44', 'Shipped'],
+      ['#LH-10487', 'Facebook', 'Tomasz R. · Poznań', '305 zł', '09:12', 'Shipped'],
+      ['#LH-10486', 'lumahome.pl', 'Lena S. · Wien', '635 zł', '08:50', 'Shipped'],
+      ['#LH-10471', 'Instagram', 'Ola M. · Wrocław', '275 zł', 'Yesterday', 'Delivered']
+    ];
+  }
+}
+</script>
+</body>
+</html>
