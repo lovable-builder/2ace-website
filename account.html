@@ -34,6 +34,16 @@
   .avatar { flex: none; display: grid; place-items: center; width: 72px; height: 72px; border-radius: 50%; background: var(--amber) center / cover no-repeat; color: var(--ink); font-family: Archivo, sans-serif; font-weight: 800; font-size: 24px; border: 1px solid rgba(11,12,14,0.12); }
   .logo-actions { display: flex; gap: 10px; flex-wrap: wrap; }
   .ghost { border: 1px solid rgba(11,12,14,0.25); background: none; cursor: pointer; padding: 14px 18px; border-radius: 2px; font-family: 'IBM Plex Mono', monospace; font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink); }
+  .inv-list { display: grid; margin: 12px 0 8px; }
+  .inv { display: grid; grid-template-columns: 1fr auto; gap: 4px 14px; align-items: center; padding: 13px 0; border-top: 1px solid rgba(11,12,14,0.1); font-size: 14px; }
+  .inv:last-child { border-bottom: 1px solid rgba(11,12,14,0.1); }
+  .inv b { font-weight: 600; }
+  .inv small { color: rgba(11,12,14,0.6); font-size: 13px; }
+  .inv a { color: #A8701A; text-decoration: none; margin-left: 12px; font-size: 13px; }
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 10px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; }
+  .pill.paid { background: rgba(47,125,85,0.14); color: #2F7D55; }
+  .pill.open { background: rgba(227,154,43,0.2); color: #8A5A10; }
+  .pill.void { background: rgba(11,12,14,0.08); color: rgba(11,12,14,0.6); }
   .msg { min-height: 20px; margin: 0; font-size: 14px; }
   .msg.err { color: var(--err); } .msg.ok { color: #2F7D55; }
   .note { margin: 0; font-size: 13px; color: rgba(11,12,14,0.6); }
@@ -91,6 +101,14 @@
     </form>
   </section>
 
+  <section id="billing" hidden>
+    <h2>Billing and invoices</h2>
+    <p class="note" id="sub-line"></p>
+    <div id="inv-list" class="inv-list"></div>
+    <p class="msg" id="m-bill" role="status" aria-live="polite"></p>
+    <button class="ghost" type="button" id="portal">Manage payment method and subscription</button>
+  </section>
+
   <section>
     <h2>Password</h2>
     <form id="f-pw" novalidate>
@@ -104,7 +122,8 @@
 <script src="countries.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-  const sb = window.supabase.createClient('https://hvbcmilcjragrcezwzlo.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2YmNtaWxjanJhZ3JjZXp3emxvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEwNjMyODMsImV4cCI6MjEwNjYzOTI4M30.Q6TlQnDToz2oPr4FXNgKdgdrZT3ojUToCroLRVQGRsw');
+  const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2YmNtaWxjanJhZ3JjZXp3emxvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEwNjMyODMsImV4cCI6MjEwNjYzOTI4M30.Q6TlQnDToz2oPr4FXNgKdgdrZT3ojUToCroLRVQGRsw';
+  const sb = window.supabase.createClient('https://hvbcmilcjragrcezwzlo.supabase.co', ANON);
   const $ = (id) => document.getElementById(id);
   const say = (id, text, kind) => { const el = $(id); el.textContent = text; el.className = 'msg ' + (kind || ''); };
   const nz = (v) => { v = v.trim(); return v === '' ? null : v; };
@@ -238,7 +257,47 @@
     $('n-pw').value = ''; say('m-pw', 'Password changed.', 'ok');
   });
 
-  load();
+  const FN = 'https://hvbcmilcjragrcezwzlo.supabase.co/functions/v1/';
+  async function callFn(name) {
+    const { data } = await sb.auth.getSession();
+    const r = await fetch(FN + name, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + data.session.access_token, apikey: ANON } , body: '{}' });
+    const out = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(out.error || 'Request failed');
+    return out;
+  }
+  const money = (n, cur) => (n / 100).toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + cur.toUpperCase();
+  const day = (t) => new Date(t * 1000).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+
+  async function loadBilling() {
+    if (!orgId || !canEditOrg) return;
+    $('billing').hidden = false;
+    $('inv-list').textContent = 'Loading invoices...';
+    try {
+      const out = await callFn('my-invoices');
+      const sub = out.subscription;
+      $('sub-line').textContent = sub ? 'Subscription: ' + sub.status + (sub.current_period_end ? (sub.cancel_at_period_end ? ' · ends ' : ' · renews ') + day(sub.current_period_end) : '') : 'No subscription yet. Build a plan to get started.';
+      const list = $('inv-list'); list.textContent = '';
+      if (!out.invoices.length) { list.appendChild(el('p', 'note', 'No invoices yet. They appear here after your first payment.')); return; }
+      out.invoices.forEach((i) => {
+        const row = el('div', 'inv');
+        const left = el('div'); left.appendChild(el('b', '', i.number || 'Invoice')); left.appendChild(el('br'));
+        left.appendChild(el('small', '', day(i.created) + ' · ' + money(i.total, i.currency)));
+        const right = el('div'); const label = i.status === 'paid' ? 'paid' : i.status === 'open' ? 'open' : i.status === 'void' ? 'void' : i.status;
+        right.appendChild(el('span', 'pill ' + (['paid', 'open', 'void'].includes(label) ? label : 'void'), label));
+        if (i.hosted_invoice_url) { const a = el('a', '', 'View'); a.href = i.hosted_invoice_url; a.target = '_blank'; a.rel = 'noopener'; right.appendChild(a); }
+        if (i.invoice_pdf) { const a = el('a', '', 'PDF'); a.href = i.invoice_pdf; a.target = '_blank'; a.rel = 'noopener'; right.appendChild(a); }
+        row.appendChild(left); row.appendChild(right); list.appendChild(row);
+      });
+    } catch (e) { $('inv-list').textContent = ''; say('m-bill', 'Could not load invoices: ' + e.message, 'err'); }
+  }
+  $('portal').addEventListener('click', async () => {
+    say('m-bill', 'Opening billing portal...');
+    try { const out = await callFn('billing-portal'); location.href = out.url; }
+    catch (e) { say('m-bill', e.message, 'err'); }
+  });
+
+  load().then(loadBilling);
 </script>
 </body>
 </html>

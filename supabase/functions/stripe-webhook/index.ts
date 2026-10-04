@@ -1,5 +1,6 @@
 import Stripe from 'npm:stripe';
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { sendEmail, layout, esc } from '../_shared/email.ts';
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!);
 const secret = Deno.env.get('STRIPE_WEBHOOK_SECRET')!;
@@ -65,6 +66,18 @@ Deno.serve(async (req) => {
         const inv = event.data.object as Stripe.Invoice & { subscription?: string | null };
         const subId = inv.subscription ?? (inv as unknown as { parent?: { subscription_details?: { subscription?: string } } }).parent?.subscription_details?.subscription;
         if (subId) await syncSub(await stripe.subscriptions.retrieve(subId));
+        if (inv.customer_email) {
+          const paid = event.type === 'invoice.paid';
+          const money = ((paid ? inv.amount_paid : inv.amount_due) / 100).toFixed(2) + ' ' + inv.currency.toUpperCase();
+          const link = inv.hosted_invoice_url ? `<p><a href="${esc(inv.hosted_invoice_url)}" style="color:#A8701A">View invoice${inv.invoice_pdf ? '' : ''}</a>${inv.invoice_pdf ? ` &middot; <a href="${esc(inv.invoice_pdf)}" style="color:#A8701A">Download PDF</a>` : ''}</p>` : '';
+          await sendEmail({
+            to: inv.customer_email,
+            subject: paid ? `Payment received: ${money}` : 'Payment failed: action needed',
+            html: layout(paid ? 'Payment received' : 'We could not take your payment',
+              paid ? `<p>Thank you. We received <b>${esc(money)}</b>${inv.number ? ` for invoice ${esc(inv.number)}` : ''}.</p>${link}`
+                   : `<p>Your payment of <b>${esc(money)}</b> did not go through. Please update your payment method in your account to keep your plan active.</p>${link}`),
+          });
+        }
         break;
       }
     }
