@@ -17,3 +17,13 @@ window.fillCountrySelect = function (sel, taxLabelEl, taxInput) {
   };
   sel.addEventListener('change', sync); sync();
 };
+
+// Polish voivodeships, spelled exactly as the registrar accepts them.
+window.PL_REGIONS = ['Dolnośląskie', 'Kujawsko-pomorskie', 'Lubelskie', 'Lubuskie', 'Łódzkie', 'Małopolskie', 'Mazowieckie', 'Opolskie', 'Podkarpackie', 'Podlaskie', 'Pomorskie', 'Śląskie', 'Świętokrzyskie', 'Warmińsko-mazurskie', 'Wielkopolskie', 'Zachodniopomorskie'];
+
+// Fills the voivodeship <select> and shows its <label> only while the country is Poland.
+window.bindRegion = function (countrySel, regionLabel, regionSel) {
+  regionSel.innerHTML = '<option value="">Select voivodeship</option>' + window.PL_REGIONS.map((r) => '<option value="' + r + '">' + r + '</option>').join('');
+  const sync = () => { regionLabel.hidden = countrySel.value !== 'PL'; if (regionLabel.hidden) regionSel.value = ''; };
+  countrySel.addEventListener('change', sync); sync();
+};

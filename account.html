@@ -89,13 +89,14 @@
       <p class="note" id="org-note" hidden></p>
       <label>Company name<input id="o-name" type="text" autocomplete="organization" required></label>
       <label>Country<select id="o-country" required></select></label>
+      <label id="o-regl" hidden>Voivodeship (województwo)<select id="o-region"></select></label>
       <label id="o-taxl">Tax / VAT number <input id="o-tax" type="text" autocomplete="off"></label>
       <label>Street and number<input id="o-addr" type="text" autocomplete="street-address"></label>
       <div class="two">
         <label>Postal code<input id="o-zip" type="text" autocomplete="postal-code"></label>
         <label>City<input id="o-city" type="text" autocomplete="address-level2"></label>
       </div>
-      <label>Company phone<input id="o-phone" type="tel"></label>
+      <label>Company phone (with country code, e.g. +48 600 100 200)<input id="o-phone" type="tel"></label>
       <button class="go" type="submit" id="org-save">Save company</button>
       <p class="msg" id="m-org" role="status" aria-live="polite"></p>
     </form>
@@ -181,6 +182,7 @@
   });
 
   fillCountrySelect($('o-country'), $('o-taxl'), $('o-tax'));
+  bindRegion($('o-country'), $('o-regl'), $('o-region'));
 
   $('logout').onclick = async () => { await sb.auth.signOut(); location.href = '/'; };
 
@@ -195,11 +197,11 @@
     $('p-name').value = (p && p.full_name) || '';
     $('p-phone').value = (p && p.phone) || '';
 
-    const { data: m } = await sb.from('members').select('org_id, role, organizations(name, country, vat_id, address_line, city, postal_code, phone, logo_path)').eq('user_id', user.id).limit(1).maybeSingle();
+    const { data: m } = await sb.from('members').select('org_id, role, organizations(name, country, vat_id, address_line, city, postal_code, phone, logo_path, region)').eq('user_id', user.id).limit(1).maybeSingle();
     if (m && m.organizations) {
       orgId = m.org_id; canEditOrg = ['owner', 'finance'].includes(m.role);
       const o = m.organizations; logoPath = o.logo_path || null; orgName = o.name || '';
-      $('o-name').value = o.name || ''; $('o-country').value = o.country || ''; $('o-country').dispatchEvent(new Event('change'));
+      $('o-name').value = o.name || ''; $('o-country').value = o.country || ''; $('o-country').dispatchEvent(new Event('change')); $('o-region').value = o.region || '';
       $('o-tax').value = o.vat_id || ''; $('o-addr').value = o.address_line || ''; $('o-zip').value = o.postal_code || '';
       $('o-city').value = o.city || ''; $('o-phone').value = o.phone || '';
     } else {
@@ -229,11 +231,12 @@
     if (!canEditOrg) return;
     if (!$('o-name').value.trim()) return say('m-org', 'Enter the company name.', 'err');
     if (!$('o-country').value) return say('m-org', 'Select a country.', 'err');
+    if ($('o-country').value === 'PL' && !$('o-region').value) return say('m-org', 'Select your voivodeship.', 'err');
     say('m-org', 'Saving...');
     if (!orgId) {
       const { data: id, error: ce } = await sb.rpc('create_my_org', {
         p_name: $('o-name').value.trim(), p_country: $('o-country').value, p_vat_id: nz($('o-tax').value), p_address_line: nz($('o-addr').value),
-        p_city: nz($('o-city').value), p_postal_code: nz($('o-zip').value), p_phone: nz($('o-phone').value)
+        p_city: nz($('o-city').value), p_postal_code: nz($('o-zip').value), p_phone: nz($('o-phone').value), p_region: nz($('o-region').value)
       });
       if (ce) return say('m-org', 'Could not create company: ' + ce.message, 'err');
       orgId = id; orgName = $('o-name').value.trim(); $('org-note').hidden = true; $('logo-pick').disabled = false; paintAvatar();
@@ -241,7 +244,7 @@
     }
     const { data, error } = await sb.from('organizations').update({
       name: $('o-name').value.trim(), country: $('o-country').value, vat_id: nz($('o-tax').value), address_line: nz($('o-addr').value),
-      postal_code: nz($('o-zip').value), city: nz($('o-city').value), phone: nz($('o-phone').value)
+      postal_code: nz($('o-zip').value), city: nz($('o-city').value), phone: nz($('o-phone').value), region: nz($('o-region').value)
     }).eq('id', orgId).select('id');
     if (error) say('m-org', 'Could not save: ' + error.message, 'err');
     else if (!data || !data.length) say('m-org', 'Not saved: you do not have permission to edit this company.', 'err');

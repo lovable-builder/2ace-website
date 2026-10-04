@@ -68,6 +68,7 @@
       <fieldset><legend>Your company</legend>
         <label>Company name<input id="up-company" type="text" autocomplete="organization" required></label>
         <label>Country<select id="up-country" autocomplete="country" required></select></label>
+        <label id="up-regl" hidden>Voivodeship (województwo)<select id="up-region"></select></label>
         <label id="up-taxl">Tax / VAT number <input id="up-tax" type="text" autocomplete="off"></label>
         <label>Street and number<input id="up-addr" type="text" autocomplete="street-address"></label>
         <div class="two">
@@ -138,6 +139,7 @@
   });
 
   fillCountrySelect($('up-country'), $('up-taxl'), $('up-tax'));
+  bindRegion($('up-country'), $('up-regl'), $('up-region'));
 
   $('f-up').addEventListener('submit', async (ev) => {
     ev.preventDefault();
@@ -148,9 +150,10 @@
     if (password.length < 8) return say($('msg'), 'Use at least 8 characters for the password.', 'err');
     if (!v('up-company')) return say($('msg'), 'Enter your company name.', 'err');
     if (!v('up-country')) return say($('msg'), 'Select your country.', 'err');
+    if (v('up-country') === 'PL' && !v('up-region')) return say($('msg'), 'Select your voivodeship.', 'err');
     busy($('f-up'), true); say($('msg'), 'Creating account...');
     const data = { full_name: v('up-name'), phone: v('up-phone'), company: v('up-company'), country: v('up-country'),
-                   vat_id: v('up-tax'), address_line: v('up-addr'), postal_code: v('up-zip'), city: v('up-city') };
+                   vat_id: v('up-tax'), region: v('up-region'), address_line: v('up-addr'), postal_code: v('up-zip'), city: v('up-city') };
     const { data: out, error } = await sb.auth.signUp({ email, password, options: { data, emailRedirectTo: location.origin + '/login?next=' + encodeURIComponent(NEXT) } });
     busy($('f-up'), false);
     if (error) return say($('msg'), nice(error), 'err');
