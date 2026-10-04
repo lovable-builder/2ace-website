@@ -1199,8 +1199,7 @@ class Component extends DCLogic {
 
   STORAGE = {
     shelf: { name: 'Shelf bins', unit: 'bins', price: 90, min: 10, max: 2000, step: 5, m2: 0.3, def: 40, desc: 'Small items, many SKUs. Picked by hand from racked bins.' },
-    pallet: { name: 'Pallets', unit: 'pallets', price: 360, min: 1, max: 1000, step: 1, m2: 1.2, def: 12, desc: 'Cartons and bulk stock on standard EUR pallets.' },
-    zone: { name: 'Private zone', unit: '× 50 m²', price: 15000, min: 1, max: 40, step: 1, m2: 50, def: 1, desc: 'A fenced area of the floor with your own racking and team.' }
+    pallet: { name: 'Pallets', unit: 'pallets', price: 360, min: 1, max: 1000, step: 1, m2: 1.2, def: 12, desc: 'Cartons and bulk stock on standard EUR pallets.' }
   };
 
   COUNTRIES = [
@@ -1241,6 +1240,7 @@ class Component extends DCLogic {
       const o = JSON.parse(localStorage.getItem('ace_plan') || 'null');
       if (!o || !o.plan || Date.now() - (o.t || 0) > this.PLAN_TTL) { if (o) this.clearPlan(); return {}; }
       const out = {}; this.PLAN_KEYS.forEach((k) => { if (o.plan[k] !== undefined) out[k] = o.plan[k]; });
+      if (!this.STORAGE[out.storageType]) { delete out.storageType; delete out.qty; } // e.g. a removed storage type from an old saved plan
       delete out.step; // always open the builder at Space; only the choices are restored
       delete out.tt; delete out.meta; // marketing channels are no longer offered in the plan builder
       return out;
@@ -1553,10 +1553,10 @@ class Component extends DCLogic {
 
       storageOpts: Object.keys(this.STORAGE).map((k) => {
         const o = this.STORAGE[k];
-        return Object.assign({ name: o.name, desc: o.desc, price: this.fmt(o.price) + ' / ' + (k === 'zone' ? '50 m²' : o.unit.replace(/s$/, '')) + ' / mo', onClick: set({ storageType: k, qty: o.def, qtyDraft: null }) }, this.sel(s.storageType === k));
+        return Object.assign({ name: o.name, desc: o.desc, price: this.fmt(o.price) + ' / ' + o.unit.replace(/s$/, '') + ' / mo', onClick: set({ storageType: k, qty: o.def, qtyDraft: null }) }, this.sel(s.storageType === k));
       }),
       qty: s.qty, qtyUnit: st.unit, qtyMin: st.min, qtyMax: st.max, qtyStep: st.step,
-      qtyTitle: 'How many ' + (s.storageType === 'zone' ? 'zone blocks' : st.unit),
+      qtyTitle: 'How many ' + st.unit,
       onQty: (e) => this.setState({ qty: Number(e.target.value), qtyDraft: null }),
       qtyDraft: s.qtyDraft != null ? s.qtyDraft : s.qty,
       onQtyType: (e) => {
