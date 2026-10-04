@@ -239,7 +239,7 @@
             <span style="font-size: 15px; color: rgba(245,244,241,0.75);">Floor space</span>
             <span style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 118; font-weight: 800; font-size: 40px; line-height: 1; letter-spacing: -0.02em;"><span id="m2out">15</span> <span style="font-size: 16px; color: rgba(245,244,241,0.6);">m²</span></span>
           </div>
-          <input id="m2" type="range" min="1" max="200" step="1" value="15" style="width: 100%; accent-color: #E39A2B; background: transparent;" />
+          <input id="m2" type="range" min="1" max="200" step="1" style="width: 100%; accent-color: #E39A2B; background: transparent;" />
           <div style="display: flex; flex-wrap: wrap; gap: 8px;"><button id="tF" type="button" data-on="1" style="cursor: pointer; flex: 1 1 140px; padding: 12px 14px; border-radius: 3px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; border: 1px solid #E39A2B; background: #E39A2B; color: #0B0C0E;">Fulfillment</button><button id="tR" type="button" data-on="1" style="cursor: pointer; flex: 1 1 140px; padding: 12px 14px; border-radius: 3px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase; border: 1px solid #E39A2B; background: #E39A2B; color: #0B0C0E;">Returns</button></div>
           <div><div style="display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(245,244,241,0.12); font-size: 14px;"><span style="color: rgba(245,244,241,0.78);">Storage</span><span id="cS" style="font-family: 'IBM Plex Mono', monospace;">0 zł</span></div><div style="display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(245,244,241,0.12); font-size: 14px;"><span style="color: rgba(245,244,241,0.78);">Fulfillment</span><span id="cF" style="font-family: 'IBM Plex Mono', monospace;">0 zł</span></div><div style="display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid rgba(245,244,241,0.12); font-size: 14px;"><span style="color: rgba(245,244,241,0.78);">Returns</span><span id="cR" style="font-family: 'IBM Plex Mono', monospace;">0 zł</span></div></div>
           <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 12px;">
@@ -803,6 +803,8 @@ class Component extends DCLogic {
   setupSlider() {
     const r = document.querySelector('#m2');
     if (!r) return;
+    // No value attribute in the template: React would treat it as controlled and snap the handle back after every drag.
+    r.value = 15;
     const fmt = (n) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' zł';
     const on = { tF: true, tR: true };
     const set = (id, v) => { const el = document.querySelector('#' + id); if (el) el.textContent = v; };
