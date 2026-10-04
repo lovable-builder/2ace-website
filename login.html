@@ -37,6 +37,7 @@
   .row { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; }
   .hidden { display: none; }
   @media (max-width: 480px) { h1 { font-size: 30px; } }
+  [hidden] { display: none !important; }
 </style>
 </head>
 <body>
@@ -93,7 +94,7 @@
   </section>
 </main>
 
-<script src="countries.js"></script>
+<script src="countries.js?v=3"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
   // The anon key is public by design; data is protected by row level security in the database.

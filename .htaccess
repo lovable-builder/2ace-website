@@ -12,3 +12,10 @@ RewriteRule ^ /%1 [R=301,L]
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME}.html -f
 RewriteRule ^([^.]+)$ $1.html [L]
+
+# Our pages and scripts change often: always revalidate so visitors never run a stale copy next to new HTML.
+<IfModule mod_headers.c>
+  <FilesMatch "\.(html|js)$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+</IfModule>
