@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /account
+Disallow: /login
+
+Sitemap: https://2ace.pl/sitemap.xml

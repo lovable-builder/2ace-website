@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 1600 900" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true" preserveAspectRatio="xMidYMid slice"><rect width="1600" height="900" fill="#0B0C0E"/><g stroke="#F5F4F1" stroke-opacity="0.05"><path d="M0 0V900"/><path d="M100 0V900"/><path d="M200 0V900"/><path d="M300 0V900"/><path d="M400 0V900"/><path d="M500 0V900"/><path d="M600 0V900"/><path d="M700 0V900"/><path d="M800 0V900"/><path d="M900 0V900"/><path d="M1000 0V900"/><path d="M1100 0V900"/><path d="M1200 0V900"/><path d="M1300 0V900"/><path d="M1400 0V900"/><path d="M1500 0V900"/><path d="M0 0H1600"/><path d="M0 100H1600"/><path d="M0 200H1600"/><path d="M0 300H1600"/><path d="M0 400H1600"/><path d="M0 500H1600"/><path d="M0 600H1600"/><path d="M0 700H1600"/><path d="M0 800H1600"/></g>
+    <g transform="translate(420 520)">
+      <path d="M0 0 L260 -120 L520 0 L260 120 Z" fill="#1B1D22" stroke="#F5F4F1" stroke-opacity=".35" stroke-width="3"/>
+      <path d="M0 0 V150 L260 270 V120 Z" fill="#14161A" stroke="#F5F4F1" stroke-opacity=".35" stroke-width="3"/>
+      <path d="M520 0 V150 L260 270 V120 Z" fill="#101216" stroke="#F5F4F1" stroke-opacity=".35" stroke-width="3"/>
+      <path d="M130 -60 L390 60" stroke="#E39A2B" stroke-width="10" opacity=".9"/>
+    </g>
+    <g transform="translate(1050 420)">
+      <circle r="190" fill="#E39A2B"/><circle r="160" fill="none" stroke="#0B0C0E" stroke-opacity=".45" stroke-width="6"/>
+      <text text-anchor="middle" y="40" font-family="Archivo, Arial, sans-serif" font-weight="800" font-size="150" fill="#0B0C0E">€3</text>
+    </g>
+    <text x="110" y="120" font-family="IBM Plex Mono, monospace" font-size="30" letter-spacing="7" fill="#E39A2B">FLAT DUTY · ≤ €150</text></svg>

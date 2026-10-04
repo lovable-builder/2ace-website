@@ -1,6 +1,6 @@
 # Hide dotfiles/dot-folders (.git, .env, .agents ...) and non-site folders from the web
 RedirectMatch 404 /\.(?!well-known)
-RedirectMatch 404 ^/(supabase|node_modules)(/|$)
+RedirectMatch 404 ^/(supabase|node_modules|content|scripts)(/|$)
 RedirectMatch 404 ^/skills-lock\.json$
 
 # Clean URLs: /platform instead of /platform.html, / instead of /index.html

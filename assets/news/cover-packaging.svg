@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 1600 900" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true" preserveAspectRatio="xMidYMid slice"><rect width="1600" height="900" fill="#0B0C0E"/><g stroke="#F5F4F1" stroke-opacity="0.05"><path d="M0 0V900"/><path d="M100 0V900"/><path d="M200 0V900"/><path d="M300 0V900"/><path d="M400 0V900"/><path d="M500 0V900"/><path d="M600 0V900"/><path d="M700 0V900"/><path d="M800 0V900"/><path d="M900 0V900"/><path d="M1000 0V900"/><path d="M1100 0V900"/><path d="M1200 0V900"/><path d="M1300 0V900"/><path d="M1400 0V900"/><path d="M1500 0V900"/><path d="M0 0H1600"/><path d="M0 100H1600"/><path d="M0 200H1600"/><path d="M0 300H1600"/><path d="M0 400H1600"/><path d="M0 500H1600"/><path d="M0 600H1600"/><path d="M0 700H1600"/><path d="M0 800H1600"/></g>
+    <g transform="translate(420 450)">
+      <path d="M0 0 L240 -110 L480 0 L240 110 Z" fill="#1B1D22" stroke="#F5F4F1" stroke-opacity=".35" stroke-width="3"/>
+      <path d="M0 0 V190 L240 300 V110 Z" fill="#14161A" stroke="#F5F4F1" stroke-opacity=".35" stroke-width="3"/>
+      <path d="M480 0 V190 L240 300 V110 Z" fill="#101216" stroke="#F5F4F1" stroke-opacity=".35" stroke-width="3"/>
+      <path d="M240 -110 V110" stroke="#E39A2B" stroke-width="10" opacity=".9"/>
+    </g>
+    <g transform="translate(1090 430)" fill="none" stroke="#E39A2B" stroke-width="30" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M-70 -110 L40 -110 L110 10"/><path d="M95 -22 L110 10 L142 -4" stroke-width="22"/>
+      <path d="M150 70 L95 165 L-45 165"/><path d="M-20 140 L-45 165 L-18 192" stroke-width="22"/>
+      <path d="M-120 100 L-175 5 L-105 -95"/><path d="M-128 -62 L-105 -95 L-70 -80" stroke-width="22"/>
+    </g>
+    <text x="110" y="120" font-family="IBM Plex Mono, monospace" font-size="30" letter-spacing="7" fill="#E39A2B">PPWR · EPR · 12 AUG 2026</text></svg>
