@@ -3,6 +3,7 @@
 import { articles } from '../content/news.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
+import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -68,7 +69,9 @@ for (const [name, draw] of Object.entries(covers)) {
   fs.mkdirSync(path.dirname(f), { recursive: true });
   fs.writeFileSync(f, '<?xml version="1.0" encoding="UTF-8"?>\n' + draw());
 }
-const coverSrc = (a) => (hasImg(a) ? a.image : `/assets/news/cover-${a.cover}.svg`);
+// A content hash in the URL means a changed cover is never served stale, and an old cached 404 can never match.
+const stamp = (rel) => crypto.createHash('md5').update(fs.readFileSync(path.join(root, rel))).digest('hex').slice(0, 8);
+const coverSrc = (a) => (hasImg(a) ? `${a.image}?v=${stamp(a.image.replace(/^\//, ''))}` : `/assets/news/cover-${a.cover}.svg?v=${stamp(`assets/news/cover-${a.cover}.svg`)}`);
 const coverHtml = (a, cls = '') => `<img class="${cls}" src="${esc(coverSrc(a))}" alt="" loading="lazy">`;
 
 // ---- shared page chrome ----
