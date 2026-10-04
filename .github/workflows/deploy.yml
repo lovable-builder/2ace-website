@@ -1,0 +1,26 @@
+name: Deploy to Hostinger
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pull latest on the server
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+        run: |
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          # Pinned server host key (public), so a fake server can't receive our key.
+          echo "[46.17.175.67]:65002 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBxxg8uGrWNdj0Uf4MzcdXX4Q/B+vfvouQ2aoVXWzbJk" > ~/.ssh/known_hosts
+          # The server key is restricted to one command: git pull --ff-only in the site folder.
+          ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -p 65002 u203694375@46.17.175.67 deploy
