@@ -33,7 +33,7 @@ export async function render(ctx, root) {
       act && { label: '', render: (l) => el('input', { type: 'checkbox', 'aria-label': 'Select ' + l.code, ...(picked.has(l.id) ? { checked: true } : {}), onclick: (e) => { e.stopPropagation(); e.target.checked ? picked.add(l.id) : picked.delete(l.id); } }) },
       { label: 'Code', render: (l) => el('strong', { class: 'mono', text: l.code }) },
       { label: 'Type', render: (l) => pill(l.kind) },
-      { label: 'Customer', render: (l) => (owner[l.id] ? orgName(orgs, owner[l.id]) : (l.kind === 'bin' || l.kind === 'pallet' ? el('span', { class: 'muted', text: 'free' }) : '-')) },
+      { label: 'Customer', render: (l) => (owner[l.id] ? orgName(orgs, owner[l.id]) : (l.kind === 'bin' || l.kind === 'pallet' ? el('span', { class: 'muted', text: 'free' }) : el('span', { class: 'muted', text: 'shared area' }))) },
       { label: 'Units', render: (l) => String(units[l.id] || 0) },
       { label: 'Status', render: (l) => (l.active ? pill('active', 'ok') : pill('off', 'muted')) },
       act && { label: '', render: (l) => el('div', { class: 'row' },
@@ -45,7 +45,7 @@ export async function render(ctx, root) {
   q.addEventListener('input', draw); kind.addEventListener('change', draw); draw();
 
   const create = () => modal('New location', (body, done) => {
-    const code = el('input', { placeholder: 'A-01-01', maxlength: '30' }), k = el('select', {}, KINDS.map((x) => el('option', { value: x, text: x + ' - ' + KIND_HELP[x] }))), label = el('input', { placeholder: 'Optional note' }); const err = el('p', { class: 'err' });
+    const code = el('input', { placeholder: 'A-01-01', maxlength: '30' }), k = el('select', {}, ['bin', 'pallet', 'receiving', 'quarantine', 'pack', 'returns', 'shipping'].map((x) => el('option', { value: x, text: x + ' - ' + KIND_HELP[x] }))), label = el('input', { placeholder: 'Optional note' }); const err = el('p', { class: 'err' });
     const go = el('button', { class: 'btn', text: 'Create', onclick: () => guarded(go, err, async () => { await rpc(ctx, 'create_location', { p_code: code.value, p_kind: k.value, p_label: label.value }); done(true); }) });
     body.append(field('Code (this is printed on the barcode label)', code), field('Type', k), field('Note', label), err, el('div', { class: 'row end' }, el('button', { class: 'btn ghost', onclick: () => done(null), text: 'Cancel' }), go));
   }).then((ok) => { if (ok) { toast('Location created'); reload(); } });
@@ -67,5 +67,5 @@ export async function render(ctx, root) {
   };
   clear(root).append(el('div', { class: 'row between' }, el('h1', { text: 'Locations' }),
     act && el('div', { class: 'row' }, el('button', { class: 'btn ghost', onclick: print, text: 'Print labels' }), el('button', { class: 'btn ghost', onclick: bulk, text: 'Create many' }), el('button', { class: 'btn', onclick: create, text: 'New location' }))),
-    el('p', { class: 'muted', text: 'Every bin and pallet slot is dedicated to one customer. That assignment is what storage is billed from.' }), el('div', { class: 'row' }, q, kind), holder);
+    el('p', { class: 'muted', text: 'Every bin and pallet slot is dedicated to one customer: use Assign on a bin or pallet row. That assignment is what storage is billed from. Receiving, quarantine and the other areas are shared and cannot be assigned.' }), el('div', { class: 'row' }, q, kind), holder);
 }
