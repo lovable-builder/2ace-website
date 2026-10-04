@@ -2,5 +2,8 @@ User-agent: *
 Allow: /
 Disallow: /account
 Disallow: /login
+Disallow: /admin
+Disallow: /scan
+Disallow: /assets/admin/
 
 Sitemap: https://2ace.pl/sitemap.xml

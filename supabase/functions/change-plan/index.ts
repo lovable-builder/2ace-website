@@ -9,6 +9,19 @@ import { createDomainOrder } from '../_shared/domainOrder.ts';
 // an upgrade is invoiced now; a downgrade is credited on the next invoice.
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!);
 
+// Stripe does not accept an inline product for subscription updates (unlike Checkout), so each line needs a real product.
+// Deterministic ids mean the same label reuses the same product instead of cluttering the catalogue.
+async function productFor(label: string): Promise<string> {
+  const data = new TextEncoder().encode(label);
+  const hash = Array.from(new Uint8Array(await crypto.subtle.digest('SHA-1', data)), (b) => b.toString(16).padStart(2, '0')).join('').slice(0, 20);
+  const id = 'ace_' + hash;
+  try { await stripe.products.retrieve(id); return id; } catch (_e) { /* not created yet */ }
+  try { await stripe.products.create({ id, name: label }); } catch (e) {
+    if ((e as { code?: string }).code !== 'resource_already_exists') throw e;   // created by a parallel request
+  }
+  return id;
+}
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders(req) });
   if (req.method !== 'POST') return json(req, { error: 'method' }, 405);
@@ -58,11 +71,11 @@ Deno.serve(async (req) => {
 
   const items: Stripe.SubscriptionUpdateParams.Item[] = sub.items.data.map((i) => ({ id: i.id, deleted: true }));
   for (const l of next.lines) {
-    if (l.monthly > 0) items.push({ price_data: { currency: 'pln', unit_amount: l.monthly * 100, recurring: { interval: 'month' }, product_data: { name: l.label } } });
+    if (l.monthly > 0) items.push({ price_data: { currency: 'pln', unit_amount: l.monthly * 100, recurring: { interval: 'month' }, product: await productFor(l.label) } });
   }
   if (!items.some((i) => 'price_data' in i)) return json(req, { error: 'Nothing to bill' }, 400);
   const addInvoiceItems: Stripe.SubscriptionUpdateParams.AddInvoiceItem[] = onceToCharge > 0
-    ? [{ price_data: { currency: 'pln', unit_amount: onceToCharge * 100, product_data: { name: 'One-time setup for added services' } }, quantity: 1 }]
+    ? [{ price_data: { currency: 'pln', unit_amount: onceToCharge * 100, product: await productFor('One-time setup for added services') }, quantity: 1 }]
     : [];
 
   try {

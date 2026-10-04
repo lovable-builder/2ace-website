@@ -34,8 +34,11 @@ Deno.serve(async (req) => {
   const company = me.orgName ?? '';
   const { data: plan } = me.orgId ? await admin.from('plans').select('monthly_pln').eq('org_id', me.orgId).eq('status', 'active').order('created_at', { ascending: false }).limit(1).maybeSingle() : { data: null };
 
-  const { error } = await admin.from('leads').insert({ name, email, message, subject: label, org_id: me.orgId ?? null, source: 'dashboard' });
+  const { data: lead, error } = await admin.from('leads').insert({ name, email, message, subject: label, org_id: me.orgId ?? null, source: 'dashboard' }).select('id').single();
   if (error) { console.error(error); return json(req, { error: 'We could not send your request. Please try again.' }, 500); }
+  // Also open an inbox request for staff (best effort: the lead is already saved).
+  const { data: rq } = await admin.from('requests').insert({ org_id: me.orgId ?? null, lead_id: lead.id, requester_name: name, requester_email: email, subject: label, source: 'dashboard' }).select('id').single();
+  if (rq) await admin.from('request_messages').insert({ request_id: rq.id, direction: 'in', body: message });
 
   // Email is best effort: the request is already saved.
   const row = (k: string, v: string) => `<tr><td style="padding:4px 14px 4px 0;color:#666">${esc(k)}</td><td>${esc(v || '-')}</td></tr>`;

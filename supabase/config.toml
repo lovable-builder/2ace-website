@@ -354,3 +354,12 @@ verify_jwt = true
 
 [functions.request-help]
 verify_jwt = true
+
+[functions.admin-api]
+verify_jwt = true
+
+[functions.my-invoices]
+verify_jwt = true
+
+[functions.billing-portal]
+verify_jwt = true

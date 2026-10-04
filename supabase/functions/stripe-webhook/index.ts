@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
   try {
     event = await stripe.webhooks.constructEventAsync(body, sig, secret);
   } catch (e) {
-    console.error('bad signature', e.message);
+    console.error('bad signature', (e as Error).message);
     return new Response('bad signature', { status: 400 });
   }
 

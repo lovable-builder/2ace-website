@@ -158,5 +158,5 @@ fs.writeFileSync(idx, home);
 // ---- sitemap + robots ----
 const urls = [['/', null], ['/platform', null], ['/market', null], ['/news', sorted[0]?.date], ...sorted.map((a) => [`/news/${a.slug}`, a.date])];
 write('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map(([u, d]) => `  <url><loc>${SITE}${u === '/' ? '/' : u}</loc>${d ? `<lastmod>${d}</lastmod>` : ''}</url>`).join('\n')}\n</urlset>\n`);
-write('robots.txt', `User-agent: *\nAllow: /\nDisallow: /account\nDisallow: /login\n\nSitemap: ${SITE}/sitemap.xml\n`);
+write('robots.txt', `User-agent: *\nAllow: /\nDisallow: /account\nDisallow: /login\nDisallow: /admin\nDisallow: /scan\nDisallow: /assets/admin/\n\nSitemap: ${SITE}/sitemap.xml\n`);
 console.log('built', sorted.length, 'articles:', sorted.map((a) => a.slug).join(', '));

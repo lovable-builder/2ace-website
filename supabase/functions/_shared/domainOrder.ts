@@ -5,6 +5,40 @@ import { admin as db } from './auth.ts';
 
 const NOTIFY = Deno.env.get('LEAD_NOTIFY_TO') ?? 'warsaw@2ace.eu';
 
+// One attempt to buy the domain through Hostinger and record the outcome on the order row. Never throws.
+async function attemptAuto(orderId: string, name: string, orgId: string, email: string, org: OrgData): Promise<Reg> {
+  try {
+    const { data: m } = await db.from('members').select('user_id').eq('org_id', orgId).eq('role', 'owner').limit(1).maybeSingle();
+    const { data: pr } = m ? await db.from('profiles').select('full_name').eq('user_id', m.user_id).maybeSingle() : { data: null };
+    const start = new Date(); start.setUTCDate(1); start.setUTCHours(0, 0, 0, 0);
+    const { count } = await db.from('domain_orders').select('id', { count: 'exact', head: true }).eq('auto', true).gte('created_at', start.toISOString());
+    const reg = await autoRegisterPl({ name, org, fullName: pr?.full_name ?? null, email, monthCount: count ?? 0 });
+    await db.from('domain_orders').update({
+      auto: reg.outcome !== 'manual', whois_id: reg.whoisId ?? null, order_ref: reg.orderRef ?? null, notes: reg.message,
+      status: reg.outcome === 'registered' ? 'registered' : 'pending', registered_at: reg.outcome === 'registered' ? new Date().toISOString() : null,
+    }).eq('id', orderId);
+    return reg;
+  } catch (e) {
+    console.error('auto register failed', e);
+    return { outcome: 'manual', message: 'Unexpected error: ' + String(e).slice(0, 120) };
+  }
+}
+
+// Staff pressed "retry automatic registration" on a pending order. Honors the same master switch, caps and checks.
+export async function retryAutoRegister(orderId: string): Promise<Reg> {
+  if (Deno.env.get('HOSTINGER_AUTO_REGISTER') !== 'true') return { outcome: 'manual', message: 'Automatic registration is switched off' };
+  const { data: o } = await db.from('domain_orders').select('id, org_id, domain, status').eq('id', orderId).single();
+  if (!o) return { outcome: 'manual', message: 'Order not found' };
+  if (o.status !== 'pending') return { outcome: 'manual', message: 'Only pending orders can be retried' };
+  const name = String(o.domain).replace(/\.pl$/, '');
+  if (!validName(name)) return { outcome: 'manual', message: 'Invalid domain name' };
+  if ((await rdapStatus(name)) !== 'free') return { outcome: 'manual', message: 'The registry no longer shows this name as free' };
+  const { data: org } = await db.from('organizations').select('name, country, vat_id, address_line, city, postal_code, phone, region').eq('id', o.org_id).single();
+  const { data: m } = await db.from('members').select('user_id').eq('org_id', o.org_id).eq('role', 'owner').limit(1).maybeSingle();
+  const { data: pr } = m ? await db.from('profiles').select('email').eq('user_id', m.user_id).maybeSingle() : { data: null };
+  return attemptAuto(orderId, name, o.org_id, pr?.email ?? '', org as OrgData);
+}
+
 // After payment, record the domain this plan needs. With HOSTINGER_AUTO_REGISTER=true we try to buy it
 // automatically (safe fallbacks inside autoRegisterPl); otherwise, or on any problem, the team registers it by hand.
 export async function createDomainOrder(o: { orgId: string; planId?: string | null; name: string; email: string; sessionId?: string | null }) {
@@ -21,17 +55,7 @@ export async function createDomainOrder(o: { orgId: string; planId?: string | nu
   // Automatic purchase: never let a failure here break the webhook (a retry must not buy twice).
   let reg: Reg | null = null;
   if (Deno.env.get('HOSTINGER_AUTO_REGISTER') === 'true' && availability === 'free' && org) {
-    try {
-      const { data: m } = await db.from('members').select('user_id').eq('org_id', orgId).eq('role', 'owner').limit(1).maybeSingle();
-      const { data: pr } = m ? await db.from('profiles').select('full_name').eq('user_id', m.user_id).maybeSingle() : { data: null };
-      const start = new Date(); start.setUTCDate(1); start.setUTCHours(0, 0, 0, 0);
-      const { count } = await db.from('domain_orders').select('id', { count: 'exact', head: true }).eq('auto', true).gte('created_at', start.toISOString());
-      reg = await autoRegisterPl({ name, org: org as OrgData, fullName: pr?.full_name ?? null, email, monthCount: count ?? 0 });
-      await db.from('domain_orders').update({
-        auto: reg.outcome !== 'manual', whois_id: reg.whoisId ?? null, order_ref: reg.orderRef ?? null, notes: reg.message,
-        status: reg.outcome === 'registered' ? 'registered' : 'pending', registered_at: reg.outcome === 'registered' ? new Date().toISOString() : null,
-      }).eq('id', orderId);
-    } catch (e) { console.error('auto register failed', e); reg = { outcome: 'manual', message: 'Unexpected error: ' + String(e).slice(0, 120) }; }
+    reg = await attemptAuto(orderId, name, orgId, email, org as OrgData);
   }
 
   const row = (k: string, v?: string | null) => `<tr><td style="padding:4px 14px 4px 0;color:#666">${esc(k)}</td><td>${esc(v || '-')}</td></tr>`;

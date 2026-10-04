@@ -29,7 +29,7 @@ Deno.serve(async (req) => {
   if (!company || !signName) return json(req, { error: 'company and signName required' }, 400);
 
   let priced;
-  try { priced = priceConfig(b.config); } catch (e) { return json(req, { error: String(e.message) }, 400); }
+  try { priced = priceConfig(b.config); } catch (e) { return json(req, { error: String((e as Error).message) }, 400); }
 
   // A storefront plan needs a valid .pl name; it is registered for the customer after payment.
   const domain = b.config.storeOn ? cleanName(b.config.domain) : '';

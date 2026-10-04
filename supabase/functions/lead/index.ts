@@ -18,8 +18,11 @@ Deno.serve(async (req) => {
   if (!name || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return json(req, { error: 'invalid' }, 400);
 
   const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
-  const { error } = await db.from('leads').insert({ name, email, message });
+  const { data: lead, error } = await db.from('leads').insert({ name, email, message }).select('id').single();
   if (error) { console.error(error); return json(req, { error: 'server' }, 500); }
+  // Also open an inbox request for staff (best effort: the lead is already saved).
+  const { data: rq } = await db.from('requests').insert({ lead_id: lead.id, requester_name: name, requester_email: email, subject: 'Message from the website', source: 'website' }).select('id').single();
+  if (rq && message) await db.from('request_messages').insert({ request_id: rq.id, direction: 'in', body: message });
   // Email is best effort: a mail failure must not lose the lead (it is already saved).
   await Promise.all([
     sendEmail({ to: NOTIFY, replyTo: email, subject: `New lead: ${name}`, html: layout('New lead from 2ace.pl', `<p><b>${esc(name)}</b> (${esc(email)})</p><p style="white-space:pre-wrap">${esc(message || '(no message)')}</p>`) }),
