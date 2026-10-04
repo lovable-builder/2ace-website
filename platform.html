@@ -18,6 +18,16 @@
   button { font: inherit; }
   input[type=range] { accent-color: #E39A2B; }
   ::selection { background: #E39A2B; color: #0B0C0E; }
+  .dashtoggle, .dashclose, .dashscrim { display: none; }
+  @media (max-width: 860px) {
+    .dashnav { position: fixed; top: 0; left: 0; bottom: 0; width: min(82vw, 300px); max-width: none !important; flex: none !important; z-index: 60; overflow-y: auto; padding-top: 18px !important; transform: translateX(-100%); visibility: hidden; transition: transform 260ms ease, visibility 0s linear 260ms; }
+    .dashnav.open { transform: none; visibility: visible; box-shadow: 10px 0 36px rgba(0,0,0,0.4); transition-delay: 0s; }
+    .dashscrim { position: fixed; inset: 0; z-index: 55; background: rgba(11,12,14,0.5); opacity: 0; pointer-events: none; transition: opacity 260ms ease; }
+    .dashscrim.open { display: block; opacity: 1; pointer-events: auto; }
+    .dashscrim { display: block; }
+    .dashtoggle { display: inline-flex; align-items: center; gap: 10px; margin: 0 0 18px; padding: 11px 16px; border: 1px solid rgba(11,12,14,0.25); border-radius: 3px; background: #FFFFFF; cursor: pointer; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: #0B0C0E; }
+    .dashclose { display: block; align-self: flex-end; margin: 0 4px 8px; padding: 6px 10px; border: 0; background: none; cursor: pointer; font-size: 26px; line-height: 1; color: #E39A2B; }
+  }
 </style>
 </helmet>
 
@@ -498,7 +508,8 @@
 
   <sc-if value="{{ isDash }}" hint-placeholder-val="{{ false }}">
     <div style="display: flex; flex-wrap: wrap; min-height: calc(100vh - 57px);">
-      <nav style="flex: 1 1 200px; max-width: 232px; background: #14161A; padding: 22px 12px; display: flex; flex-direction: column; gap: 2px;">
+      <nav class="{{ navCls }}" style="flex: 1 1 200px; max-width: 232px; background: #14161A; padding: 22px 12px; display: flex; flex-direction: column; gap: 2px;">
+        <button class="dashclose" onClick="{{ closeMenu }}" aria-label="Close menu">×</button>
         <span style="font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.2em; color: rgba(245,244,241,0.45); padding: 0 12px 12px;">{{ customer }}</span>
         <sc-for list="{{ navItems }}" as="n" hint-placeholder-count="6">
           <button onClick="{{ n.onClick }}" style="cursor: pointer; display: flex; justify-content: space-between; align-items: center; gap: 10px; text-align: left; border: 0; padding: 11px 12px; border-radius: 3px; background: {{ n.bg }}; color: {{ n.fg }}; font-size: 14px; font-weight: 500;">
@@ -508,7 +519,10 @@
         </sc-for>
       </nav>
 
+      <div class="{{ scrimCls }}" onClick="{{ closeMenu }}"></div>
+
       <main style="flex: 1 1 620px; min-width: 0; padding: clamp(20px, 3vw, 36px);">
+        <button class="dashtoggle" onClick="{{ toggleMenu }}" aria-label="Open menu"><span style="font-size: 18px; line-height: 1;">☰</span> Menu</button>
 
         <sc-if value="{{ tabOverview }}" hint-placeholder-val="{{ true }}">
           <div style="display: flex; flex-direction: column; gap: 20px;">
@@ -1150,7 +1164,7 @@
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900}}">
 class Component extends DCLogic {
   state = {
-    view: 'build', step: 0, userEmail: '', logoUrl: '', orgName: '', userName: '', payErr: '',
+    view: 'build', step: 0, userEmail: '', menuOpen: false, logoUrl: '', orgName: '', userName: '', payErr: '',
     storageType: 'pallet', qty: 12, estUnits: 6000, estSize: 'medium',
     pkgs: { ful: false, ret: false, imp: false }, orders: 1500,
     storeOn: false, domain: 'lumahome', domainStatus: null, theme: 'mono',
@@ -1455,7 +1469,7 @@ class Component extends DCLogic {
       ['overview', 'Overview', ''], ['imports', 'Imports', s.invoiceUp ? '4' : '1 !'], ['tracking', 'Shipment tracking', '3 live'], ['inbound', 'Book inbound', s.inbounds.length ? String(s.inbounds.length) : 'New'], ['products', 'Products', missingCount ? missingCount + ' !' : String(s.products.length)], ['inventory', 'Inventory', lowCount + ' low'],
       ['orders', 'Orders', '214'], ['returns', 'Returns', '23'], ['growth', 'Storefront & marketing', ''], ['market', '2ACE Market', s.marketOn ? 'Live' : 'New'], ['team', 'Team', String(s.team.length + 1)]
     ];
-    const tabSet = (t) => () => { this.setState({ tab: t }); window.scrollTo(0, 0); };
+    const tabSet = (t) => () => { this.setState({ tab: t, menuOpen: false }); window.scrollTo(0, 0); };
 
     const X = this.extraVals(s, P, customer, cc, tabSet);
     return Object.assign(X, {
@@ -1466,6 +1480,8 @@ class Component extends DCLogic {
           this.setState({ view: v }); window.scrollTo(0, 0);
         }
       })),
+      navCls: s.menuOpen ? 'dashnav open' : 'dashnav', scrimCls: s.menuOpen ? 'dashscrim open' : 'dashscrim',
+      toggleMenu: () => this.setState({ menuOpen: !s.menuOpen }), closeMenu: () => this.setState({ menuOpen: false }),
       welcome: s.userEmail ? 'Welcome, ' + (s.orgName || s.userName || s.userEmail) : '',
       authLabel: s.userEmail ? 'Log out' : 'Log in',
       authTitle: s.userEmail || 'Not signed in',
