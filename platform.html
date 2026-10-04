@@ -1386,7 +1386,7 @@ class Component extends DCLogic {
     };
 
     const frac = (s.qty - st.min) / (st.max - st.min);
-    const filled = Math.max(1, Math.round((0.04 + frac * 0.96) * 80));
+    const filled = Math.max(1, Math.round(frac * 80)); // 1 box at the minimum, all 80 at the maximum
     const cells = Array.from({ length: 80 }, (_, i) => ({ bg: i < filled ? '#E39A2B' : 'rgba(11,12,14,0.08)' }));
     const upp = { small: 1200, medium: 400, large: 120 }[s.estSize];
     const estPallets = Math.max(1, Math.ceil((s.estUnits || 0) / upp));
