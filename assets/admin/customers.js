@@ -78,10 +78,35 @@ async function detail(ctx, root, orgId) {
         { label: 'When', render: (p) => fmtDate(p.created_at) }, { label: 'Plan', render: (p) => planSummary(p.config) }, { label: 'Monthly', render: (p) => zl(p.monthly_pln) }, { label: 'Status', render: (p) => statusPill(p.status) }], plans.data))),
     el('section', { class: 'card' }, el('h2', { text: 'Subscription' }), table([
       { label: 'Stripe id', key: 'stripe_subscription_id' }, { label: 'Status', render: (s) => statusPill(s.status) }, { label: 'Renews / ends', render: (s) => fmtDay(s.current_period_end) }], subs.data || [])),
+    invoicesCard(ctx, orgId),
     el('section', { class: 'card' }, el('h2', { text: 'Signed agreements' }), table([
       { label: 'Signed by', key: 'signer_name' }, { label: 'Version', key: 'version' }, { label: 'IP', key: 'ip' }, { label: 'When', render: (a) => fmtDate(a.signed_at) }], agr.data || [])),
     el('section', { class: 'card' }, el('h2', { text: 'Domain orders' }), table([
       { label: 'Domain', key: 'domain' }, { label: 'Status', render: (d) => statusPill(d.status) }, { label: 'Notes', render: (d) => d.notes || '-' }, { label: 'Ordered', render: (d) => fmtDate(d.created_at) }], doms.data || [], () => ctx.go('domains'))),
     el('section', { class: 'card' }, el('h2', { text: 'Requests' }), table([
       { label: 'Subject', key: 'subject' }, { label: 'Status', render: (r) => statusPill(r.status) }, { label: 'Last activity', render: (r) => fmtDate(r.last_message_at) }], reqs.data || [], (r) => ctx.go('requests/' + r.id))));
+}
+
+// Invoices come live from Stripe through admin-api (the browser has no Stripe access).
+function invoicesCard(ctx, orgId) {
+  const body = el('p', { class: 'muted', text: 'Loading from Stripe…' });
+  const card = el('section', { class: 'card' }, el('h2', { text: 'Invoices' }), body);
+  ctx.api('org.invoices', { org_id: orgId }).then((r) => {
+    if (!r.invoices.length) return clear(body).replaceWith(el('p', { class: 'muted', text: 'No invoices yet.' }));
+    const money = (i) => (i.total / 100).toLocaleString('pl-PL', { style: 'currency', currency: (i.currency || 'pln').toUpperCase() });
+    body.replaceWith(table([
+      { label: 'Number', render: (i) => i.number || i.id },
+      { label: 'Date', render: (i) => fmtDay(new Date(i.created * 1000).toISOString()) },
+      { label: 'Total', render: money },
+      { label: 'Status', render: (i) => statusPill(i.status) },
+      { label: '', render: (i) => el('div', { class: 'row' },
+        i.hosted_invoice_url && el('a', { href: i.hosted_invoice_url, target: '_blank', rel: 'noopener', text: 'View' }),
+        r.customer && el('a', { href: 'https://dashboard.stripe.com/invoices/' + i.id, target: '_blank', rel: 'noopener', text: 'Stripe' }),
+        el('button', { class: 'btn ghost tiny', text: 'Email to owner', onclick: async (e) => {
+          e.stopPropagation(); e.target.disabled = true;
+          try { const x = await ctx.api('invoice.resend', { org_id: orgId, invoice_id: i.id }); toast('Sent to ' + x.to); } catch (err) { toast(err.message, true); }
+          e.target.disabled = false; } })) },
+    ], r.invoices));
+  }).catch((e) => { body.className = 'err'; body.textContent = 'Could not load invoices: ' + e.message; });
+  return card;
 }

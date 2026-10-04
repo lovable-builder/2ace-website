@@ -2,6 +2,9 @@ import { corsHeaders, json } from '../_shared/cors.ts';
 import { admin, staffCaller, audit, type StaffCtx, type StaffRole } from '../_shared/auth.ts';
 import { sendEmail, layout, esc } from '../_shared/email.ts';
 import { retryAutoRegister } from '../_shared/domainOrder.ts';
+import Stripe from 'npm:stripe';
+
+const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!);
 
 // One endpoint for every staff action. Reads happen in the browser under RLS; everything that CHANGES data goes through here:
 // role-checked, validated, and written to the audit log before we answer.
@@ -90,6 +93,37 @@ const actions: Record<string, { roles?: StaffRole[]; run: (s: StaffCtx, b: Recor
     await audit(s, 'org.set_status', 'organizations', orgId, orgId, { status: cur.status }, { status }, reason);
     return { ok: true };
   } },
+  // Stripe invoices for a customer (read-only, audited). Resend = email the hosted invoice link through Resend.
+  'org.invoices': { roles: ['admin', 'support'], run: async (s, b) => {
+    const orgId = b.org_id; if (!isUuid(orgId)) throw new Bad('Invalid organization');
+    const { data: o } = await admin.from('organizations').select('stripe_customer_id').eq('id', orgId).maybeSingle();
+    if (!o) throw new Bad('Organization not found', 404);
+    if (!o.stripe_customer_id) return { invoices: [], customer: null };
+    let list;
+    try { list = await stripe.invoices.list({ customer: o.stripe_customer_id, limit: 24 }); }
+    catch (e) { console.error(e); throw new Bad('Could not reach Stripe', 502); }
+    await audit(s, 'org.invoices_view', 'organizations', orgId, orgId, null, null);
+    return { customer: o.stripe_customer_id, invoices: list.data.filter((i) => i.status !== 'draft').map((i) => ({
+      id: i.id, number: i.number, created: i.created, status: i.status, currency: i.currency, total: i.total, amount_due: i.amount_due,
+      hosted_invoice_url: i.hosted_invoice_url, invoice_pdf: i.invoice_pdf })) };
+  } },
+  'invoice.resend': { roles: ['admin', 'support'], run: async (s, b) => {
+    const orgId = b.org_id, invId = text(b.invoice_id, 100);
+    if (!isUuid(orgId) || !/^in_[A-Za-z0-9]+$/.test(invId)) throw new Bad('Invalid invoice');
+    const { data: o } = await admin.from('organizations').select('stripe_customer_id').eq('id', orgId).maybeSingle();
+    if (!o?.stripe_customer_id) throw new Bad('Customer has no billing account', 404);
+    let inv;
+    try { inv = await stripe.invoices.retrieve(invId); } catch { throw new Bad('Invoice not found', 404); }
+    if (inv.customer !== o.stripe_customer_id) throw new Bad('Invoice does not belong to this customer', 403);   // never trust an id alone
+    if (!inv.hosted_invoice_url) throw new Bad('This invoice has no online link');
+    const owner = await ownerOf(orgId);
+    if (!owner?.email) throw new Bad('No owner email on file');
+    const ok = await sendEmail({ to: owner.email, subject: `Invoice ${inv.number ?? ''} from 2ACE`.trim(),
+      html: layout('Your invoice', `<p>Here is your invoice${inv.number ? ' <b>' + esc(inv.number) + '</b>' : ''}.</p><p><a href="${esc(inv.hosted_invoice_url)}" style="display:inline-block;background:#FF6A1A;color:#fff;padding:12px 20px;border-radius:999px;text-decoration:none;font-weight:700">View invoice</a></p>`) });
+    if (!ok) throw new Bad('Email could not be sent', 502);
+    await audit(s, 'invoice.resend', 'organizations', orgId, orgId, null, { invoice: invId, to: owner.email });
+    return { ok: true, to: owner.email };
+  } },
   'viewas.start': { roles: ['admin', 'support'], run: async (s, b) => {
     const orgId = b.org_id, reason = text(b.reason, 500);
     if (!isUuid(orgId)) throw new Bad('Invalid organization');
@@ -143,6 +177,12 @@ const actions: Record<string, { roles?: StaffRole[]; run: (s: StaffCtx, b: Recor
     const { error } = await admin.from('requests').update(patch).eq('id', id);
     if (error) throw new Error(error.message);
     await audit(s, 'request.update', 'requests', id, cur.org_id, cur, patch);
+    if (b.assignee && b.assignee !== cur.assignee && b.assignee !== s.user.id) {   // tell the new owner (not yourself)
+      const { data: who } = await admin.auth.admin.getUserById(b.assignee as string);
+      const { data: rq } = await admin.from('requests').select('subject, requester_name').eq('id', id).maybeSingle();
+      if (who?.user?.email) await sendEmail({ to: who.user.email, subject: `Assigned to you: ${rq?.subject ?? 'request'}`,
+        html: layout('A request was assigned to you', `<p><b>${esc(rq?.subject ?? '')}</b>${rq?.requester_name ? ' from ' + esc(rq.requester_name) : ''}.</p><p><a href="${SITE}/admin#requests/${id}">Open it in the admin panel</a></p>`) });
+    }
     return { ok: true };
   } },
   'request.message': { roles: ['admin', 'support'], run: async (s, b) => {
