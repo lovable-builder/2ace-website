@@ -194,6 +194,11 @@
                       <button onClick="{{ checkDomain }}" style="cursor: pointer; padding: 12px 20px; border: 0; border-radius: 3px; background: #0B0C0E; color: #F5F4F1; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;" style-hover="background: #2A2D33;">Check</button>
                     </div>
                     <p style="font-size: 14px; margin: 10px 0 0; color: {{ domainColor }};">{{ domainMsg }}</p>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px;">
+                      <sc-for list="{{ domainAlts }}" as="a" hint-placeholder-count="3">
+                        <button onClick="{{ a.onClick }}" style="cursor: pointer; min-height: 40px; padding: 8px 14px; border-radius: 20px; border: 1px solid rgba(11,12,14,0.25); background: #FFFFFF; font-size: 14px;">{{ a.label }}</button>
+                      </sc-for>
+                    </div>
                   </div>
 
                   <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px;">
@@ -1171,10 +1176,10 @@
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900}}">
 class Component extends DCLogic {
   state = {
-    view: 'build', step: 0, userEmail: '', menuOpen: false, logoUrl: '', orgName: '', userName: '', payErr: '', mkCat: 'home', payNotice: '', payBanner: '',
+    view: 'build', step: 0, userEmail: '', menuOpen: false, logoUrl: '', orgName: '', userName: '', payErr: '', domainAlts: [], mkCat: 'home', payNotice: '', payBanner: '',
     storageType: 'pallet', qty: 12, estUnits: 6000, estSize: 'medium',
     pkgs: { ful: false, ret: false, imp: false }, orders: 1500,
-    storeOn: false, domain: 'lumahome', domainStatus: null, theme: 'mono',
+    storeOn: false, domain: '', domainStatus: null, theme: 'mono',
     langs: { Polish: true, English: true, German: false, Czech: false },
     pays: { BLIK: true, Przelewy24: true, Cards: true, 'Apple Pay': false, PayPo: false },
     tt: 'off', meta: 'off', budget: 0,
@@ -1246,6 +1251,27 @@ class Component extends DCLogic {
       return out;
     } catch (e) { return {}; }
   }
+
+  // Free .pl availability check through our domain-check function (NASK's public RDAP).
+  async checkDomainName(name) {
+    if (!name) return;
+    this.setState({ domainStatus: 'checking', domainAlts: [] });
+    const token = ++this.domToken;
+    try {
+      const r = await fetch(this.API + '/functions/v1/domain-check', {
+        method: 'POST', headers: { 'Content-Type': 'application/json', apikey: this.ANON },
+        body: JSON.stringify({ name })
+      });
+      const out = await r.json().catch(() => ({}));
+      if (token !== this.domToken) return; // a newer check superseded this one
+      if (r.status === 429) return this.setState({ domainStatus: 'limited' });
+      if (!r.ok) return this.setState({ domainStatus: 'unknown' });
+      this.setState({ domainStatus: out.status || 'unknown', domainAlts: out.alternatives || [] });
+    } catch (e) {
+      if (token === this.domToken) this.setState({ domainStatus: 'unknown' });
+    }
+  }
+  domToken = 0;
 
   // Keep progress saved and make the browser Back button walk the wizard instead of leaving the site.
   componentDidUpdate() {
@@ -1379,6 +1405,11 @@ class Component extends DCLogic {
     const formOk = s.company.trim() && s.vat.trim().length >= 5 && emailOk;
 
     const next = () => {
+      // A storefront needs a .pl name that is not taken: the domain is registered for the customer after payment.
+      if (s.step === 2 && s.storeOn && !['free', 'unknown'].includes(s.domainStatus)) {
+        this.setState({ domainStatus: s.domain.length < 2 ? 'empty' : ['taken', 'checking', 'invalid'].includes(s.domainStatus) ? s.domainStatus : 'unchecked' });
+        return;
+      }
       if (s.step < 3) { this.setState({ step: s.step + 1 }); window.scrollTo(0, 0); return; }
       if (!formOk) { this.setState({ tried: true }); return; }
       this.setState({ view: 'checkout', checkout: s.userEmail ? 1 : 0, coTried: false, acctEmail: s.acctEmail || s.email });
@@ -1392,12 +1423,17 @@ class Component extends DCLogic {
     const estPallets = Math.max(1, Math.ceil((s.estUnits || 0) / upp));
 
     const domainMsg = {
-      null: 'We register the domain and host the store for you.',
+      null: 'Pick a name for your store. We check it against the .pl registry.',
       checking: 'Checking ' + s.domain + '.pl…',
-      free: s.domain + '.pl is available. It is yours once you activate.',
-      taken: s.domain + '.pl is taken. Try another name.'
+      free: s.domain + '.pl looks available. We confirm and register it for you when you activate your plan.',
+      taken: s.domain + '.pl is already registered. Try another name' + (s.domainAlts.length ? ' or one of these:' : '.'),
+      empty: 'Enter a name for your store, or turn the storefront off.',
+      unchecked: 'Click Check to make sure ' + s.domain + '.pl is available before you continue.',
+      invalid: 'Use 2 to 63 letters, numbers or hyphens, with no hyphen at the start or end.',
+      unknown: 'We could not reach the registry just now. Please try again in a moment.',
+      limited: 'Too many checks in a row. Please wait a minute and try again.'
     }[String(s.domainStatus)];
-    const domainColor = s.domainStatus === 'free' ? '#2F7D55' : s.domainStatus === 'taken' ? '#B4442E' : 'rgba(11,12,14,0.6)';
+    const domainColor = s.domainStatus === 'free' ? '#2F7D55' : ['taken', 'invalid', 'empty', 'unchecked'].includes(s.domainStatus) ? '#B4442E' : 'rgba(11,12,14,0.6)';
 
     const chip = (on) => on ? { bg: '#0B0C0E', fg: '#F5F4F1', bd: '#0B0C0E' } : { bg: 'transparent', fg: '#0B0C0E', bd: 'rgba(11,12,14,0.22)' };
 
@@ -1600,13 +1636,9 @@ class Component extends DCLogic {
       storeTrack: s.storeOn ? '#E39A2B' : 'rgba(11,12,14,0.2)', storeKnob: s.storeOn ? '23px' : '3px',
       toggleStore: () => this.setState({ storeOn: !s.storeOn }),
       domain: s.domain, domainMsg, domainColor,
-      onDomain: (e) => this.setState({ domain: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''), domainStatus: null }),
-      checkDomain: () => {
-        const d = s.domain; if (!d) return;
-        this.setState({ domainStatus: 'checking' });
-        clearTimeout(this.domT);
-        this.domT = setTimeout(() => this.setState({ domainStatus: ['luma', 'home', 'shop', 'sklep', 'moda', 'dom'].includes(d) ? 'taken' : 'free' }), 700);
-      },
+      onDomain: (e) => this.setState({ domain: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''), domainStatus: null, domainAlts: [] }),
+      domainAlts: s.domainAlts.map((n) => ({ label: n + '.pl', onClick: () => { this.setState({ domain: n, domainStatus: null, domainAlts: [] }); setTimeout(() => this.checkDomainName(n), 0); } })),
+      checkDomain: () => this.checkDomainName(s.domain),
       themes: [
         { k: 'mono', name: 'Mono', desc: 'Quiet, product first', c1: '#E7E4DE', c2: '#0B0C0E', c3: '#BFB9AE' },
         { k: 'market', name: 'Market', desc: 'Bold, promo ready', c1: '#E39A2B', c2: '#0B0C0E', c3: '#F4D9A8' },

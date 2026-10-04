@@ -2,6 +2,7 @@ import Stripe from 'npm:stripe';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { corsHeaders, json } from '../_shared/cors.ts';
 import { priceConfig, type PlanConfig } from '../_shared/pricing.ts';
+import { validName, cleanName } from '../_shared/domain.ts';
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!);
 const SITE = Deno.env.get('SITE_URL') ?? 'https://2ace.pl';
@@ -29,6 +30,10 @@ Deno.serve(async (req) => {
 
   let priced;
   try { priced = priceConfig(b.config); } catch (e) { return json(req, { error: String(e.message) }, 400); }
+
+  // A storefront plan needs a valid .pl name; it is registered for the customer after payment.
+  const domain = b.config.storeOn ? cleanName(b.config.domain) : '';
+  if (b.config.storeOn && !validName(domain)) return json(req, { error: 'Enter a valid name for your .pl store domain' }, 400);
 
   // Org: reuse the user's existing one, else create.
   let orgId: string;
@@ -78,7 +83,7 @@ Deno.serve(async (req) => {
     customer,
     client_reference_id: orgId,
     line_items,
-    metadata: { org_id: orgId, plan_id: plan.id },
+    metadata: { org_id: orgId, plan_id: plan.id, ...(domain ? { domain } : {}) },
     subscription_data: { metadata: { org_id: orgId, plan_id: plan.id } },
     customer_update: { name: 'auto', address: 'auto' },
     billing_address_collection: 'required',

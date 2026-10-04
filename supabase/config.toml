@@ -342,3 +342,6 @@ verify_jwt = false
 
 [functions.create-checkout]
 verify_jwt = true
+
+[functions.domain-check]
+verify_jwt = false

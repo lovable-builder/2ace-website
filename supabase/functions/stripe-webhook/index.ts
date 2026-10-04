@@ -1,6 +1,9 @@
 import Stripe from 'npm:stripe';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { sendEmail, layout, esc } from '../_shared/email.ts';
+import { validName, rdapStatus } from '../_shared/domain.ts';
+
+const NOTIFY = Deno.env.get('LEAD_NOTIFY_TO') ?? 'warsaw@2ace.eu';
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!);
 const secret = Deno.env.get('STRIPE_WEBHOOK_SECRET')!;
@@ -8,6 +11,34 @@ const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SE
 
 async function setOrg(orgId: string | undefined | null, status: string) {
   if (orgId) await db.from('organizations').update({ status }).eq('id', orgId);
+}
+
+// After payment, record the domain this plan needs and tell the team to register it (manual step for now).
+async function createDomainOrder(s: Stripe.Checkout.Session) {
+  const name = s.metadata?.domain, orgId = s.metadata?.org_id ?? s.client_reference_id;
+  if (!name || !validName(name) || !orgId) return;
+  const domain = name + '.pl';
+  const availability = await rdapStatus(name);
+  const { error } = await db.from('domain_orders').insert({ org_id: orgId, plan_id: s.metadata?.plan_id ?? null, domain, availability });
+  if (error) { if (error.code === '23505') return; throw error; } // 23505: already recorded by an earlier delivery of this event
+  const { data: o } = await db.from('organizations').select('name, country, vat_id, address_line, city, postal_code, phone').eq('id', orgId).single();
+  const email = s.customer_details?.email ?? '';
+  const row = (k: string, v?: string | null) => `<tr><td style="padding:4px 14px 4px 0;color:#666">${esc(k)}</td><td>${esc(v || '-')}</td></tr>`;
+  await sendEmail({
+    to: NOTIFY, replyTo: email || undefined, subject: `Register ${domain} for ${o?.name ?? 'a new customer'}`,
+    html: layout(`Register ${domain}`, `
+      ${availability === 'taken' ? '<p style="color:#B3392C"><b>Heads up:</b> the registry now shows this name as already registered. Contact the customer for another name.</p>' : ''}
+      ${availability === 'unknown' ? '<p><b>Note:</b> the registry check did not answer. Check availability in Hostinger first.</p>' : ''}
+      <p>A customer paid for a plan with a storefront. Register the domain in Hostinger in <b>their company's name</b>, then mark it done.</p>
+      <table style="font-size:14px;border-collapse:collapse">${row('Domain', domain)}${row('Availability now', availability)}${row('Company', o?.name)}${row('Country', o?.country)}${row('Tax / VAT ID', o?.vat_id)}${row('Address', [o?.address_line, o?.postal_code, o?.city].filter(Boolean).join(', '))}${row('Phone', o?.phone)}${row('Customer email', email)}</table>
+      <p style="font-size:13px;color:#666">When registered, set the row in <code>domain_orders</code> to status <code>registered</code>.</p>`),
+  });
+  if (email) {
+    await sendEmail({
+      to: email, subject: 'Your plan is active: we are registering your domain',
+      html: layout('Your plan is active', `<p>Thank you. We are registering <b>${esc(domain)}</b> for you and will confirm within one working day. If the name is no longer available we will contact you first.</p>`),
+    });
+  }
 }
 
 async function syncSub(sub: Stripe.Subscription) {
@@ -49,6 +80,7 @@ Deno.serve(async (req) => {
           await setOrg(orgId, 'active');
           if (s.metadata?.plan_id) await db.from('plans').update({ status: 'active' }).eq('id', s.metadata.plan_id);
           if (typeof s.subscription === 'string') await syncSub(await stripe.subscriptions.retrieve(s.subscription));
+          await createDomainOrder(s);
         }
         break;
       }
