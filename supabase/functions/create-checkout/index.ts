@@ -43,6 +43,10 @@ Deno.serve(async (req) => {
     await admin.from('members').insert({ org_id: orgId, user_id: user.id, role: 'owner' });
   }
 
+  // One live subscription per company: changes go through the billing portal, not a second checkout.
+  const { data: live } = await admin.from('subscriptions').select('stripe_subscription_id').eq('org_id', orgId).in('status', ['active', 'trialing', 'past_due']).limit(1);
+  if (live && live.length) return json(req, { error: 'already subscribed' }, 409);
+
   const { data: org } = await admin.from('organizations').select('stripe_customer_id').eq('id', orgId).single();
   let customer = org?.stripe_customer_id as string | null;
   if (!customer) {

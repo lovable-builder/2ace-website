@@ -41,7 +41,7 @@ export function priceConfig(c: PlanConfig) {
     if (v === 'setup') lines.push({ label: `${name} setup`, monthly: 0, once: setup });
     if (v === 'managed') lines.push({ label: `${name} managed`, monthly: managed, once: setup });
   }
-  // 2ACE Market is a 15% commission on sales: nothing billed up front.
+  // 2ACE Market is a per-category commission on sales (3.6-9.2%): nothing billed up front.
   const monthly = lines.reduce((a, l) => a + l.monthly, 0);
   const once = lines.reduce((a, l) => a + l.once, 0);
   return { lines, monthly, once };

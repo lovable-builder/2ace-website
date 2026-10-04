@@ -47,12 +47,23 @@
       <span style="max-width: 24ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.08em; color: #F5F4F1;">{{ welcome }}</span>
       <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.08em; color: rgba(245,244,241,0.75);">Plan · {{ monthlyFmt }} / mo</span>
       <button onClick="{{ onAuth }}" title="{{ authTitle }}" style="cursor: pointer; background: none; border: 0; padding: 0; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.08em; color: rgba(245,244,241,0.75); text-decoration: underline; text-underline-offset: 3px;">{{ authLabel }}</button>
-      <a href="/account" title="Your account" style="text-decoration: none;"><span style="display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: {{ avBg }}; color: #0B0C0E; font-family: Archivo, sans-serif; font-weight: 800; font-size: 13px;">{{ avText }}</span></a>
+      <sc-if value="{{ signedIn }}" hint-placeholder-val="{{ false }}">
+              <a href="/account" title="Your account" style="text-decoration: none;"><span style="display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: {{ avBg }}; color: #0B0C0E; font-family: Archivo, sans-serif; font-weight: 800; font-size: 13px;">{{ avText }}</span></a>
+      </sc-if>
     </div>
   </header>
 
   <sc-if value="{{ isBuild }}" hint-placeholder-val="{{ true }}">
     <main style="max-width: 1280px; margin: 0 auto; padding: clamp(28px, 4vw, 52px) clamp(16px, 3vw, 32px) 96px;">
+        <sc-if value="{{ ownedNotice }}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 18px; margin: 0 0 20px; background: #0B0C0E; color: #F5F4F1; border-radius: 4px;">
+            <span style="font-size: 15px;"><strong style="color: #E39A2B;">You already have an active plan.</strong> Change or cancel it from your billing page.</span>
+            <span style="display: flex; gap: 10px;">
+              <button onClick="{{ goDash }}" style="cursor: pointer; padding: 9px 14px; border: 0; border-radius: 3px; background: #E39A2B; color: #0B0C0E; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;">Dashboard</button>
+              <a href="/account" style="padding: 9px 14px; border: 1px solid rgba(245,244,241,0.4); border-radius: 3px; color: #F5F4F1; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;">Billing</a>
+            </span>
+          </div>
+        </sc-if>
       <p style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; color: #A8701A; margin: 0 0 14px;">Build your 2ACE plan</p>
       <h1 style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 110; font-weight: 800; font-size: clamp(30px, 4.2vw, 56px); line-height: 0.98; letter-spacing: -0.025em; margin: 0 0 14px; max-width: 20ch;">Space, service, storefront and sales. Priced in front of you.</h1>
       <p style="font-size: 17px; line-height: 1.55; color: rgba(11,12,14,0.66); margin: 0 0 34px; max-width: 58ch;">No quote calls. Every choice updates your price live, and you can change anything later from the dashboard.</p>
@@ -122,28 +133,36 @@
           <sc-if value="{{ stepSvc }}" hint-placeholder-val="{{ false }}">
             <div style="display: flex; flex-direction: column; gap: 18px;">
               <div>
-                <p style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: #A8701A; margin: 0 0 10px;">{{ svc.kicker }}</p>
-                <h2 style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 108; font-weight: 700; font-size: 28px; letter-spacing: -0.015em; margin: 0 0 6px;">{{ svc.title }}</h2>
-                <p style="font-size: 15px; line-height: 1.55; color: rgba(11,12,14,0.62); margin: 0; max-width: 60ch;">{{ svc.lead }}</p>
+                <p style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: #A8701A; margin: 0 0 10px;">Services</p>
+                <h2 style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 108; font-weight: 700; font-size: 28px; letter-spacing: -0.015em; margin: 0 0 6px;">What should we handle for you?</h2>
+                <p style="font-size: 15px; line-height: 1.55; color: rgba(11,12,14,0.62); margin: 0; max-width: 60ch;">Storage is already in your plan. Add only what you need. You can change this any month.</p>
               </div>
-              <div style="background: #FFFFFF; border: 1px solid {{ svc.bd }}; border-radius: 4px; padding: 24px; display: flex; flex-direction: column; gap: 16px;">
-                <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 10px;">
-                  <span style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 106; font-weight: 700; font-size: 21px;">{{ svc.name }}</span>
-                  <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #A8701A;">{{ svc.price }}</span>
+              <sc-for list="{{ svcList }}" as="v" hint-placeholder-count="3">
+                <div style="background: #FFFFFF; border: 2px solid {{ v.bd }}; border-radius: 4px; padding: 22px; display: flex; flex-direction: column; gap: 14px;">
+                  <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 10px;">
+                    <span style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 106; font-weight: 700; font-size: 20px;">{{ v.name }}</span>
+                    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: #A8701A;">{{ v.price }}</span>
+                  </div>
+                  <p style="font-size: 15px; line-height: 1.55; color: rgba(11,12,14,0.68); margin: 0;">{{ v.lead }}</p>
+                  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 8px 18px;">
+                    <sc-for list="{{ v.points }}" as="pt" hint-placeholder-count="4">
+                      <div style="display: grid; grid-template-columns: 16px minmax(0, 1fr); gap: 8px; font-size: 14px; line-height: 1.45;">
+                        <span style="color: #E39A2B; font-weight: 700;">✓</span>
+                        <span>{{ pt.t }}</span>
+                      </div>
+                    </sc-for>
+                  </div>
+                  <button onClick="{{ v.toggle }}" style="cursor: pointer; align-self: flex-start; min-height: 46px; padding: 13px 20px; border: 0; border-radius: 3px; background: {{ v.bg }}; color: {{ v.fg }}; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;">{{ v.label }}</button>
                 </div>
-                <div style="display: flex; flex-direction: column; gap: 10px;">
-                  <sc-for list="{{ svc.points }}" as="pt" hint-placeholder-count="4">
-                    <div style="display: grid; grid-template-columns: 18px minmax(0, 1fr); gap: 10px; font-size: 15px; line-height: 1.5;">
-                      <span style="color: #E39A2B; font-weight: 700;">✓</span>
-                      <span>{{ pt.t }}</span>
-                    </div>
-                  </sc-for>
-                </div>
-              </div>
-              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 12px;">
-                <button onClick="{{ svc.add }}" style="cursor: pointer; padding: 15px; border: 0; border-radius: 3px; background: {{ svc.addBg }}; color: {{ svc.addFg }}; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;">{{ svc.addLabel }}</button>
-                <button onClick="{{ svc.skip }}" style="cursor: pointer; padding: 15px; border: 1px solid rgba(11,12,14,0.25); border-radius: 3px; background: transparent; color: #0B0C0E; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;" style-hover="border-color: #0B0C0E;">{{ svc.skipLabel }}</button>
-              </div>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ stepSell }}" hint-placeholder-val="{{ false }}">
+            <div>
+              <p style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: #A8701A; margin: 0 0 10px;">Sell</p>
+              <h2 style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 108; font-weight: 700; font-size: 28px; letter-spacing: -0.015em; margin: 0 0 6px;">How will you sell?</h2>
+              <p style="font-size: 15px; line-height: 1.55; color: rgba(11,12,14,0.62); margin: 0; max-width: 62ch;">Pick either option below, both, or neither and add it later. Nothing is charged until you sign up.</p>
             </div>
           </sc-if>
 
@@ -221,46 +240,12 @@
             </div>
           </sc-if>
 
-          <sc-if value="{{ step5 }}" hint-placeholder-val="{{ false }}">
-            <div style="display: flex; flex-direction: column; gap: 16px;">
-              <div>
-                <h2 style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 108; font-weight: 700; font-size: 28px; letter-spacing: -0.015em; margin: 0 0 6px;">Sell where your buyers scroll.</h2>
-                <p style="font-size: 15px; line-height: 1.55; color: rgba(11,12,14,0.62); margin: 0;">We open the shops, list your catalogue and connect orders to the warehouse. Choose setup only, or let our team run it.</p>
-              </div>
-              <sc-for list="{{ channels }}" as="ch" hint-placeholder-count="2">
-                <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px; display: flex; flex-direction: column; gap: 14px;">
-                  <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px;">
-                    <div style="display: flex; flex-direction: column; gap: 4px; max-width: 46ch;">
-                      <span style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 106; font-weight: 700; font-size: 19px;">{{ ch.name }}</span>
-                      <span style="font-size: 14px; line-height: 1.5; color: rgba(11,12,14,0.62);">{{ ch.desc }}</span>
-                    </div>
-                    <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #A8701A;">{{ ch.price }}</span>
-                  </div>
-                  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 3px; background: #F5F4F1; border-radius: 3px;">
-                    <sc-for list="{{ ch.opts }}" as="o" hint-placeholder-count="3">
-                      <button onClick="{{ o.onClick }}" style="cursor: pointer; border: 0; padding: 10px 8px; border-radius: 2px; background: {{ o.bg }}; color: {{ o.fg }}; font-size: 13px; font-weight: 500;">{{ o.label }}</button>
-                    </sc-for>
-                  </div>
-                  <span style="font-size: 13px; color: rgba(11,12,14,0.6);">{{ ch.note }}</span>
-                </div>
-              </sc-for>
-              <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 22px;">
-                <div style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 14px;">
-                  <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(11,12,14,0.55);">Monthly ad budget</span>
-                  <span style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 116; font-weight: 800; font-size: 38px; letter-spacing: -0.02em; line-height: 1;">{{ budgetFmt }}</span>
-                </div>
-                <input type="range" min="0" max="40000" step="1000" value="{{ budget }}" onChange="{{ onBudget }}" style="width: 100%;" />
-                <p style="font-size: 13px; color: rgba(11,12,14,0.6); margin: 12px 0 0;">Paid directly to TikTok and Meta. It is not part of your 2ACE invoice.</p>
-              </div>
-            </div>
-          </sc-if>
-
           <sc-if value="{{ step6 }}" hint-placeholder-val="{{ false }}">
             <div style="display: flex; flex-direction: column; gap: 16px;">
               <div>
                 <p style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #A8701A; margin: 0 0 10px;">New · 2ACE Market</p>
                 <h2 style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 108; font-weight: 700; font-size: 28px; letter-spacing: -0.015em; margin: 0 0 6px;">Skip the website. Skip the marketing bill.</h2>
-                <p style="font-size: 15px; line-height: 1.55; color: rgba(11,12,14,0.62); margin: 0; max-width: 62ch;">Instead of building your own store and paying for marketing, sell on 2ACE Market. We run the store, the listings and the promotion. No setup, no monthly fee, 15% only when something sells.</p>
+                <p style="font-size: 15px; line-height: 1.55; color: rgba(11,12,14,0.62); margin: 0; max-width: 62ch;">Instead of building your own store and paying for marketing, sell on 2ACE Market. We run the store, the listings and the promotion. No setup, no monthly fee. You pay a commission of {{ mkRange }} (by category) only when something sells.</p>
               </div>
               <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px; display: flex; flex-direction: column; gap: 14px;">
                 <div style="display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 12px;">
@@ -268,6 +253,13 @@
                   <span style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 116; font-weight: 800; letter-spacing: -0.02em; line-height: 1; font-size: 38px;">{{ mkSalesFmt }}</span>
                 </div>
                 <input type="range" min="5000" max="300000" step="5000" value="{{ mkSales }}" onChange="{{ onMkSales }}" style="width: 100%;" />
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(11,12,14,0.55);">Your main category</span>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                  <sc-for list="{{ mkCats }}" as="c" hint-placeholder-count="5">
+                    <button onClick="{{ c.onClick }}" style="cursor: pointer; min-height: 44px; padding: 10px 14px; border-radius: 22px; border: 1px solid {{ c.bd }}; background: {{ c.bg }}; color: {{ c.fg }}; font-size: 14px;">{{ c.label }}</button>
+                  </sc-for>
+                </div>
+                <span style="font-size: 13px; color: rgba(11,12,14,0.6);">Commission is per category and includes payment processing. It is about 30% below typical marketplace rates, and you pay nothing until something sells.</span>
               </div>
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 12px;">
                 <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px;">
@@ -387,6 +379,15 @@
 
   <sc-if value="{{ isCheckout }}" hint-placeholder-val="{{ false }}">
     <main style="max-width: 1180px; margin: 0 auto; padding: clamp(28px, 4vw, 52px) clamp(16px, 3vw, 32px) 96px;">
+        <sc-if value="{{ ownedNotice }}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 18px; margin: 0 0 20px; background: #0B0C0E; color: #F5F4F1; border-radius: 4px;">
+            <span style="font-size: 15px;"><strong style="color: #E39A2B;">You already have an active plan.</strong> Change or cancel it from your billing page.</span>
+            <span style="display: flex; gap: 10px;">
+              <button onClick="{{ goDash }}" style="cursor: pointer; padding: 9px 14px; border: 0; border-radius: 3px; background: #E39A2B; color: #0B0C0E; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;">Dashboard</button>
+              <a href="/account" style="padding: 9px 14px; border: 1px solid rgba(245,244,241,0.4); border-radius: 3px; color: #F5F4F1; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;">Billing</a>
+            </span>
+          </div>
+        </sc-if>
       <p style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #A8701A; margin: 0 0 14px;">Activate your plan</p>
       <h1 style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 110; font-weight: 800; font-size: clamp(28px, 3.6vw, 48px); line-height: 1; letter-spacing: -0.025em; margin: 0 0 30px;">{{ coTitle }}</h1>
       <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 32px; max-width: 640px;">
@@ -523,6 +524,12 @@
 
       <main style="flex: 1 1 620px; min-width: 0; padding: clamp(20px, 3vw, 36px);">
         <button class="dashtoggle" onClick="{{ toggleMenu }}" aria-label="Open menu"><span style="font-size: 18px; line-height: 1;">☰</span> Menu</button>
+        <sc-if value="{{ payConfirming }}" hint-placeholder-val="{{ false }}">
+          <div role="status" style="padding: 16px 20px; margin: 0 0 20px; background: #0B0C0E; color: #F5F4F1; border-radius: 4px; font-size: 15px;"><strong style="color: #E39A2B;">Confirming your payment…</strong> This usually takes a few seconds. You can keep this page open.</div>
+        </sc-if>
+        <sc-if value="{{ paySlow }}" hint-placeholder-val="{{ false }}">
+          <div role="status" style="padding: 16px 20px; margin: 0 0 20px; background: rgba(227,154,43,0.16); border: 1px solid #E39A2B; border-radius: 4px; font-size: 15px;"><strong>Still confirming your payment.</strong> Some payment methods take longer. Your plan goes live as soon as the payment clears, and we will email you.</div>
+        </sc-if>
 
         <sc-if value="{{ tabOverview }}" hint-placeholder-val="{{ true }}">
           <div style="display: flex; flex-direction: column; gap: 20px;">
@@ -1164,7 +1171,7 @@
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900}}">
 class Component extends DCLogic {
   state = {
-    view: 'build', step: 0, userEmail: '', menuOpen: false, logoUrl: '', orgName: '', userName: '', payErr: '',
+    view: 'build', step: 0, userEmail: '', menuOpen: false, logoUrl: '', orgName: '', userName: '', payErr: '', mkCat: 'home', payNotice: '', payBanner: '',
     storageType: 'pallet', qty: 12, estUnits: 6000, estSize: 'medium',
     pkgs: { ful: false, ret: false, imp: false }, orders: 1500,
     storeOn: false, domain: 'lumahome', domainStatus: null, theme: 'mono',
@@ -1216,19 +1223,53 @@ class Component extends DCLogic {
   }
   API = 'https://hvbcmilcjragrcezwzlo.supabase.co';
   ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2YmNtaWxjanJhZ3JjZXp3emxvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEwNjMyODMsImV4cCI6MjEwNjYzOTI4M30.Q6TlQnDToz2oPr4FXNgKdgdrZT3ojUToCroLRVQGRsw';
-  PLAN_KEYS = ['storageType', 'qty', 'orders', 'pkgs', 'storeOn', 'domain', 'tt', 'meta', 'marketOn', 'company', 'country', 'vat', 'email', 'signName'];
+  PLAN_KEYS = ['storageType', 'qty', 'orders', 'pkgs', 'storeOn', 'domain', 'tt', 'meta', 'marketOn', 'company', 'country', 'vat', 'step'];
+  // 2ACE Market commission: Allegro's published category commission (net) + ~1.2% payment fee, then 30% lower.
+  MK_CATS = [['home', 'Home & kitchen', 9], ['beauty', 'Beauty & health', 8], ['fashion', 'Fashion', 12], ['kids', 'Kids', 9], ['tech', 'Tech accessories', 4]]
+    .map(([k, name, base]) => ({ k, name, rate: Math.round((base + 1.2) * 0.7 * 10) / 10 }));
+  mkRate(k) { const c = this.MK_CATS.find((x) => x.k === k) || this.MK_CATS[0]; return c.rate; }
+  mkRange() { const r = this.MK_CATS.map((c) => c.rate); return Math.min(...r) + '–' + Math.max(...r) + '%'; }
+  PLAN_TTL = 24 * 3600 * 1000;
   toLogin(next) { location.href = '/login?next=' + encodeURIComponent(next || '/platform?view=dash'); }
+  planSnap() { const o = {}; this.PLAN_KEYS.forEach((k) => { o[k] = this.state[k]; }); return o; }
   savePlan() {
-    try { const o = {}; this.PLAN_KEYS.forEach((k) => { o[k] = this.state[k]; }); localStorage.setItem('ace_plan', JSON.stringify(o)); } catch (e) { /* storage blocked */ }
+    try { localStorage.setItem('ace_plan', JSON.stringify({ v: 2, t: Date.now(), plan: this.planSnap() })); } catch (e) { /* storage blocked */ }
   }
+  clearPlan() { try { localStorage.removeItem('ace_plan'); } catch (e) { /* ignore */ } }
   restorePlan() {
     try {
       const o = JSON.parse(localStorage.getItem('ace_plan') || 'null');
-      if (!o) return {};
-      const out = {}; this.PLAN_KEYS.forEach((k) => { if (o[k] !== undefined) out[k] = o[k]; });
+      if (!o || !o.plan || Date.now() - (o.t || 0) > this.PLAN_TTL) { if (o) this.clearPlan(); return {}; }
+      const out = {}; this.PLAN_KEYS.forEach((k) => { if (o.plan[k] !== undefined) out[k] = o.plan[k]; });
+      delete out.step; // always open the builder at Space; only the choices are restored
+      delete out.tt; delete out.meta; // marketing channels are no longer offered in the plan builder
       return out;
     } catch (e) { return {}; }
   }
+
+  // Keep progress saved and make the browser Back button walk the wizard instead of leaving the site.
+  componentDidUpdate() {
+    const s = this.state;
+    if (this.noPersist) return;
+    if (s.view === 'build' || s.view === 'checkout') {
+      const snap = JSON.stringify(this.planSnap());
+      if (snap !== this.lastSnap) { this.lastSnap = snap; clearTimeout(this.saveT); this.saveT = setTimeout(() => this.savePlan(), 400); }
+    }
+    const nav = s.view + ':' + s.step + ':' + s.checkout;
+    if (nav !== this.lastNav) {
+      const first = this.lastNav === undefined;
+      this.lastNav = nav;
+      if (this.popping) { this.popping = false; return; }
+      try { history[first ? 'replaceState' : 'pushState']({ view: s.view, step: s.step, checkout: s.checkout }, '', location.pathname); } catch (e) { /* ignore */ }
+    }
+  }
+  onPop = (e) => {
+    const st = e.state;
+    if (!st) return;
+    this.popping = true;
+    this.setState({ view: st.view, step: st.step, checkout: st.checkout });
+    window.scrollTo(0, 0);
+  };
 
   // Company name + logo for the header: members -> organizations via the REST API with the user's token.
   async loadOrg(sess) {
@@ -1259,16 +1300,18 @@ class Component extends DCLogic {
   componentDidMount() {
     const sess = this.authSession();
     const q = new URLSearchParams(location.search);
-    const patch = Object.assign({ userEmail: sess && sess.user ? sess.user.email : '' }, this.restorePlan());
     const view = q.get('view'), co = q.get('checkout');
+    if (co === 'success') this.clearPlan();
+    const patch = Object.assign({ userEmail: sess && sess.user ? sess.user.email : '' }, co === 'success' ? {} : this.restorePlan());
     if (view === 'checkout') { patch.view = 'checkout'; patch.checkout = sess ? 1 : 0; }
-    if (co === 'cancelled') { patch.view = 'checkout'; patch.checkout = 2; }
+    if (co === 'cancelled') { patch.view = 'checkout'; patch.checkout = 2; patch.payNotice = 'Payment was cancelled, nothing was charged. Your plan is saved, so you can try again whenever you are ready.'; }
     this.setState(patch);
+    window.addEventListener('popstate', this.onPop);
     if (sess) this.loadOrg(sess);
     if (view === 'dash') { if (sess) this.setState({ view: 'dash' }); else this.toLogin(); }
     if (co === 'success') {
       if (!sess) { this.toLogin('/platform?view=dash'); return; }
-      this.setState({ view: 'dash', tab: 'overview' });
+      this.setState({ view: 'dash', tab: 'overview', payBanner: 'confirming' });
       this.waitForPayment(sess);
     }
     if (view || co) { try { history.replaceState(null, '', '/platform'); } catch (e) { /* ignore */ } }
@@ -1276,20 +1319,19 @@ class Component extends DCLogic {
 
   // After Stripe redirects back, the webhook flips the company to active. Poll until it does.
   waitForPayment(sess) {
-    this.showToast('Confirming your payment…');
     let tries = 0;
     const tick = async () => {
       tries += 1;
       await this.loadOrg(sess);
-      if (this.state.activated) { this.showToast('Payment received. Your plan is live.'); return; }
+      if (this.state.activated) { this.setState({ payBanner: '' }); return; }
       if (tries < 20) this.payPoll = setTimeout(tick, 2000);
-      else this.showToast('Still confirming. Your plan goes live as soon as the payment clears.');
+      else this.setState({ payBanner: 'slow' });
     };
     this.payPoll = setTimeout(tick, 1500);
   }
 
 
-  componentWillUnmount() { clearTimeout(this.toastT); clearTimeout(this.domT); clearTimeout(this.syncT); clearTimeout(this.payT); clearTimeout(this.payPoll); }
+  componentWillUnmount() { clearTimeout(this.toastT); clearTimeout(this.domT); clearTimeout(this.syncT); clearTimeout(this.payT); clearTimeout(this.payPoll); clearTimeout(this.saveT); window.removeEventListener('popstate', this.onPop); }
 
   fmt(n) { return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' zł'; }
   num(n) { return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
@@ -1320,7 +1362,7 @@ class Component extends DCLogic {
       if (s[k] === 'setup') m.push({ label: name, detail: 'Shop setup and catalogue', v: 0, once: setup });
       if (s[k] === 'managed') m.push({ label: name, detail: 'Setup, then run by our team', v: managed, once: setup });
     });
-    if (s.marketOn) m.push({ label: '2ACE Market', detail: '15% commission on market sales', v: 0, comm: true });
+    if (s.marketOn) m.push({ label: '2ACE Market', detail: this.mkRange() + ' commission on market sales', v: 0, comm: true });
     const monthly = m.reduce((a, l) => a + l.v, 0);
     const once = m.reduce((a, l) => a + (l.once || 0), 0);
     return { lines: m, monthly, once, storage, returns };
@@ -1330,16 +1372,16 @@ class Component extends DCLogic {
     const s = this.state, st = this.STORAGE[s.storageType];
     const P = this.pricing();
     const set = (o) => () => this.setState(o);
-    const stepNames = ['Space', 'Fulfillment', 'Returns', 'Import', 'Storefront', 'Marketing', '2ACE Market', 'Review'];
+    const stepNames = ['Space', 'Services', 'Sell', 'Review'];
     const customer = s.company.trim() ? s.company.trim().replace(/\s+sp\. z o\.o\.$/i, '') : (s.orgName || 'Luma Home');
     const emailOk = /.+@.+\..+/.test(s.email);
     const C = this.COUNTRIES, cc = C.find((c) => c.code === s.country) || C[0];
     const formOk = s.company.trim() && s.vat.trim().length >= 5 && emailOk;
 
     const next = () => {
-      if (s.step < 7) { this.setState({ step: s.step + 1 }); window.scrollTo(0, 0); return; }
+      if (s.step < 3) { this.setState({ step: s.step + 1 }); window.scrollTo(0, 0); return; }
       if (!formOk) { this.setState({ tried: true }); return; }
-      this.setState({ view: 'checkout', checkout: 0, coTried: false, acctEmail: s.acctEmail || s.email });
+      this.setState({ view: 'checkout', checkout: s.userEmail ? 1 : 0, coTried: false, acctEmail: s.acctEmail || s.email });
       window.scrollTo(0, 0);
     };
 
@@ -1504,10 +1546,10 @@ class Component extends DCLogic {
         fg: i <= s.step ? '#0B0C0E' : 'rgba(11,12,14,0.45)',
         onClick: set({ step: i })
       })),
-      step0: s.step === 0, step4: s.step === 4, step5: s.step === 5, step6: s.step === 6, step7: s.step === 7, stepSvc: s.step >= 1 && s.step <= 3,
+      step0: s.step === 0, step4: s.step === 2, step6: s.step === 2, step7: s.step === 3, stepSvc: s.step === 1, stepSell: s.step === 2,
       next, back: () => this.setState({ step: Math.max(0, s.step - 1) }),
       backVis: s.step === 0 ? 'hidden' : 'visible',
-      ctaLabel: s.step === 7 ? 'Continue to sign-up' : 'Continue to ' + stepNames[s.step + 1].toLowerCase(),
+      ctaLabel: s.step === 3 ? 'Continue to sign-up' : 'Continue to ' + stepNames[s.step + 1].toLowerCase(),
 
       storageOpts: Object.keys(this.STORAGE).map((k) => {
         const o = this.STORAGE[k];
@@ -1540,17 +1582,16 @@ class Component extends DCLogic {
         this.showToast('Set to ' + n + ' pallets · ' + this.num(n * 1.2) + ' m².');
       },
 
-      svc: (() => {
-        const d = svcDefs[Math.min(2, Math.max(0, s.step - 1))], on = !!s.pkgs[d.k];
-        const setOn = (v, adv) => () => { this.setState({ pkgs: Object.assign({}, s.pkgs, { [d.k]: v }), step: adv ? s.step + 1 : s.step }); if (adv) window.scrollTo(0, 0); };
+      svcList: svcDefs.map((d) => {
+        const on = !!s.pkgs[d.k];
         return {
-          kicker: 'Add-on ' + Math.max(1, s.step) + ' of 3', title: d.title, lead: d.lead, name: d.name, price: d.rate ? '+ ' + this.fmt(d.rate) + ' / m² · ' + this.fmt(s.qty * st.m2 * d.rate) + ' / month' : d.price,
-          points: d.points.map((t) => ({ t })), bd: on ? '#0B0C0E' : 'rgba(11,12,14,0.12)',
-          addLabel: on ? 'Added ✓' : d.addLabel, addBg: on ? '#0B0C0E' : '#E39A2B', addFg: on ? '#F5F4F1' : '#0B0C0E',
-          add: on ? setOn(false, false) : setOn(true, true),
-          skipLabel: on ? 'Remove' : 'Skip for now', skip: on ? setOn(false, false) : setOn(false, true)
+          name: d.name, lead: d.lead, points: d.points.map((t) => ({ t })),
+          price: d.rate ? '+ ' + this.fmt(d.rate) + ' / m² · ' + this.fmt(s.qty * st.m2 * d.rate) + ' / month' : d.price,
+          bd: on ? '#0B0C0E' : 'rgba(11,12,14,0.12)',
+          label: on ? 'Added ✓  Tap to remove' : d.addLabel, bg: on ? '#0B0C0E' : '#E39A2B', fg: on ? '#F5F4F1' : '#0B0C0E',
+          toggle: () => this.setState({ pkgs: Object.assign({}, s.pkgs, { [d.k]: !on }) })
         };
-      })(),
+      }),
       needsOrders: s.pkgs.ful || s.pkgs.ret || s.pkgs.pack,
       orders: s.orders, ordersFmt: this.num(s.orders), returnsEst: this.num(P.returns),
       onOrders: (e) => this.setState({ orders: Number(e.target.value) }),
@@ -1576,8 +1617,8 @@ class Component extends DCLogic {
 
       channels, onBudget: (e) => this.setState({ budget: Number(e.target.value) }),
 
-      reviewLines: P.lines.map((l) => ({ label: l.label, detail: l.detail, monthly: l.comm ? '15% / sale' : l.incl ? 'Included' : l.quote ? 'On quote' : l.v ? this.fmt(l.v) : '—', once: l.once ? this.fmt(l.once) : '—' })),
-      sumLines: P.lines.map((l, i) => ({ label: (i ? '+ ' : '') + l.label, amount: l.comm ? '15% / sale' : l.incl ? 'Included' : l.quote ? 'On quote' : l.v ? this.fmt(l.v) : this.fmt(l.once) + ' once' })),
+      reviewLines: P.lines.map((l) => ({ label: l.label, detail: l.detail, monthly: l.comm ? this.mkRange() + ' / sale' : l.incl ? 'Included' : l.quote ? 'On quote' : l.v ? this.fmt(l.v) : '—', once: l.once ? this.fmt(l.once) : '—' })),
+      sumLines: P.lines.map((l, i) => ({ label: (i ? '+ ' : '') + l.label, amount: l.comm ? this.mkRange() + ' / sale' : l.incl ? 'Included' : l.quote ? 'On quote' : l.v ? this.fmt(l.v) : this.fmt(l.once) + ' once' })),
       company: s.company, vat: s.vat, email: s.email,
       onCompany: (e) => this.setState({ company: e.target.value }),
       onVat: (e) => this.setState({ vat: e.target.value.toUpperCase() }),
@@ -1653,6 +1694,8 @@ class Component extends DCLogic {
       ''
     ];
     const coNext = async () => {
+      if (s.payNotice) this.setState({ payNotice: '' });
+      if (s.activated) { this.setState({ payErr: 'You already have an active plan. Manage it from Account > Billing.' }); return; }
       if (errs[s.checkout]) { this.setState({ coTried: true }); return; }
       if (s.checkout < 2) { this.setState({ checkout: s.checkout + 1, coTried: false }); window.scrollTo(0, 0); return; }
       if (s.paying) return;
@@ -1669,7 +1712,7 @@ class Component extends DCLogic {
           })
         });
         const out = await r.json().catch(() => ({}));
-        if (!r.ok || !out.url) throw new Error(r.status === 401 ? 'Your session expired. Please log in again.' : (out.error || 'Could not start the payment'));
+        if (!r.ok || !out.url) throw new Error(r.status === 401 ? 'Your session expired. Please log in again.' : r.status === 409 ? 'You already have an active plan. Manage it from Account > Billing.' : (out.error || 'Could not start the payment'));
         this.savePlan();
         window.location.href = out.url;
       } catch (e) {
@@ -1679,7 +1722,7 @@ class Component extends DCLogic {
     const sel = (on) => this.sel(on);
 
     const DIY = [['.pl storefront, hosting and care', 199], ['TikTok Shop, managed', 1890], ['Meta Business, managed', 1690]];
-    const diy = DIY.reduce((a, r) => a + r[1], 0), comm = s.mkSales * 0.15;
+    const diy = DIY.reduce((a, r) => a + r[1], 0), comm = s.mkSales * this.mkRate(s.mkCat) / 100;
     // inbound
     const days = [];
     const d0 = new Date(2026, 9, 1);
@@ -1763,7 +1806,7 @@ class Component extends DCLogic {
     }));
 
     return {
-      coTitle: ['Create your account', 'Sign the agreement', 'Pay and go live'][s.checkout],
+      coTitle: [s.userEmail ? 'Review your account' : 'Create your account', 'Sign the agreement', 'Pay and go live'][s.checkout],
       coSteps: ['Account', 'Agreement', 'Payment'].map((label, i) => ({ n: '0' + (i + 1), label,
         bar: i === s.checkout ? '#E39A2B' : i < s.checkout ? '#0B0C0E' : 'rgba(11,12,14,0.14)', fg: i <= s.checkout ? '#0B0C0E' : 'rgba(11,12,14,0.45)',
         onClick: () => { if (i <= s.checkout) this.setState({ checkout: i, coTried: false }); } })),
@@ -1798,22 +1841,25 @@ class Component extends DCLogic {
       vatLabel, vatNote,
       invLines: P.lines.filter((l) => l.v || l.once || l.quote).map((l) => ({ label: l.label, amount: l.quote ? 'On quote' : this.fmt((l.v || 0) + (l.once || 0)) })),
       netFmt: this.fmt(net), vatFmt: this.fmt(vat), grossFmt: this.fmt(net + vat),
-      coErr: !!s.payErr || (t && !!errs[s.checkout]), coErrMsg: s.payErr || errs[s.checkout],
+      coErr: !!s.payErr || !!s.payNotice || (t && !!errs[s.checkout]), coErrMsg: s.payErr || s.payNotice || errs[s.checkout],
+      ownedNotice: !!s.activated, goDash: () => { this.setState({ view: 'dash' }); window.scrollTo(0, 0); },
+      payConfirming: s.payBanner === 'confirming', paySlow: s.payBanner === 'slow',
       signedIn: !!s.userEmail, signedOut: !s.userEmail, signedInAs: s.userEmail, goLogin: () => { this.savePlan(); this.toLogin('/platform?view=checkout'); },
-      coBack: () => { if (s.checkout === 0) this.setState({ view: 'build', step: 7 }); else this.setState({ checkout: s.checkout - 1, coTried: false }); window.scrollTo(0, 0); },
+      coBack: () => { if (s.checkout === 0 || (s.checkout === 1 && s.userEmail)) this.setState({ view: 'build', step: 3 }); else this.setState({ checkout: s.checkout - 1, coTried: false }); window.scrollTo(0, 0); },
       coNext, coCta: s.checkout < 2 ? 'Continue' : s.paying ? 'Opening secure payment…' : 'Continue to secure payment',
 
       tabMarket: s.tab === 'market', mkOn: s.marketOn, mkOff: !s.marketOn,
       mkSales: s.mkSales, onMkSales: (e) => this.setState({ mkSales: Number(e.target.value) }),
       diyRows: DIY.map(([k, v]) => ({ k, v: this.fmt(v) })), diyFmt: this.fmt(diy),
       mkIncl: ['Store, checkout and payments', 'Listings, photos and product copy', 'Marketing and promotions', 'No setup fee'].map((t) => ({ t })), setupFmt: this.fmt(2950 + 1690 + 1190),
-      mkRateLabel: '15% of ' + this.fmt(s.mkSales), mkCommFmt: this.fmt(comm), mkSalesFmt: this.fmt(s.mkSales),
+      mkRateLabel: this.mkRate(s.mkCat) + '% of ' + this.fmt(s.mkSales), mkRange: this.mkRange(),
+      mkCats: this.MK_CATS.map((c) => Object.assign({ label: c.name + ' · ' + c.rate + '%', onClick: () => this.setState({ mkCat: c.k }) }, this.sel(s.mkCat === c.k))), mkCommFmt: this.fmt(comm), mkSalesFmt: this.fmt(s.mkSales),
       mkSaveFmt: this.fmt(Math.max(0, diy - comm)), mkSavePct: Math.max(0, Math.round((1 - comm / diy) * 100)) + '% saved',
       mkAddLabel: s.marketOn ? 'Added ✓ · click to remove' : 'Add 2ACE Market', mkAddBg: s.marketOn ? '#0B0C0E' : '#E39A2B', mkAddFg: s.marketOn ? '#F5F4F1' : '#0B0C0E',
-      mkAdd: () => { if (s.marketOn) { this.setState({ marketOn: false }); return; } this.setState({ marketOn: true, step: 7 }); window.scrollTo(0, 0); },
+      mkAdd: () => { if (s.marketOn) { this.setState({ marketOn: false }); return; } this.setState({ marketOn: true }); },
       mkJoin: () => { this.setState({ marketOn: true }); this.showToast('Welcome to 2ACE Market. We start listing your products today.'); },
-      mkStatusLine: s.marketOn ? 'Live · we handle listing, marketing and customer care · 15% commission' : 'Not joined yet',
-      mkKpis: [{ l: 'Market sales · 30 d', v: '46 180 zł', s: '+22% vs last month' }, { l: 'Orders', v: '392', s: 'Avg. basket 118 zł' }, { l: 'Commission', v: this.fmt(46180 * 0.15), s: '15% of sales' }, { l: 'Tickets solved', v: '57', s: 'Median reply 2 min' }],
+      mkStatusLine: s.marketOn ? 'Live · we handle listing, marketing and customer care · ' + this.mkRange() + ' commission' : 'Not joined yet',
+      mkKpis: [{ l: 'Market sales · 30 d', v: '46 180 zł', s: '+22% vs last month' }, { l: 'Orders', v: '392', s: 'Avg. basket 118 zł' }, { l: 'Commission', v: this.fmt(46180 * this.mkRate(s.mkCat) / 100), s: this.mkRate(s.mkCat) + '% of sales' }, { l: 'Tickets solved', v: '57', s: 'Median reply 2 min' }],
       mkListings: s.products.map((p, i) => {
         const st = !p.hs || !(p.l && p.w && p.h) ? ['Needs data', 'rgba(180,68,46,0.12)', '#B4442E'] : i === 5 ? ['In review', 'rgba(227,154,43,0.18)', '#8A5A12'] : ['Live', 'rgba(47,125,85,0.12)', '#2F7D55'];
         return { sku: p.sku, name: p.name, sold: st[0] === 'Live' ? (40 + i * 13) + ' sold' : '—', status: st[0], pillBg: st[1], pillFg: st[2] };

@@ -151,7 +151,7 @@
     busy($('f-up'), true); say($('msg'), 'Creating account...');
     const data = { full_name: v('up-name'), phone: v('up-phone'), company: v('up-company'), country: v('up-country'),
                    vat_id: v('up-tax'), address_line: v('up-addr'), postal_code: v('up-zip'), city: v('up-city') };
-    const { data: out, error } = await sb.auth.signUp({ email, password, options: { data, emailRedirectTo: location.origin + '/login' } });
+    const { data: out, error } = await sb.auth.signUp({ email, password, options: { data, emailRedirectTo: location.origin + '/login?next=' + encodeURIComponent(NEXT) } });
     busy($('f-up'), false);
     if (error) return say($('msg'), nice(error), 'err');
     // Supabase returns an empty identities list (not an error) for an already-registered email.
@@ -163,7 +163,7 @@
   $('forgot').onclick = async () => {
     const email = $('in-email').value.trim();
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return say($('msg'), 'Type your email above first, then click Forgot password.', 'err');
-    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + '/login' });
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + '/login?next=' + encodeURIComponent(NEXT) });
     if (error) return say($('msg'), nice(error), 'err');
     say($('msg'), 'If that email has an account, a reset link is on its way.', 'ok');
   };
