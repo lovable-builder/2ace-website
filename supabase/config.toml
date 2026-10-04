@@ -351,3 +351,6 @@ verify_jwt = true
 
 [functions.change-plan]
 verify_jwt = true
+
+[functions.request-help]
+verify_jwt = true
