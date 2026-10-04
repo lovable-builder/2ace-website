@@ -2,7 +2,7 @@
 // Keep in sync with the browser version; the browser total is display only.
 
 export const STORAGE = {
-  shelf: { name: 'Shelf bins', unit: 'bins', price: 90, min: 10, max: 2000, m2: 0.3 },
+  shelf: { name: 'Shelf bins', unit: 'bins', price: 90, min: 1, max: 2000, m2: 0.3 },
   pallet: { name: 'Pallets', unit: 'pallets', price: 360, min: 1, max: 1000, m2: 1.2 },
 } as const;
 
