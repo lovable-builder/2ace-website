@@ -391,19 +391,16 @@
         <div style="flex: 1 1 540px; min-width: 0; display: flex; flex-direction: column; gap: 16px;">
 
           <sc-if value="{{ co0 }}" hint-placeholder-val="{{ true }}">
-            <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px; display: flex; flex-direction: column; gap: 16px;">
-              <button onClick="{{ onGoogle }}" style="cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 12px; padding: 13px; border: 1px solid rgba(11,12,14,0.25); border-radius: 3px; background: #FFFFFF; font-size: 15px; font-weight: 500; color: #0B0C0E;" style-hover="border-color: #0B0C0E;"><span style="display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; border: 1px solid rgba(11,12,14,0.2); font-family: Archivo, sans-serif; font-weight: 800; font-size: 13px;">G</span>Continue with Google</button>
-              <div style="display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: center; gap: 12px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; color: rgba(11,12,14,0.45);"><span style="height: 1px; background: rgba(11,12,14,0.12);"></span>OR WITH EMAIL<span style="height: 1px; background: rgba(11,12,14,0.12);"></span></div>
-              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 12px;">
-                <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.55);">Work email
-                  <input type="email" value="{{ acctEmail }}" onChange="{{ onAcctEmail }}" placeholder="name@yourcompany.com" style="padding: 12px; border-radius: 3px; font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; letter-spacing: 0; text-transform: none; background: #F5F4F1; color: #0B0C0E; min-width: 0; border: 1px solid {{ acctEmailBd }};" />
-                </label>
-                <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.55);">Password
-                  <input type="password" value="{{ pw }}" onChange="{{ onPw }}" placeholder="At least 8 characters" style="padding: 12px; border-radius: 3px; font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; letter-spacing: 0; text-transform: none; background: #F5F4F1; color: #0B0C0E; min-width: 0; border: 1px solid {{ pwBd }};" />
-                </label>
-              </div>
-              <span style="font-size: 13px; color: {{ pwHintColor }};">{{ pwHint }}</span>
-              <p style="font-size: 14px; line-height: 1.55; color: rgba(11,12,14,0.62); margin: 0;">You sign in as the account owner. Invite operations, finance and marketing colleagues from the dashboard.</p>
+            <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+              <sc-if value="{{ signedIn }}" hint-placeholder-val="{{ false }}">
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #2F7D55;">Signed in</span>
+                <p style="font-size: 16px; line-height: 1.5; margin: 0;">{{ signedInAs }}</p>
+                <p style="font-size: 14px; line-height: 1.55; color: rgba(11,12,14,0.62); margin: 0;">This account becomes the owner of your plan. Invite operations, finance and marketing colleagues from the dashboard.</p>
+              </sc-if>
+              <sc-if value="{{ signedOut }}" hint-placeholder-val="{{ true }}">
+                <p style="font-size: 16px; line-height: 1.5; margin: 0;">Log in or create your account to continue. Your plan choices are saved and will be waiting for you.</p>
+                <button onClick="{{ goLogin }}" style="align-self: flex-start; cursor: pointer; padding: 13px 22px; border: 0; background: #E39A2B; border-radius: 3px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: #0B0C0E;">Log in or create account</button>
+              </sc-if>
             </div>
           </sc-if>
 
@@ -446,17 +443,9 @@
                 </sc-for>
               </div>
               <sc-if value="{{ payCard }}" hint-placeholder-val="{{ true }}">
-                <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: 12px;">
-                  <div style="grid-column: 1 / -1;"><label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.55);">Card number
-                  <input type="text" value="{{ cardNo }}" onChange="{{ onCardNo }}" placeholder="4242 4242 4242 4242" style="padding: 12px; border-radius: 3px; font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; letter-spacing: 0; text-transform: none; background: #F5F4F1; color: #0B0C0E; min-width: 0; border: 1px solid {{ cardNoBd }};" />
-                </label></div>
-                  <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.55);">Expiry
-                  <input type="text" value="{{ cardExp }}" onChange="{{ onCardExp }}" placeholder="MM / YY" style="padding: 12px; border-radius: 3px; font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; letter-spacing: 0; text-transform: none; background: #F5F4F1; color: #0B0C0E; min-width: 0; border: 1px solid {{ cardExpBd }};" />
-                </label>
-                  <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.55);">CVC
-                  <input type="text" value="{{ cardCvc }}" onChange="{{ onCardCvc }}" placeholder="123" style="padding: 12px; border-radius: 3px; font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; letter-spacing: 0; text-transform: none; background: #F5F4F1; color: #0B0C0E; min-width: 0; border: 1px solid {{ cardCvcBd }};" />
-                </label>
-                  <span style="grid-column: 1 / -1; font-size: 13px; color: rgba(11,12,14,0.6);">Charged today for the first month and setup. Then monthly on the 1st, from this card.</span>
+                <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px; display: flex; flex-direction: column; gap: 8px;">
+                  <span style="font-family: Archivo, sans-serif; font-weight: 700; font-size: 17px;">Secure payment on Stripe</span>
+                  <span style="font-size: 14px; line-height: 1.55; color: rgba(11,12,14,0.65);">You enter your payment details on Stripe's own page, so your card number never touches 2ACE. Charged today for the first month and setup, then monthly.</span>
                 </div>
               </sc-if>
               <sc-if value="{{ payBank }}" hint-placeholder-val="{{ false }}">
@@ -1161,7 +1150,7 @@
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900}}">
 class Component extends DCLogic {
   state = {
-    view: 'build', step: 0, userEmail: '', logoUrl: '', orgName: '', userName: '',
+    view: 'build', step: 0, userEmail: '', logoUrl: '', orgName: '', userName: '', payErr: '',
     storageType: 'pallet', qty: 12, estUnits: 6000, estSize: 'medium',
     pkgs: { ful: false, ret: false, imp: false }, orders: 1500,
     storeOn: false, domain: 'lumahome', domainStatus: null, theme: 'mono',
@@ -1211,7 +1200,21 @@ class Component extends DCLogic {
     } catch (e) { /* storage blocked or corrupt: treat as signed out */ }
     return null;
   }
-  toLogin() { location.href = '/login?next=' + encodeURIComponent('/platform?view=dash'); }
+  API = 'https://hvbcmilcjragrcezwzlo.supabase.co';
+  ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2YmNtaWxjanJhZ3JjZXp3emxvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEwNjMyODMsImV4cCI6MjEwNjYzOTI4M30.Q6TlQnDToz2oPr4FXNgKdgdrZT3ojUToCroLRVQGRsw';
+  PLAN_KEYS = ['storageType', 'qty', 'orders', 'pkgs', 'storeOn', 'domain', 'tt', 'meta', 'marketOn', 'company', 'country', 'vat', 'email', 'signName'];
+  toLogin(next) { location.href = '/login?next=' + encodeURIComponent(next || '/platform?view=dash'); }
+  savePlan() {
+    try { const o = {}; this.PLAN_KEYS.forEach((k) => { o[k] = this.state[k]; }); localStorage.setItem('ace_plan', JSON.stringify(o)); } catch (e) { /* storage blocked */ }
+  }
+  restorePlan() {
+    try {
+      const o = JSON.parse(localStorage.getItem('ace_plan') || 'null');
+      if (!o) return {};
+      const out = {}; this.PLAN_KEYS.forEach((k) => { if (o[k] !== undefined) out[k] = o[k]; });
+      return out;
+    } catch (e) { return {}; }
+  }
 
   // Company name + logo for the header: members -> organizations via the REST API with the user's token.
   async loadOrg(sess) {
@@ -1220,13 +1223,14 @@ class Component extends DCLogic {
     const get = (path) => fetch(base + '/rest/v1/' + path, { headers: H }).then((r) => (r.ok ? r.json() : [])).catch(() => []);
     const uid = sess.user.id;
     const [m, pr] = await Promise.all([
-      get('members?select=organizations(name,country,vat_id,logo_path)&user_id=eq.' + uid + '&limit=1'),
+      get('members?select=organizations(name,country,vat_id,logo_path,status)&user_id=eq.' + uid + '&limit=1'),
       get('profiles?select=full_name&user_id=eq.' + uid + '&limit=1')
     ]);
     const o = m[0] && m[0].organizations;
     const patch = { userName: (pr[0] && pr[0].full_name) || '' };
     if (o) {
       patch.orgName = o.name || '';
+      patch.activated = o.status === 'active';
       if (o.logo_path) patch.logoUrl = base + '/storage/v1/object/public/logos/' + encodeURI(o.logo_path);
       // Prefill the plan review form once, without overwriting what the user already typed.
       const st = this.state;
@@ -1240,14 +1244,38 @@ class Component extends DCLogic {
 
   componentDidMount() {
     const sess = this.authSession();
-    this.setState({ userEmail: sess && sess.user ? sess.user.email : '' });
+    const q = new URLSearchParams(location.search);
+    const patch = Object.assign({ userEmail: sess && sess.user ? sess.user.email : '' }, this.restorePlan());
+    const view = q.get('view'), co = q.get('checkout');
+    if (view === 'checkout') { patch.view = 'checkout'; patch.checkout = sess ? 1 : 0; }
+    if (co === 'cancelled') { patch.view = 'checkout'; patch.checkout = 2; }
+    this.setState(patch);
     if (sess) this.loadOrg(sess);
-    if (new URLSearchParams(location.search).get('view') === 'dash') {
-      if (sess) this.setState({ view: 'dash' }); else this.toLogin();
+    if (view === 'dash') { if (sess) this.setState({ view: 'dash' }); else this.toLogin(); }
+    if (co === 'success') {
+      if (!sess) { this.toLogin('/platform?view=dash'); return; }
+      this.setState({ view: 'dash', tab: 'overview' });
+      this.waitForPayment(sess);
     }
+    if (view || co) { try { history.replaceState(null, '', '/platform'); } catch (e) { /* ignore */ } }
   }
 
-  componentWillUnmount() { clearTimeout(this.toastT); clearTimeout(this.domT); clearTimeout(this.syncT); clearTimeout(this.payT); }
+  // After Stripe redirects back, the webhook flips the company to active. Poll until it does.
+  waitForPayment(sess) {
+    this.showToast('Confirming your payment…');
+    let tries = 0;
+    const tick = async () => {
+      tries += 1;
+      await this.loadOrg(sess);
+      if (this.state.activated) { this.showToast('Payment received. Your plan is live.'); return; }
+      if (tries < 20) this.payPoll = setTimeout(tick, 2000);
+      else this.showToast('Still confirming. Your plan goes live as soon as the payment clears.');
+    };
+    this.payPoll = setTimeout(tick, 1500);
+  }
+
+
+  componentWillUnmount() { clearTimeout(this.toastT); clearTimeout(this.domT); clearTimeout(this.syncT); clearTimeout(this.payT); clearTimeout(this.payPoll); }
 
   fmt(n) { return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' zł'; }
   num(n) { return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
@@ -1604,21 +1632,33 @@ class Component extends DCLogic {
     const cardOk = s.cardNo.replace(/\s/g, '').length >= 15 && /^\d{2}\s?\/\s?\d{2}$/.test(s.cardExp.trim()) && s.cardCvc.trim().length >= 3;
     const t = s.coTried;
     const errs = [
-      !(s.google || (emailOk && pwOk)) ? 'Add a valid email and a password of at least 8 characters, or continue with Google.' : '',
+      !s.userEmail ? 'Log in or create an account to continue.' : '',
       !(s.accept && s.signName.trim().length > 2) ? 'Accept the agreement and type your full name to sign.' : '',
-      s.payMethod === 'card' && !cardOk ? 'Check the card number, expiry (MM / YY) and CVC.' : ''
+      ''
     ];
-    const coNext = () => {
+    const coNext = async () => {
       if (errs[s.checkout]) { this.setState({ coTried: true }); return; }
       if (s.checkout < 2) { this.setState({ checkout: s.checkout + 1, coTried: false }); window.scrollTo(0, 0); return; }
       if (s.paying) return;
-      this.setState({ paying: true });
-      clearTimeout(this.payT);
-      this.payT = setTimeout(() => {
-        this.setState({ paying: false, activated: true, view: 'dash', tab: 'inbound' });
-        window.scrollTo(0, 0);
-        this.showToast(s.payMethod === 'card' ? 'Payment received. Your plan is live.' : 'Pro-forma sent. Your plan goes live when the transfer lands.');
-      }, 1200);
+      const sess = this.authSession();
+      if (!sess) { this.savePlan(); this.toLogin('/platform?view=checkout'); return; }
+      this.setState({ paying: true, payErr: '' });
+      try {
+        const r = await fetch(this.API + '/functions/v1/create-checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', apikey: this.ANON, Authorization: 'Bearer ' + sess.access_token },
+          body: JSON.stringify({
+            config: { storageType: s.storageType, qty: s.qty, pkgs: s.pkgs, storeOn: s.storeOn, domain: s.domain, tt: s.tt, meta: s.meta, marketOn: s.marketOn },
+            company: s.company.trim() || s.orgName, country: s.country, vatId: s.vat, signName: s.signName.trim()
+          })
+        });
+        const out = await r.json().catch(() => ({}));
+        if (!r.ok || !out.url) throw new Error(r.status === 401 ? 'Your session expired. Please log in again.' : (out.error || 'Could not start the payment'));
+        this.savePlan();
+        window.location.href = out.url;
+      } catch (e) {
+        this.setState({ paying: false, payErr: String(e.message || e) });
+      }
     };
     const sel = (on) => this.sel(on);
 
@@ -1730,7 +1770,7 @@ class Component extends DCLogic {
       acceptTick: s.accept ? '✓' : '', acceptBg: s.accept ? '#E39A2B' : 'transparent', acceptBd: t && !s.accept ? '#B4442E' : '#0B0C0E',
       signName: s.signName, onSignName: fld('signName'), signBd: bd(t && s.checkout === 1 && s.signName.trim().length <= 2),
       companyName: s.company.trim() || customer, countryName: cc.name, vatShow: s.vat || '—',
-      payOpts: [['card', 'Card', 'Visa, Mastercard, Amex. Goes live immediately.'], ['bank', 'Bank transfer', 'Pay the pro-forma. Live once the transfer lands.']].map(([k, name, desc]) => Object.assign({ name, desc, onClick: () => this.setState({ payMethod: k, coTried: false }) }, sel(s.payMethod === k))),
+      payOpts: [['card', 'Pay online', 'Cards, Apple Pay, Przelewy24 and SEPA. Goes live as soon as the payment clears.']].map(([k, name, desc]) => Object.assign({ name, desc, onClick: () => this.setState({ payMethod: k, coTried: false }) }, sel(s.payMethod === k))),
       payCard: s.payMethod === 'card', payBank: s.payMethod === 'bank',
       cardNo: s.cardNo, cardExp: s.cardExp, cardCvc: s.cardCvc,
       onCardNo: (e) => this.setState({ cardNo: e.target.value.replace(/[^\d]/g, '').slice(0, 19).replace(/(\d{4})(?=\d)/g, '$1 ') }),
@@ -1742,9 +1782,10 @@ class Component extends DCLogic {
       vatLabel, vatNote,
       invLines: P.lines.filter((l) => l.v || l.once || l.quote).map((l) => ({ label: l.label, amount: l.quote ? 'On quote' : this.fmt((l.v || 0) + (l.once || 0)) })),
       netFmt: this.fmt(net), vatFmt: this.fmt(vat), grossFmt: this.fmt(net + vat),
-      coErr: t && !!errs[s.checkout], coErrMsg: errs[s.checkout],
+      coErr: !!s.payErr || (t && !!errs[s.checkout]), coErrMsg: s.payErr || errs[s.checkout],
+      signedIn: !!s.userEmail, signedOut: !s.userEmail, signedInAs: s.userEmail, goLogin: () => { this.savePlan(); this.toLogin('/platform?view=checkout'); },
       coBack: () => { if (s.checkout === 0) this.setState({ view: 'build', step: 7 }); else this.setState({ checkout: s.checkout - 1, coTried: false }); window.scrollTo(0, 0); },
-      coNext, coCta: s.checkout < 2 ? 'Continue' : s.paying ? 'Processing…' : s.payMethod === 'card' ? 'Pay ' + this.fmt(net + vat) + ' and go live' : 'Send me the pro-forma',
+      coNext, coCta: s.checkout < 2 ? 'Continue' : s.paying ? 'Opening secure payment…' : 'Continue to secure payment',
 
       tabMarket: s.tab === 'market', mkOn: s.marketOn, mkOff: !s.marketOn,
       mkSales: s.mkSales, onMkSales: (e) => this.setState({ mkSales: Number(e.target.value) }),
