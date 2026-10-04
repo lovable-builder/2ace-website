@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Log in | 2ACE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@75..125,400..900&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root { --ink: #0B0C0E; --paper: #F5F4F1; --amber: #E39A2B; --err: #B3392C; }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 24px 16px; background: var(--paper); color: var(--ink); font-family: "IBM Plex Sans", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  .card { width: 100%; max-width: 460px; }
+  .mark { display: block; margin: 0 0 32px; font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 118; font-weight: 800; font-size: 26px; letter-spacing: 0.02em; color: var(--ink); text-decoration: none; }
+  h1 { font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 112; font-weight: 800; font-size: 34px; line-height: 1; letter-spacing: -0.02em; margin: 0 0 8px; }
+  .sub { margin: 0 0 24px; font-size: 15px; line-height: 1.5; color: rgba(11,12,14,0.66); }
+  .tabs { display: flex; gap: 2px; padding: 3px; margin: 0 0 24px; border: 1px solid rgba(11,12,14,0.18); border-radius: 3px; }
+  .tabs button { flex: 1; border: 0; cursor: pointer; padding: 10px 12px; border-radius: 2px; background: transparent; color: rgba(11,12,14,0.7); font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; }
+  .tabs button[aria-selected="true"] { background: var(--ink); color: var(--paper); }
+  form { display: grid; gap: 14px; }
+  label { display: grid; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.6); }
+  select { font: 15px 'IBM Plex Sans', sans-serif; letter-spacing: 0; text-transform: none; padding: 14px 15px; border: 1px solid rgba(11,12,14,0.25); border-radius: 2px; background: #fff; color: var(--ink); }
+  select:focus { outline: 0; border-color: var(--amber); box-shadow: 0 0 0 3px rgba(227,154,43,0.25); }
+  fieldset { display: grid; gap: 14px; margin: 0; padding: 0; border: 0; }
+  legend { padding: 0; margin: 4px 0 2px; font-family: Archivo, sans-serif; font-weight: 800; font-size: 16px; letter-spacing: -0.01em; }
+  .two { display: grid; grid-template-columns: 1fr 1.6fr; gap: 12px; }
+  input { font: 15px 'IBM Plex Sans', sans-serif; letter-spacing: 0; text-transform: none; padding: 14px 15px; border: 1px solid rgba(11,12,14,0.25); border-radius: 2px; background: #fff; color: var(--ink); }
+  input:focus { outline: 0; border-color: var(--amber); box-shadow: 0 0 0 3px rgba(227,154,43,0.25); }
+  .go { margin-top: 4px; border: 0; cursor: pointer; padding: 16px 22px; border-radius: 2px; background: var(--amber); color: var(--ink); font-family: 'IBM Plex Mono', monospace; font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; }
+  .go:hover { background: #F0AE47; }
+  .go:disabled { opacity: 0.6; cursor: default; }
+  .link { background: none; border: 0; padding: 0; cursor: pointer; font: 13px 'IBM Plex Sans', sans-serif; color: rgba(11,12,14,0.7); text-decoration: underline; text-underline-offset: 3px; }
+  .msg { min-height: 20px; margin: 16px 0 0; font-size: 14px; line-height: 1.45; }
+  .msg.err { color: var(--err); }
+  .msg.ok { color: #2F7D55; }
+  .row { display: flex; justify-content: space-between; align-items: center; margin-top: 4px; }
+  .hidden { display: none; }
+  @media (max-width: 480px) { h1 { font-size: 30px; } }
+</style>
+</head>
+<body>
+<main class="card">
+  <a class="mark" href="/">2ACE</a>
+
+  <section id="v-auth">
+    <h1 id="title">Welcome back</h1>
+    <p class="sub" id="sub">Log in to see your plan, stock and orders.</p>
+    <div class="tabs" role="tablist">
+      <button type="button" role="tab" id="t-in" aria-selected="true">Log in</button>
+      <button type="button" role="tab" id="t-up" aria-selected="false">Create account</button>
+    </div>
+
+    <form id="f-in" novalidate>
+      <label>Email<input id="in-email" type="email" autocomplete="email" required></label>
+      <label>Password<input id="in-pw" type="password" autocomplete="current-password" required></label>
+      <button class="go" type="submit">Log in</button>
+      <div class="row"><button class="link" type="button" id="forgot">Forgot password?</button></div>
+    </form>
+
+    <form id="f-up" class="hidden" novalidate>
+      <fieldset><legend>You</legend>
+        <label>Full name<input id="up-name" type="text" autocomplete="name" required></label>
+        <label>Work email<input id="up-email" type="email" autocomplete="email" required></label>
+        <label>Phone (optional)<input id="up-phone" type="tel" autocomplete="tel"></label>
+        <label>Password (min 8 characters)<input id="up-pw" type="password" autocomplete="new-password" minlength="8" required></label>
+      </fieldset>
+      <fieldset><legend>Your company</legend>
+        <label>Company name<input id="up-company" type="text" autocomplete="organization" required></label>
+        <label>Country<select id="up-country" autocomplete="country" required></select></label>
+        <label id="up-taxl">Tax / VAT number <input id="up-tax" type="text" autocomplete="off"></label>
+        <label>Street and number<input id="up-addr" type="text" autocomplete="street-address"></label>
+        <div class="two">
+          <label>Postal code<input id="up-zip" type="text" autocomplete="postal-code"></label>
+          <label>City<input id="up-city" type="text" autocomplete="address-level2"></label>
+        </div>
+      </fieldset>
+      <button class="go" type="submit">Create account</button>
+    </form>
+
+    <p class="msg" id="msg" role="status" aria-live="polite"></p>
+  </section>
+
+  <section id="v-reset" class="hidden">
+    <h1>Set a new password</h1>
+    <p class="sub">Choose a password with at least 8 characters.</p>
+    <form id="f-reset" novalidate>
+      <label>New password<input id="rs-pw" type="password" autocomplete="new-password" minlength="8" required></label>
+      <button class="go" type="submit">Save password</button>
+    </form>
+    <p class="msg" id="msg2" role="status" aria-live="polite"></p>
+  </section>
+</main>
+
+<script src="countries.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  // The anon key is public by design; data is protected by row level security in the database.
+  const SUPABASE_URL = 'https://hvbcmilcjragrcezwzlo.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2YmNtaWxjanJhZ3JjZXp3emxvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEwNjMyODMsImV4cCI6MjEwNjYzOTI4M30.Q6TlQnDToz2oPr4FXNgKdgdrZT3ojUToCroLRVQGRsw';
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+  const $ = (id) => document.getElementById(id);
+  const NEXT = (() => {
+    const n = new URLSearchParams(location.search).get('next');
+    return n && /^\/[a-z0-9_-]+(\?[a-z0-9=&_-]*)?$/i.test(n) ? n : '/platform?view=dash';
+  })();
+  const say = (el, text, kind) => { el.textContent = text; el.className = 'msg ' + (kind || ''); };
+  const busy = (form, on) => form.querySelectorAll('button').forEach((b) => { b.disabled = on; });
+
+  function mode(up) {
+    $('t-in').setAttribute('aria-selected', String(!up));
+    $('t-up').setAttribute('aria-selected', String(up));
+    $('f-in').classList.toggle('hidden', up);
+    $('f-up').classList.toggle('hidden', !up);
+    $('title').textContent = up ? 'Create your account' : 'Welcome back';
+    $('sub').textContent = up ? 'One account for your plan, stock, orders and billing.' : 'Log in to see your plan, stock and orders.';
+    say($('msg'), '');
+  }
+  $('t-in').onclick = () => mode(false);
+  $('t-up').onclick = () => mode(true);
+
+  const nice = (e) => /invalid login/i.test(e.message) ? 'Wrong email or password.'
+    : /not confirmed/i.test(e.message) ? 'Please confirm your email first. Check your inbox for the link.'
+    : /already registered/i.test(e.message) ? 'That email already has an account. Try logging in.'
+    : /rate limit|too many/i.test(e.message) ? 'Too many attempts. Please wait a minute and try again.'
+    : e.message;
+
+  $('f-in').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const email = $('in-email').value.trim(), password = $('in-pw').value;
+    if (!email || !password) return say($('msg'), 'Enter your email and password.', 'err');
+    busy($('f-in'), true); say($('msg'), 'Logging in...');
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    busy($('f-in'), false);
+    if (error) return say($('msg'), nice(error), 'err');
+    location.href = NEXT;
+  });
+
+  fillCountrySelect($('up-country'), $('up-taxl'), $('up-tax'));
+
+  $('f-up').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const v = (id) => $(id).value.trim();
+    const email = v('up-email'), password = $('up-pw').value;
+    if (!v('up-name')) return say($('msg'), 'Enter your full name.', 'err');
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return say($('msg'), 'Enter a valid email.', 'err');
+    if (password.length < 8) return say($('msg'), 'Use at least 8 characters for the password.', 'err');
+    if (!v('up-company')) return say($('msg'), 'Enter your company name.', 'err');
+    if (!v('up-country')) return say($('msg'), 'Select your country.', 'err');
+    busy($('f-up'), true); say($('msg'), 'Creating account...');
+    const data = { full_name: v('up-name'), phone: v('up-phone'), company: v('up-company'), country: v('up-country'),
+                   vat_id: v('up-tax'), address_line: v('up-addr'), postal_code: v('up-zip'), city: v('up-city') };
+    const { data: out, error } = await sb.auth.signUp({ email, password, options: { data, emailRedirectTo: location.origin + '/login' } });
+    busy($('f-up'), false);
+    if (error) return say($('msg'), nice(error), 'err');
+    // Supabase returns an empty identities list (not an error) for an already-registered email.
+    if (out.user && out.user.identities && out.user.identities.length === 0) return say($('msg'), nice({ message: 'already registered' }), 'err');
+    if (out.session) { location.href = NEXT; return; }
+    say($('msg'), 'Check your inbox. We sent a confirmation link to ' + email + '.', 'ok');
+  });
+
+  $('forgot').onclick = async () => {
+    const email = $('in-email').value.trim();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return say($('msg'), 'Type your email above first, then click Forgot password.', 'err');
+    const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + '/login' });
+    if (error) return say($('msg'), nice(error), 'err');
+    say($('msg'), 'If that email has an account, a reset link is on its way.', 'ok');
+  };
+
+  $('f-reset').addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const password = $('rs-pw').value;
+    if (password.length < 8) return say($('msg2'), 'Use at least 8 characters.', 'err');
+    busy($('f-reset'), true);
+    const { error } = await sb.auth.updateUser({ password });
+    busy($('f-reset'), false);
+    if (error) return say($('msg2'), nice(error), 'err');
+    say($('msg2'), 'Password updated. Taking you to your dashboard...', 'ok');
+    setTimeout(() => { location.href = NEXT; }, 900);
+  });
+
+  sb.auth.onAuthStateChange((event) => {
+    if (event === 'PASSWORD_RECOVERY') { $('v-auth').classList.add('hidden'); $('v-reset').classList.remove('hidden'); }
+  });
+
+  // Already signed in (and not mid-recovery): go straight to the dashboard.
+  sb.auth.getSession().then(({ data }) => {
+    if (data.session && !/type=recovery/.test(location.hash)) location.href = NEXT;
+  });
+</script>
+</body>
+</html>

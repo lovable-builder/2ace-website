@@ -17,6 +17,7 @@
   a:hover { color: #A8701A; }
   ::selection { background: #E39A2B; color: #0B0C0E; }
   #burger { display: none; }
+  .welcome { max-width: 26ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   @media (max-width: 860px) {
     #burger { display: flex; flex-direction: column; justify-content: center; gap: 6px; width: 44px; height: 44px; margin: -10px -10px -10px 0; padding: 0 10px; border: 0; background: none; cursor: pointer; transition: color 320ms ease; -webkit-tap-highlight-color: transparent; }
     #burger span { display: block; height: 2px; background: currentColor; border-radius: 1px; transition: transform 260ms ease, opacity 200ms ease; }
@@ -26,6 +27,7 @@
     #menu { position: absolute; top: 100%; left: 0; right: 0; flex-direction: column; align-items: stretch !important; gap: 0 !important; padding: 8px clamp(18px, 4vw, 48px) 24px; background: #0B0C0E; visibility: hidden; opacity: 0; transform: translateY(-8px); transition: opacity 240ms ease, transform 240ms ease, visibility 0s linear 240ms; }
     #menu.open { visibility: visible; opacity: 1; transform: none; transition-delay: 0s; }
     #menu a { color: #F5F4F1 !important; font-size: 14px !important; padding: 16px 0 !important; border-bottom: 1px solid rgba(245,244,241,0.12); }
+    #menu .welcome { max-width: none; white-space: normal; color: #F5F4F1 !important; padding: 16px 0 6px; font-size: 13px !important; }
     #menu a:last-child { margin-top: 18px; border: 0; text-align: center; color: #0B0C0E !important; padding: 14px 16px 13px !important; }
   }
   @keyframes spin { to { transform: rotate(360deg); } }
@@ -35,7 +37,7 @@
 
 <div style="position: relative; width: 100%; background: #F5F4F1;">
 
-  <nav style="transition: background 240ms ease; position: fixed; top: 0; left: 0; right: 0; z-index: 60; display: flex; align-items: center; justify-content: space-between; padding: 20px clamp(18px, 4vw, 48px);">
+  <nav style="transition: background 320ms ease, border-color 320ms ease; background: rgba(245,244,241,0.55); -webkit-backdrop-filter: blur(16px) saturate(1.5); backdrop-filter: blur(16px) saturate(1.5); border-bottom: 1px solid rgba(11,12,14,0.08); position: fixed; top: 0; left: 0; right: 0; z-index: 60; display: flex; align-items: center; justify-content: space-between; padding: 20px clamp(18px, 4vw, 48px);">
     <span id="navmark" style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 118; font-weight: 800; font-size: 22px; letter-spacing: 0.02em; color: #0B0C0E; transition: color 320ms ease;">2ACE</span>
     <button id="burger" type="button" aria-label="Menu" aria-expanded="false" aria-controls="menu" style="color: #0B0C0E;"><span></span><span></span><span></span></button>
     <div id="menu" style="display: flex; align-items: center; gap: clamp(14px, 2.4vw, 34px);">
@@ -43,8 +45,10 @@
       <a class="navlink" href="#pricing" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: #0B0C0E; transition: color 320ms ease;">Pricing</a>
       <a class="navlink" href="#market" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: #0B0C0E; transition: color 320ms ease;">Market</a>
       <a class="navlink" href="#coverage" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: #0B0C0E; transition: color 320ms ease;">Coverage</a>
-      <a class="navlink" href="platform.html" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: #0B0C0E; transition: color 320ms ease;">Log in</a>
-      <a href="platform.html" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: #0B0C0E; background: #E39A2B; padding: 9px 16px 8px; border-radius: 2px;" style-hover="background: #F0AE47;">Build your plan</a>
+      <span id="welcome" class="navlink welcome" style="display: none; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.14em; text-transform: none; color: #0B0C0E; transition: color 320ms ease;"></span>
+      <a id="authlink" class="navlink" href="/login" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: #0B0C0E; transition: color 320ms ease;">Log in</a>
+      <a id="logoutlink" class="navlink" href="#" style="display: none; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: #0B0C0E; transition: color 320ms ease;">Log out</a>
+      <a href="/platform" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: #0B0C0E; background: #E39A2B; padding: 9px 16px 8px; border-radius: 2px;" style-hover="background: #F0AE47;">Build your plan</a>
     </div>
   </nav>
 
@@ -113,7 +117,7 @@
             <p style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; margin: 0 0 18px; color: #E39A2B;">Six services · One plan</p>
             <h2 style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 112; font-weight: 800; font-size: clamp(36px, 5.8vw, 86px); line-height: 0.94; letter-spacing: -0.025em; margin: 0; color: #F5F4F1;">You build the brand.<br />We hold the peace of mind.</h2>
             <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-top: 26px;">
-              <a href="platform.html" style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: #0B0C0E; background: #E39A2B; padding: 15px 26px 14px; border-radius: 2px;" style-hover="background: #F0AE47;">Build your plan</a>
+              <a href="/platform" style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: #0B0C0E; background: #E39A2B; padding: 15px 26px 14px; border-radius: 2px;" style-hover="background: #F0AE47;">Build your plan</a>
               <a href="#pricing" style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: #F5F4F1; border: 1px solid rgba(245,244,241,0.35); padding: 15px 26px 14px; border-radius: 2px;" style-hover="border-color: #F5F4F1;">See pricing</a>
             </div>
           </div>
@@ -242,7 +246,7 @@
             <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; color: rgba(245,244,241,0.6);">PER MONTH</span>
             <span id="cT" style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 118; font-weight: 800; font-size: 44px; line-height: 1; letter-spacing: -0.025em;">0 zł</span>
           </div>
-          <a href="platform.html" style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: #0B0C0E; background: #E39A2B; padding: 15px 20px 14px; border-radius: 2px; text-align: center;" style-hover="background: #F0AE47; color: #0B0C0E;">Build this plan</a>
+          <a href="/platform" style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: #0B0C0E; background: #E39A2B; padding: 15px 20px 14px; border-radius: 2px; text-align: center;" style-hover="background: #F0AE47; color: #0B0C0E;">Build this plan</a>
         </div>
       </div>
       <div>
@@ -302,8 +306,8 @@
         </div>
       </div>
       <div class="reveal" style="display: flex; flex-wrap: wrap; gap: 12px;">
-        <a href="market.html" style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: #0B0C0E; background: #E39A2B; padding: 15px 26px 14px; border-radius: 2px;" style-hover="background: #F0AE47; color: #0B0C0E;">See 2ACE Market</a>
-        <a href="platform.html" style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: #F5F4F1; border: 1px solid rgba(245,244,241,0.35); padding: 15px 26px 14px; border-radius: 2px;" style-hover="border-color: #F5F4F1; color: #F5F4F1;">Add it to your plan</a>
+        <a href="/market" style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: #0B0C0E; background: #E39A2B; padding: 15px 26px 14px; border-radius: 2px;" style-hover="background: #F0AE47; color: #0B0C0E;">See 2ACE Market</a>
+        <a href="/platform" style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: #F5F4F1; border: 1px solid rgba(245,244,241,0.35); padding: 15px 26px 14px; border-radius: 2px;" style-hover="border-color: #F5F4F1; color: #F5F4F1;">Add it to your plan</a>
       </div>
     </div>
   </section>
@@ -384,6 +388,7 @@
         <input id="f1" type="text" placeholder="Name" style="font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; padding: 15px 16px; background: rgba(245,244,241,0.06); border: 1px solid rgba(245,244,241,0.2); color: #F5F4F1; border-radius: 2px;" />
         <input id="f2" type="email" placeholder="Work email" style="font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; padding: 15px 16px; background: rgba(245,244,241,0.06); border: 1px solid rgba(245,244,241,0.2); color: #F5F4F1; border-radius: 2px;" />
         <textarea id="f3" rows="4" placeholder="What you sell, where it comes from and where it sells" style="font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; padding: 15px 16px; background: rgba(245,244,241,0.06); border: 1px solid rgba(245,244,241,0.2); color: #F5F4F1; border-radius: 2px; resize: vertical;"></textarea>
+        <input id="fhp" type="text" tabindex="-1" autocomplete="off" aria-hidden="true" style="position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0;" />
         <button id="fbtn" type="submit" style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: #0B0C0E; background: #E39A2B; border: 0; padding: 16px 22px; border-radius: 2px; cursor: pointer; justify-self: start;" style-hover="background: #F0AE47;">Talk to sales</button>
         <p id="fmsg" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.1em; margin: 0; color: #E39A2B; opacity: 0; transition: opacity 400ms ease;">Sent. We reply from warsaw@2ace.eu within one working day.</p>
       </form>
@@ -462,6 +467,7 @@ class Component extends DCLogic {
     this.raf = requestAnimationFrame(this.tickLoop);
 
     this.setupMenu();
+    this.setupAuth();
     this.setupReveals();
     this.setupForm();
     this.setupSlider();
@@ -651,6 +657,15 @@ class Component extends DCLogic {
     this.updateNav();
   }
 
+  // Frosted-glass bar: light tint over light sections, dark tint over dark ones. Solid dark while the mobile menu is open.
+  applyGlass() {
+    const nav = this.el.navmark.parentElement;
+    if (this.menuOpen) { nav.style.background = '#0B0C0E'; nav.style.borderBottomColor = 'rgba(245,244,241,0.1)'; return; }
+    const dark = this.lastNav === 'paper';
+    nav.style.background = dark ? 'rgba(11,12,14,0.42)' : 'rgba(245,244,241,0.55)';
+    nav.style.borderBottomColor = dark ? 'rgba(245,244,241,0.12)' : 'rgba(11,12,14,0.08)';
+  }
+
   updateNav() {
     const line = 30;
     let mode = 'ink';
@@ -662,9 +677,46 @@ class Component extends DCLogic {
     this.lastNav = mode;
     const c = mode === 'paper' || this.menuOpen ? '#F5F4F1' : '#0B0C0E';
     this.el.navmark.style.color = c;
+    this.applyGlass();
     this.el.navlinks.forEach((a) => { a.style.color = c; });
     const bg = document.querySelector('#burger');
     if (bg) bg.style.color = this.menuOpen ? '#E39A2B' : c;
+  }
+
+  // Reflect login state in the nav. Session is the one login.html stores (supabase-js key in localStorage).
+  setupAuth() {
+    const KEY = 'sb-hvbcmilcjragrcezwzlo-auth-token', BASE = 'https://hvbcmilcjragrcezwzlo.supabase.co', ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2YmNtaWxjanJhZ3JjZXp3emxvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEwNjMyODMsImV4cCI6MjEwNjYzOTI4M30.Q6TlQnDToz2oPr4FXNgKdgdrZT3ojUToCroLRVQGRsw';
+    let sess = null;
+    try {
+      const t = JSON.parse(localStorage.getItem(KEY) || 'null');
+      if (t && t.access_token && (!t.expires_at || t.expires_at * 1000 > Date.now())) sess = t;
+    } catch (e) { /* storage blocked: stay signed-out */ }
+    if (!sess) return;
+
+    const q = (id) => document.querySelector(id);
+    const link = q('#authlink'), out = q('#logoutlink'), hi = q('#welcome');
+    if (!link || !out || !hi) return;
+    link.textContent = 'Dashboard'; link.setAttribute('href', '/platform?view=dash');
+    out.style.display = ''; hi.style.display = '';
+    const email = sess.user && sess.user.email;
+    hi.textContent = 'Welcome' + (email ? ', ' + email : '');
+
+    out.addEventListener('click', async (e) => {
+      e.preventDefault();
+      try { await fetch(BASE + '/auth/v1/logout?scope=local', { method: 'POST', headers: { apikey: ANON, Authorization: 'Bearer ' + sess.access_token } }); } catch (err) { /* best effort */ }
+      try { localStorage.removeItem(KEY); } catch (err) { /* ignore */ }
+      location.reload();
+    });
+
+    // Upgrade the greeting to the company name (fallback: your name).
+    const H = { apikey: ANON, Authorization: 'Bearer ' + sess.access_token };
+    const get = (path) => fetch(BASE + '/rest/v1/' + path, { headers: H }).then((r) => (r.ok ? r.json() : [])).catch(() => []);
+    const uid = sess.user.id;
+    Promise.all([get('members?select=organizations(name)&user_id=eq.' + uid + '&limit=1'), get('profiles?select=full_name&user_id=eq.' + uid + '&limit=1')]).then(([m, p]) => {
+      const company = m[0] && m[0].organizations && m[0].organizations.name;
+      const name = company || (p[0] && p[0].full_name);
+      if (name) hi.textContent = 'Welcome, ' + name;
+    });
   }
 
   setupMenu() {
@@ -675,7 +727,7 @@ class Component extends DCLogic {
       b.setAttribute('aria-expanded', String(open));
       // orange X stays visible on both light and dark backgrounds
       this.menuOpen = open;
-      m.parentElement.style.background = open ? '#0B0C0E' : '';
+      this.applyGlass();
       this.el.navmark.style.color = open ? '#F5F4F1' : (this.lastNav === 'paper' ? '#F5F4F1' : '#0B0C0E');
       b.style.color = open ? '#E39A2B' : (this.lastNav === 'paper' ? '#F5F4F1' : '#0B0C0E');
     };
@@ -708,12 +760,37 @@ class Component extends DCLogic {
   setupForm() {
     const f = document.querySelector('#form');
     if (!f) return;
-    f.addEventListener('submit', (e) => {
+    f.addEventListener('submit', async (e) => {
       e.preventDefault();
+      if (this.sending) return;
       const msg = document.querySelector('#fmsg');
       const btn = document.querySelector('#fbtn');
-      if (btn) { btn.textContent = 'Sent'; btn.style.background = 'rgba(245,244,241,0.14)'; btn.style.color = '#F5F4F1'; }
-      if (msg) msg.style.opacity = '1';
+      const val = (s) => (document.querySelector(s) || {}).value || '';
+      const name = val('#f1').trim(), email = val('#f2').trim();
+      const show = (text, ok) => {
+        if (!msg) return;
+        msg.textContent = text;
+        msg.style.color = ok ? '#E39A2B' : '#E8685A';
+        msg.style.opacity = '1';
+      };
+      if (!name || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) { show('Please add your name and a valid email.', false); return; }
+      this.sending = true;
+      const label = btn ? btn.textContent : '';
+      if (btn) btn.textContent = 'Sending...';
+      try {
+        const res = await fetch('https://hvbcmilcjragrcezwzlo.supabase.co/functions/v1/lead', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, message: val('#f3').trim(), website: val('#fhp') })
+        });
+        if (!res.ok) throw new Error('status ' + res.status);
+        if (btn) { btn.textContent = 'Sent'; btn.style.background = 'rgba(245,244,241,0.14)'; btn.style.color = '#F5F4F1'; }
+        show('Sent. We reply from warsaw@2ace.eu within one working day.', true);
+      } catch (err) {
+        if (btn) btn.textContent = label;
+        this.sending = false;
+        show('Could not send. Please try again or email warsaw@2ace.eu.', false);
+      }
     });
     ['#f1', '#f2', '#f3'].forEach((s) => {
       const el = document.querySelector(s);

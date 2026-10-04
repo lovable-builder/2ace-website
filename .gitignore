@@ -1,0 +1,22 @@
+# Secrets: never commit. Keys live in .env locally and in Supabase secrets in production.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+supabase/.env
+supabase/.temp/
+supabase/functions/.env
+
+# Stripe CLI / local tooling
+.stripe/
+
+# Agent tooling installed by `npx skills add`
+.agents/
+.claude/
+.continue/
+.windsurf/
+skills-lock.json
+
+.DS_Store
+node_modules/

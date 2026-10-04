@@ -25,7 +25,7 @@
 
   <header style="position: sticky; top: 0; z-index: 40; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 14px; padding: 12px clamp(16px, 3vw, 32px); background: #0B0C0E; color: #F5F4F1;">
     <div style="display: flex; align-items: baseline; gap: 10px;">
-      <a href="index.html" style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 118; font-weight: 800; font-size: 21px; letter-spacing: 0.02em; color: #F5F4F1;">2ACE</a>
+      <a href="/" style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 118; font-weight: 800; font-size: 21px; letter-spacing: 0.02em; color: #F5F4F1;">2ACE</a>
       <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.18em; color: #E39A2B;">PLATFORM</span>
     </div>
     <div style="display: flex; gap: 2px; padding: 3px; border: 1px solid rgba(245,244,241,0.18); border-radius: 3px;">
@@ -34,8 +34,10 @@
       </sc-for>
     </div>
     <div style="display: flex; align-items: center; gap: 12px;">
+      <span style="max-width: 24ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.08em; color: #F5F4F1;">{{ welcome }}</span>
       <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.08em; color: rgba(245,244,241,0.75);">Plan · {{ monthlyFmt }} / mo</span>
-      <span style="display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: #E39A2B; color: #0B0C0E; font-family: Archivo, sans-serif; font-weight: 800; font-size: 13px;">{{ initials }}</span>
+      <button onClick="{{ onAuth }}" title="{{ authTitle }}" style="cursor: pointer; background: none; border: 0; padding: 0; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.08em; color: rgba(245,244,241,0.75); text-decoration: underline; text-underline-offset: 3px;">{{ authLabel }}</button>
+      <a href="/account" title="Your account" style="text-decoration: none;"><span style="display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: {{ avBg }}; color: #0B0C0E; font-family: Archivo, sans-serif; font-weight: 800; font-size: 13px;">{{ avText }}</span></a>
     </div>
   </header>
 
@@ -287,7 +289,7 @@
               </div>
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 12px;">
                 <button onClick="{{ mkAdd }}" style="cursor: pointer; padding: 15px; border: 0; border-radius: 3px; background: {{ mkAddBg }}; color: {{ mkAddFg }}; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;">{{ mkAddLabel }}</button>
-                <a href="market.html" style="display: grid; place-items: center; padding: 15px; border: 1px solid rgba(11,12,14,0.25); border-radius: 3px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: #0B0C0E;">Preview 2ACE Market →</a>
+                <a href="/market" style="display: grid; place-items: center; padding: 15px; border: 1px solid rgba(11,12,14,0.25); border-radius: 3px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: #0B0C0E;">Preview 2ACE Market →</a>
               </div>
             </div>
           </sc-if>
@@ -949,7 +951,7 @@
                 <h1 style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 108; font-weight: 800; font-size: clamp(26px, 3vw, 36px); letter-spacing: -0.02em; margin: 0; margin-bottom: 6px;">2ACE Market</h1>
                 <p style="font-size: 14px; color: rgba(11,12,14,0.6); margin: 0;">{{ mkStatusLine }}</p>
               </div>
-              <a href="market.html" style="padding: 11px 16px; border: 1px solid #0B0C0E; border-radius: 3px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;">Open the market →</a>
+              <a href="/market" style="padding: 11px 16px; border: 1px solid #0B0C0E; border-radius: 3px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;">Open the market →</a>
             </div>
             <sc-if value="{{ mkOff }}" hint-placeholder-val="{{ false }}">
               <div style="display: flex; flex-direction: column; gap: 16px;">
@@ -1159,7 +1161,7 @@
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900}}">
 class Component extends DCLogic {
   state = {
-    view: 'build', step: 0,
+    view: 'build', step: 0, userEmail: '', logoUrl: '', orgName: '', userName: '',
     storageType: 'pallet', qty: 12, estUnits: 6000, estSize: 'medium',
     pkgs: { ful: false, ret: false, imp: false }, orders: 1500,
     storeOn: false, domain: 'lumahome', domainStatus: null, theme: 'mono',
@@ -1199,6 +1201,51 @@ class Component extends DCLogic {
     ['US', 'United States', 'EIN', '12-3456789'], ['CN', 'China', 'Unified Social Credit Code', '91310000MA1FL0000X'], ['AE', 'United Arab Emirates', 'TRN (tax ID)', '100123456700003'],
     ['OTHER', 'Other country', 'Business registration number', 'Registration number']
   ].map(([code, name, label, ph]) => ({ code, name, label, ph }));
+
+  // Session lives in localStorage under supabase-js's key; login.html creates it.
+  authSession() {
+    try {
+      const raw = localStorage.getItem('sb-hvbcmilcjragrcezwzlo-auth-token');
+      const t = raw && JSON.parse(raw);
+      if (t && t.access_token && (!t.expires_at || t.expires_at * 1000 > Date.now())) return t;
+    } catch (e) { /* storage blocked or corrupt: treat as signed out */ }
+    return null;
+  }
+  toLogin() { location.href = '/login?next=' + encodeURIComponent('/platform?view=dash'); }
+
+  // Company name + logo for the header: members -> organizations via the REST API with the user's token.
+  async loadOrg(sess) {
+    const base = 'https://hvbcmilcjragrcezwzlo.supabase.co';
+    const H = { apikey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2YmNtaWxjanJhZ3JjZXp3emxvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEwNjMyODMsImV4cCI6MjEwNjYzOTI4M30.Q6TlQnDToz2oPr4FXNgKdgdrZT3ojUToCroLRVQGRsw', Authorization: 'Bearer ' + sess.access_token };
+    const get = (path) => fetch(base + '/rest/v1/' + path, { headers: H }).then((r) => (r.ok ? r.json() : [])).catch(() => []);
+    const uid = sess.user.id;
+    const [m, pr] = await Promise.all([
+      get('members?select=organizations(name,country,vat_id,logo_path)&user_id=eq.' + uid + '&limit=1'),
+      get('profiles?select=full_name&user_id=eq.' + uid + '&limit=1')
+    ]);
+    const o = m[0] && m[0].organizations;
+    const patch = { userName: (pr[0] && pr[0].full_name) || '' };
+    if (o) {
+      patch.orgName = o.name || '';
+      if (o.logo_path) patch.logoUrl = base + '/storage/v1/object/public/logos/' + encodeURI(o.logo_path);
+      // Prefill the plan review form once, without overwriting what the user already typed.
+      const st = this.state;
+      if (!st.company) patch.company = o.name || '';
+      if (!st.vat && o.vat_id) patch.vat = o.vat_id;
+      if (o.country && this.COUNTRIES.some((c) => c.code === o.country)) patch.country = o.country;
+      if (!st.email && sess.user.email) patch.email = sess.user.email;
+    }
+    this.setState(patch);
+  }
+
+  componentDidMount() {
+    const sess = this.authSession();
+    this.setState({ userEmail: sess && sess.user ? sess.user.email : '' });
+    if (sess) this.loadOrg(sess);
+    if (new URLSearchParams(location.search).get('view') === 'dash') {
+      if (sess) this.setState({ view: 'dash' }); else this.toLogin();
+    }
+  }
 
   componentWillUnmount() { clearTimeout(this.toastT); clearTimeout(this.domT); clearTimeout(this.syncT); clearTimeout(this.payT); }
 
@@ -1242,7 +1289,7 @@ class Component extends DCLogic {
     const P = this.pricing();
     const set = (o) => () => this.setState(o);
     const stepNames = ['Space', 'Fulfillment', 'Returns', 'Import', 'Storefront', 'Marketing', '2ACE Market', 'Review'];
-    const customer = s.company.trim() ? s.company.trim().replace(/\s+sp\. z o\.o\.$/i, '') : 'Luma Home';
+    const customer = s.company.trim() ? s.company.trim().replace(/\s+sp\. z o\.o\.$/i, '') : (s.orgName || 'Luma Home');
     const emailOk = /.+@.+\..+/.test(s.email);
     const C = this.COUNTRIES, cc = C.find((c) => c.code === s.country) || C[0];
     const formOk = s.company.trim() && s.vat.trim().length >= 5 && emailOk;
@@ -1386,9 +1433,23 @@ class Component extends DCLogic {
     return Object.assign(X, {
       viewTabs: [['build', 'Build plan'], ['dash', 'Dashboard']].map(([v, l]) => ({
         label: l, bg: s.view === v ? '#F5F4F1' : 'transparent', fg: s.view === v ? '#0B0C0E' : 'rgba(245,244,241,0.75)',
-        onClick: () => { this.setState({ view: v }); window.scrollTo(0, 0); }
+        onClick: () => {
+          if (v === 'dash' && !this.authSession()) { this.toLogin(); return; }
+          this.setState({ view: v }); window.scrollTo(0, 0);
+        }
       })),
+      welcome: s.userEmail ? 'Welcome, ' + (s.orgName || s.userName || s.userEmail) : '',
+      authLabel: s.userEmail ? 'Log out' : 'Log in',
+      authTitle: s.userEmail || 'Not signed in',
+      onAuth: () => {
+        if (s.userEmail) {
+          try { localStorage.removeItem('sb-hvbcmilcjragrcezwzlo-auth-token'); } catch (e) { /* ignore */ }
+          this.setState({ userEmail: '', view: 'build' }); window.scrollTo(0, 0);
+        } else this.toLogin();
+      },
       isBuild: s.view === 'build', isDash: s.view === 'dash', isCheckout: s.view === 'checkout',
+      avBg: s.logoUrl ? '#FFFFFF url(' + s.logoUrl + ') center / cover no-repeat' : '#E39A2B',
+      avText: s.logoUrl ? '' : customer.split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase(),
       initials: customer.split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase(),
       customer,
       monthlyFmt: this.fmt(P.monthly), onceFmt: this.fmt(P.once), budgetFmt: this.fmt(s.budget), budget: s.budget,
