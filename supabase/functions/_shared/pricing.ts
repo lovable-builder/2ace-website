@@ -45,3 +45,19 @@ export function priceConfig(c: PlanConfig) {
   const once = lines.reduce((a, l) => a + l.once, 0);
   return { lines, monthly, once };
 }
+
+// How a new configuration compares with the current one (whole PLN, net of VAT).
+export type ChangeKind = 'upgrade' | 'downgrade' | 'same';
+export function comparePlans(current: { monthly: number }, next: { monthly: number; once: number }) {
+  const delta = next.monthly - current.monthly;
+  const kind: ChangeKind = delta > 0 ? 'upgrade' : delta < 0 ? 'downgrade' : 'same';
+  return { kind, delta };
+}
+
+// Prorated amount for the rest of the current period. Positive = charge now, negative = credit on the next invoice.
+// One-time setup fees on the new plan are charged in full right away.
+export function prorate(delta: number, once: number, nowSec: number, periodStartSec: number, periodEndSec: number) {
+  const span = Math.max(1, periodEndSec - periodStartSec);
+  const left = Math.min(1, Math.max(0, (periodEndSec - nowSec) / span));
+  return { fractionLeft: left, today: Math.round(delta * left + once) };
+}

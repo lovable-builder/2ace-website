@@ -348,3 +348,6 @@ verify_jwt = false
 
 [functions.domain-checkout]
 verify_jwt = true
+
+[functions.change-plan]
+verify_jwt = true

@@ -55,11 +55,21 @@
 
   <sc-if value="{{ isBuild }}" hint-placeholder-val="{{ true }}">
     <main style="max-width: 1280px; margin: 0 auto; padding: clamp(28px, 4vw, 52px) clamp(16px, 3vw, 32px) 96px;">
+        <sc-if value="{{ changeMode }}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 18px; margin: 0 0 20px; background: #FFFFFF; border: 2px solid #0B0C0E; border-radius: 4px;">
+            <span style="font-size: 15px;"><strong>Changing your plan.</strong> Current: {{ chCurrent }} / month. New: {{ chNewLive }} / month.</span>
+            <span style="display: flex; align-items: center; gap: 10px;">
+              <span style="padding: 5px 12px; border-radius: 14px; background: {{ chBadgeBg }}; color: {{ chBadgeFg }}; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;">{{ chBadgeLive }}</span>
+              <button onClick="{{ cancelChange }}" style="cursor: pointer; padding: 8px 12px; border: 1px solid rgba(11,12,14,0.3); border-radius: 3px; background: transparent; font-size: 13px;">Cancel change</button>
+            </span>
+          </div>
+        </sc-if>
         <sc-if value="{{ ownedNotice }}" hint-placeholder-val="{{ false }}">
           <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 18px; margin: 0 0 20px; background: #0B0C0E; color: #F5F4F1; border-radius: 4px;">
-            <span style="font-size: 15px;"><strong style="color: #E39A2B;">You already have an active plan.</strong> Change or cancel it from your billing page.</span>
+            <span style="font-size: 15px;"><strong style="color: #E39A2B;">You already have an active plan.</strong> Change it here, or manage payment and invoices in Billing.</span>
             <span style="display: flex; gap: 10px;">
-              <button onClick="{{ goDash }}" style="cursor: pointer; padding: 9px 14px; border: 0; border-radius: 3px; background: #E39A2B; color: #0B0C0E; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;">Dashboard</button>
+              <button onClick="{{ startChange }}" style="cursor: pointer; padding: 9px 14px; border: 0; border-radius: 3px; background: #E39A2B; color: #0B0C0E; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;">Change plan</button>
+              <button onClick="{{ goDash }}" style="cursor: pointer; padding: 9px 14px; border: 1px solid rgba(245,244,241,0.4); border-radius: 3px; background: transparent; color: #F5F4F1; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;">Dashboard</button>
               <a href="/account" style="padding: 9px 14px; border: 1px solid rgba(245,244,241,0.4); border-radius: 3px; color: #F5F4F1; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;">Billing</a>
             </span>
           </div>
@@ -184,6 +194,7 @@
 
               <sc-if value="{{ storeOn }}" hint-placeholder-val="{{ true }}">
                 <div style="display: flex; flex-direction: column; gap: 16px;">
+                  <sc-if value="{{ needDomain }}" hint-placeholder-val="{{ true }}">
                   <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px;">
                     <span style="display: block; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(11,12,14,0.55); margin-bottom: 12px;">Domain</span>
                     <div style="display: flex; flex-wrap: wrap; gap: 10px;">
@@ -200,6 +211,8 @@
                       </sc-for>
                     </div>
                   </div>
+                </sc-if>
+                <sc-if value="{{ haveDomain }}" hint-placeholder-val="{{ false }}"><p style="margin: 0; font-size: 14px; color: rgba(11,12,14,0.65);">You already have a domain with us. The new storefront will use it.</p></sc-if>
 
                   <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px;">
                     <span style="display: block; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(11,12,14,0.55); margin-bottom: 12px;">Starting look</span>
@@ -304,8 +317,8 @@
           <sc-if value="{{ step7 }}" hint-placeholder-val="{{ false }}">
             <div style="display: flex; flex-direction: column; gap: 16px;">
               <div>
-                <h2 style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 108; font-weight: 700; font-size: 28px; letter-spacing: -0.015em; margin: 0 0 6px;">Review and activate.</h2>
-                <p style="font-size: 15px; line-height: 1.55; color: rgba(11,12,14,0.62); margin: 0;">Monthly, no minimum term. Your account manager calls within one working day to book your first inbound.</p>
+                <h2 style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 108; font-weight: 700; font-size: 28px; letter-spacing: -0.015em; margin: 0 0 6px;">{{ reviewTitle }}</h2>
+                <p style="font-size: 15px; line-height: 1.55; color: rgba(11,12,14,0.62); margin: 0;">{{ reviewLead }}</p>
               </div>
               <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; overflow-x: auto;">
                 <div style="min-width: 520px;">
@@ -327,6 +340,24 @@
                   </div>
                 </div>
               </div>
+              <sc-if value="{{ changeMode }}" hint-placeholder-val="{{ false }}">
+                <div style="background: #FFFFFF; border: 2px solid #0B0C0E; border-radius: 4px; padding: 20px; display: flex; flex-direction: column; gap: 12px;">
+                  <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px;">
+                    <span style="font-family: Archivo, sans-serif; font-weight: 800; font-size: 20px;">Your change</span>
+                    <span style="padding: 5px 12px; border-radius: 14px; background: {{ chBadgeBg }}; color: {{ chBadgeFg }}; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;">{{ chBadge }}</span>
+                  </div>
+                  <sc-if value="{{ chLoading }}" hint-placeholder-val="{{ false }}"><span style="font-size: 14px; color: rgba(11,12,14,0.6);">Calculating…</span></sc-if>
+                  <sc-if value="{{ chShow }}" hint-placeholder-val="{{ false }}">
+                    <div style="display: flex; justify-content: space-between; gap: 10px; font-size: 15px;"><span style="color: rgba(11,12,14,0.65);">Current plan</span><span style="font-family: 'IBM Plex Mono', monospace;">{{ chCurrent }} / month</span></div>
+                    <div style="display: flex; justify-content: space-between; gap: 10px; font-size: 15px;"><span style="color: rgba(11,12,14,0.65);">New plan</span><span style="font-family: 'IBM Plex Mono', monospace;">{{ chNew }} / month</span></div>
+                    <div style="display: flex; justify-content: space-between; gap: 10px; font-size: 16px; font-weight: 700; padding-top: 8px; border-top: 1px solid rgba(11,12,14,0.12);"><span>Difference</span><span style="font-family: 'IBM Plex Mono', monospace; color: {{ chBadgeBg }};">{{ chDelta }} / month</span></div>
+                    <p style="margin: 0; padding: 12px 14px; border-radius: 3px; background: rgba(227,154,43,0.12); font-size: 14px; line-height: 1.5;">{{ chTodayText }}</p>
+                    <p style="margin: 0; font-size: 13px; color: rgba(11,12,14,0.6);">The change applies immediately and uses the payment method on your account. Prices exclude VAT. There is no minimum term.</p>
+                  </sc-if>
+                  <sc-if value="{{ chErr }}" hint-placeholder-val="{{ false }}"><p style="margin: 0; font-size: 14px; color: #B4442E;">{{ chErrText }}</p></sc-if>
+                </div>
+              </sc-if>
+              <sc-if value="{{ notChange }}" hint-placeholder-val="{{ true }}">
               <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 12px;">
                 <span style="grid-column: 1 / -1; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #A8701A;">Your company</span>
                 <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.55);">Country of registration
@@ -350,6 +381,7 @@
                 <p style="margin: 0; font-size: 14px; color: #B4442E;">Add your company name, business number and a valid email to activate.</p>
               </sc-if>
             </div>
+              </sc-if>
           </sc-if>
 
           <div style="display: flex; justify-content: space-between; gap: 12px; margin-top: 8px;">
@@ -374,7 +406,6 @@
           </div>
           <div style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: rgba(245,244,241,0.7);">
             <span>One-time setup · {{ onceFmt }}</span>
-            <span>Ad budget, paid to platforms · {{ budgetFmt }}</span>
           </div>
           <button onClick="{{ next }}" style="cursor: pointer; margin-top: 6px; padding: 14px; border: 0; background: #E39A2B; border-radius: 3px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: #0B0C0E;" style-hover="background: #F0AE47;">{{ ctaLabel }}</button>
         </aside>
@@ -386,9 +417,10 @@
     <main style="max-width: 1180px; margin: 0 auto; padding: clamp(28px, 4vw, 52px) clamp(16px, 3vw, 32px) 96px;">
         <sc-if value="{{ ownedNotice }}" hint-placeholder-val="{{ false }}">
           <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 14px 18px; margin: 0 0 20px; background: #0B0C0E; color: #F5F4F1; border-radius: 4px;">
-            <span style="font-size: 15px;"><strong style="color: #E39A2B;">You already have an active plan.</strong> Change or cancel it from your billing page.</span>
+            <span style="font-size: 15px;"><strong style="color: #E39A2B;">You already have an active plan.</strong> Change it here, or manage payment and invoices in Billing.</span>
             <span style="display: flex; gap: 10px;">
-              <button onClick="{{ goDash }}" style="cursor: pointer; padding: 9px 14px; border: 0; border-radius: 3px; background: #E39A2B; color: #0B0C0E; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;">Dashboard</button>
+              <button onClick="{{ startChange }}" style="cursor: pointer; padding: 9px 14px; border: 0; border-radius: 3px; background: #E39A2B; color: #0B0C0E; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;">Change plan</button>
+              <button onClick="{{ goDash }}" style="cursor: pointer; padding: 9px 14px; border: 1px solid rgba(245,244,241,0.4); border-radius: 3px; background: transparent; color: #F5F4F1; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;">Dashboard</button>
               <a href="/account" style="padding: 9px 14px; border: 1px solid rgba(245,244,241,0.4); border-radius: 3px; color: #F5F4F1; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;">Billing</a>
             </span>
           </div>
@@ -529,6 +561,9 @@
 
       <main style="flex: 1 1 620px; min-width: 0; padding: clamp(20px, 3vw, 36px);">
         <button class="dashtoggle" onClick="{{ toggleMenu }}" aria-label="Open menu"><span style="font-size: 18px; line-height: 1;">☰</span> Menu</button>
+        <sc-if value="{{ chDone }}" hint-placeholder-val="{{ false }}">
+          <div role="status" style="padding: 16px 20px; margin: 0 0 20px; background: #0B0C0E; color: #F5F4F1; border-radius: 4px; font-size: 15px;"><strong style="color: #E39A2B;">Plan updated.</strong> {{ chDoneText }}</div>
+        </sc-if>
         <sc-if value="{{ payConfirming }}" hint-placeholder-val="{{ false }}">
           <div role="status" style="padding: 16px 20px; margin: 0 0 20px; background: #0B0C0E; color: #F5F4F1; border-radius: 4px; font-size: 15px;"><strong style="color: #E39A2B;">Confirming your payment…</strong> This usually takes a few seconds. You can keep this page open.</div>
         </sc-if>
@@ -547,7 +582,7 @@
             <sc-if value="{{ activated }}" hint-placeholder-val="{{ false }}">
               <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px; background: #0B0C0E; color: #F5F4F1; border-radius: 4px;">
                 <span style="font-size: 15px;"><strong style="color: #E39A2B;">Your plan is live.</strong> Your account manager will call to book the first inbound slot.</span>
-                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: rgba(245,244,241,0.7);">{{ monthlyFmt }} / month</span>
+                <span style="display: flex; align-items: center; gap: 12px;"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: rgba(245,244,241,0.7);">{{ monthlyFmt }} / month</span><button onClick="{{ startChange }}" style="cursor: pointer; padding: 8px 14px; border: 0; border-radius: 3px; background: #E39A2B; color: #0B0C0E; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;">Change plan</button></span>
               </div>
             </sc-if>
             <div style="display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px;">
@@ -1229,7 +1264,7 @@
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900}}">
 class Component extends DCLogic {
   state = {
-    view: 'build', step: 0, userEmail: '', menuOpen: false, logoUrl: '', orgName: '', userName: '', payErr: '', domainOffer: false, dmInfo: null, dmErr: '', dmName: '', dmStatus: null, dmAlts: [], dmNote: '', dmBusy: false, domainAlts: [], mkCat: 'home', payNotice: '', payBanner: '',
+    view: 'build', step: 0, userEmail: '', menuOpen: false, logoUrl: '', orgName: '', userName: '', payErr: '', changeMode: false, curPlan: null, hasDomain: false, chPrev: null, chBusy: false, chErr: '', chDone: '', domainOffer: false, dmInfo: null, dmErr: '', dmName: '', dmStatus: null, dmAlts: [], dmNote: '', dmBusy: false, domainAlts: [], mkCat: 'home', payNotice: '', payBanner: '',
     storageType: 'pallet', qty: 12, estUnits: 6000, estSize: 'medium',
     pkgs: { ful: false, ret: false, imp: false }, orders: 1500,
     storeOn: false, domain: '', domainStatus: null, theme: 'mono',
@@ -1303,6 +1338,58 @@ class Component extends DCLogic {
       delete out.tt; delete out.meta; // marketing channels are no longer offered in the plan builder
       return out;
     } catch (e) { return {}; }
+  }
+
+  // ---- Change plan: upgrade or downgrade an active plan ----
+  startChange = () => {
+    const s = this.state, c = s.curPlan && s.curPlan.config;
+    if (!c) { this.setState({ payErr: 'We could not load your current plan. Please reload the page.' }); return; }
+    this.noPersist = true;
+    this.setState({
+      changeMode: true, view: 'build', step: 0, chPrev: null, chErr: '', chDone: '',
+      storageType: c.storageType, qty: c.qty, qtyDraft: null, pkgs: c.pkgs || {}, storeOn: !!c.storeOn, marketOn: !!c.marketOn,
+      domain: '', domainStatus: null, domainAlts: [], tt: 'off', meta: 'off'
+    });
+    window.scrollTo(0, 0);
+  };
+  cancelChange = () => { this.noPersist = false; this.setState({ changeMode: false, chPrev: null, chErr: '', view: 'dash', tab: 'overview' }); window.scrollTo(0, 0); };
+  chConfig() {
+    const s = this.state, addingStore = s.storeOn && !(s.curPlan && s.curPlan.config && s.curPlan.config.storeOn);
+    return { storageType: s.storageType, qty: s.qty, pkgs: s.pkgs, storeOn: s.storeOn, domain: addingStore && !s.hasDomain ? s.domain : '', tt: 'off', meta: 'off', marketOn: s.marketOn };
+  }
+  async chCall(preview) {
+    const sess = this.authSession();
+    if (!sess) { this.toLogin('/platform?view=dash'); throw new Error('Please log in again'); }
+    const r = await fetch(this.API + '/functions/v1/change-plan', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', apikey: this.ANON, Authorization: 'Bearer ' + sess.access_token },
+      body: JSON.stringify({ config: this.chConfig(), preview: !!preview })
+    });
+    const out = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(out.error || 'Request failed');
+    return out;
+  }
+  async chPreview() {
+    this.setState({ chBusy: true, chErr: '' });
+    const snap = JSON.stringify(this.planSnap());
+    try {
+      const out = await this.chCall(true);
+      if (JSON.stringify(this.planSnap()) === snap) this.setState({ chPrev: out, chBusy: false });
+      else this.setState({ chBusy: false });
+    } catch (e) { this.setState({ chErr: String(e.message || e), chBusy: false }); }
+  }
+  async chApply() {
+    const s = this.state;
+    if (s.chBusy) return;
+    if (!s.chPrev) { if (s.chErr) this.setState({ chErr: '' }); return; } // after an error: clearing it makes the Review step recalculate
+    this.setState({ chBusy: true, chErr: '' });
+    try {
+      const out = await this.chCall(false);
+      const word = out.kind === 'upgrade' ? 'upgraded' : out.kind === 'downgrade' ? 'downgraded' : 'updated';
+      this.noPersist = false; this.clearPlan();
+      this.setState({ changeMode: false, chBusy: false, chPrev: null, view: 'dash', tab: 'overview', chDone: 'Your plan was ' + word + '. Your new price is ' + this.fmt(out.newMonthly) + ' per month.' });
+      window.scrollTo(0, 0);
+      const sess = this.authSession(); if (sess) this.loadOrg(sess);
+    } catch (e) { this.setState({ chErr: String(e.message || e), chBusy: false }); }
   }
 
   // ---- Domain tab: customers with an active plan and no domain ----
@@ -1388,6 +1475,11 @@ class Component extends DCLogic {
       const snap = JSON.stringify(this.planSnap());
       if (snap !== this.lastSnap) { this.lastSnap = snap; clearTimeout(this.saveT); this.saveT = setTimeout(() => this.savePlan(), 400); }
     }
+    if (s.changeMode && s.view === 'build') {
+      const snap = JSON.stringify(this.planSnap());
+      if (snap !== this.chSnap) { this.chSnap = snap; if (s.chPrev || s.chErr) { this.setState({ chPrev: null, chErr: '' }); return; } }
+      if (s.step === 3 && !s.chPrev && !s.chBusy && !s.chErr) this.chPreview();
+    }
     const nav = s.view + ':' + s.step + ':' + s.checkout;
     if (nav !== this.lastNav) {
       const first = this.lastNav === undefined;
@@ -1411,11 +1503,16 @@ class Component extends DCLogic {
     const get = (path) => fetch(base + '/rest/v1/' + path, { headers: H }).then((r) => (r.ok ? r.json() : [])).catch(() => []);
     const uid = sess.user.id;
     const [m, pr] = await Promise.all([
-      get('members?select=role,organizations(name,country,vat_id,logo_path,status,domain_orders(domain,status))&user_id=eq.' + uid + '&limit=1'),
+      get('members?select=org_id,role,organizations(name,country,vat_id,logo_path,status,domain_orders(domain,status))&user_id=eq.' + uid + '&limit=1'),
       get('profiles?select=full_name&user_id=eq.' + uid + '&limit=1')
     ]);
     const o = m[0] && m[0].organizations;
     const patch = { userName: (pr[0] && pr[0].full_name) || '' };
+    if (o) {
+      patch.hasDomain = (o.domain_orders || []).some((d) => ['pending', 'registered'].includes(d.status));
+      const pl = await get('plans?select=config,monthly_pln,once_pln&org_id=eq.' + m[0].org_id + '&status=eq.active&order=created_at.desc&limit=1');
+      patch.curPlan = pl[0] ? { config: pl[0].config, monthly: pl[0].monthly_pln } : null;
+    }
     // Offer a domain to active customers (owner/finance) who have none yet.
     patch.domainOffer = !!(o && o.status === 'active' && ['owner', 'finance'].includes(m[0].role) && !(o.domain_orders || []).some((d) => ['pending', 'registered'].includes(d.status)));
     if (o) {
@@ -1522,11 +1619,14 @@ class Component extends DCLogic {
 
     const next = () => {
       // A storefront needs a .pl name that is not taken: the domain is registered for the customer after payment.
-      if (s.step === 2 && s.storeOn && !['free', 'unknown'].includes(s.domainStatus)) {
+      const addingStore = s.storeOn && !(s.curPlan && s.curPlan.config && s.curPlan.config.storeOn);
+      const needDomain = s.changeMode ? addingStore && !s.hasDomain : s.storeOn;
+      if (s.step === 2 && needDomain && !['free', 'unknown'].includes(s.domainStatus)) {
         this.setState({ domainStatus: s.domain.length < 2 ? 'empty' : ['taken', 'checking', 'invalid'].includes(s.domainStatus) ? s.domainStatus : 'unchecked' });
         return;
       }
       if (s.step < 3) { this.setState({ step: s.step + 1 }); window.scrollTo(0, 0); return; }
+      if (s.changeMode) { this.chApply(); return; }
       if (!formOk) { this.setState({ tried: true }); return; }
       this.setState({ view: 'checkout', checkout: s.userEmail ? 1 : 0, coTried: false, acctEmail: s.acctEmail || s.email });
       window.scrollTo(0, 0);
@@ -1705,7 +1805,7 @@ class Component extends DCLogic {
       avText: s.logoUrl ? '' : customer.split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase(),
       initials: customer.split(/\s+/).map((w) => w[0]).join('').slice(0, 2).toUpperCase(),
       customer,
-      monthlyFmt: this.fmt(P.monthly), onceFmt: this.fmt(P.once), budgetFmt: this.fmt(s.budget), budget: s.budget,
+      monthlyFmt: this.fmt(s.activated && s.curPlan && !s.changeMode ? s.curPlan.monthly : P.monthly), onceFmt: this.fmt(P.once), budgetFmt: this.fmt(s.budget), budget: s.budget,
 
       steps: stepNames.map((label, i) => ({
         n: '0' + (i + 1), label,
@@ -1716,7 +1816,7 @@ class Component extends DCLogic {
       step0: s.step === 0, step4: s.step === 2, step6: s.step === 2, step7: s.step === 3, stepSvc: s.step === 1, stepSell: s.step === 2,
       next, back: () => this.setState({ step: Math.max(0, s.step - 1) }),
       backVis: s.step === 0 ? 'hidden' : 'visible',
-      ctaLabel: s.step === 3 ? (s.userEmail ? 'Continue to agreement and payment' : 'Continue to sign-up') : 'Continue to ' + stepNames[s.step + 1].toLowerCase(),
+      ctaLabel: s.step === 3 && s.changeMode ? (s.chBusy ? 'Please wait…' : s.chErr && !s.chPrev ? 'Try again' : s.chPrev ? (s.chPrev.kind === 'upgrade' ? 'Confirm upgrade' : s.chPrev.kind === 'downgrade' ? 'Confirm downgrade' : 'Confirm change') : 'Calculating…') : s.step === 3 ? (s.userEmail ? 'Continue to agreement and payment' : 'Continue to sign-up') : 'Continue to ' + stepNames[s.step + 1].toLowerCase(),
 
       storageOpts: Object.keys(this.STORAGE).map((k) => {
         const o = this.STORAGE[k];
@@ -1840,6 +1940,9 @@ class Component extends DCLogic {
   }
 
   extraVals(s, P, customer, cc, tabSet) {
+    const chLiveDelta = s.curPlan ? P.monthly - s.curPlan.monthly : 0;
+    const chLiveKind = chLiveDelta > 0 ? 'upgrade' : chLiveDelta < 0 ? 'downgrade' : 'same';
+    const chKind = s.chPrev ? s.chPrev.kind : chLiveKind;
     const fld = (k) => (e) => this.setState({ [k]: e.target.value });
     const bd = (bad) => bad ? '#B4442E' : 'rgba(11,12,14,0.2)';
     const EU = ['PL', 'DE', 'CZ', 'SK', 'LT', 'NL', 'FR', 'IT', 'ES'];
@@ -2005,7 +2108,22 @@ class Component extends DCLogic {
       invLines: P.lines.filter((l) => l.v || l.once || l.quote).map((l) => ({ label: l.label, amount: l.quote ? 'On quote' : this.fmt((l.v || 0) + (l.once || 0)) })),
       netFmt: this.fmt(net), vatFmt: this.fmt(vat), grossFmt: this.fmt(net + vat),
       coErr: !!s.payErr || !!s.payNotice || (t && !!errs[s.checkout]), coErrMsg: s.payErr || s.payNotice || errs[s.checkout],
-      ownedNotice: !!s.activated, goDash: () => { this.setState({ view: 'dash' }); window.scrollTo(0, 0); },
+      ownedNotice: !!s.activated && !s.changeMode, startChange: this.startChange, cancelChange: this.cancelChange,
+      changeMode: s.changeMode, notChange: !s.changeMode,
+      needDomain: s.changeMode ? (s.storeOn && !(s.curPlan && s.curPlan.config && s.curPlan.config.storeOn) && !s.hasDomain) : true,
+      haveDomain: s.changeMode && s.storeOn && s.hasDomain && !(s.curPlan && s.curPlan.config && s.curPlan.config.storeOn),
+      chCurrent: this.fmt(s.curPlan ? s.curPlan.monthly : 0), chNewLive: this.fmt(P.monthly), chNew: this.fmt(s.chPrev ? s.chPrev.newMonthly : P.monthly),
+      chBadgeLive: chLiveKind === 'upgrade' ? 'Upgrade +' + this.fmt(Math.abs(chLiveDelta)) : chLiveKind === 'downgrade' ? 'Downgrade −' + this.fmt(Math.abs(chLiveDelta)) : 'No change',
+      chBadge: chKind === 'upgrade' ? 'Upgrade' : chKind === 'downgrade' ? 'Downgrade' : 'No change',
+      chBadgeBg: chLiveKind === 'upgrade' ? '#2F7D55' : chLiveKind === 'downgrade' ? '#8A5A12' : '#6B6E73', chBadgeFg: '#FFFFFF',
+      chLoading: s.chBusy && !s.chPrev, chShow: !!s.chPrev, chErr: !!s.chErr, chErrText: s.chErr,
+      chDelta: s.chPrev ? (s.chPrev.delta > 0 ? '+' : s.chPrev.delta < 0 ? '−' : '') + this.fmt(Math.abs(s.chPrev.delta)) : '',
+      chTodayText: !s.chPrev ? '' : s.chPrev.todayEstimate >= 0
+        ? 'Charged today: about ' + this.fmt(s.chPrev.todayEstimate) + ' (the price difference for the rest of this billing period' + (s.chPrev.onceToCharge ? ', plus ' + this.fmt(s.chPrev.onceToCharge) + ' one-time setup' : '') + '). From your next invoice you pay ' + this.fmt(s.chPrev.newMonthly) + ' a month.'
+        : 'You get a credit of about ' + this.fmt(Math.abs(s.chPrev.todayEstimate)) + ' on your next invoice for the unused part of this period. From then on you pay ' + this.fmt(s.chPrev.newMonthly) + ' a month.',
+      chDone: !!s.chDone, chDoneText: s.chDone,
+      reviewTitle: s.changeMode ? 'Review your change.' : 'Review and activate.',
+      reviewLead: s.changeMode ? 'Check the difference below. You confirm once and the new plan starts straight away.' : 'Monthly, no minimum term. Your account manager calls within one working day to book your first inbound.', goDash: () => { this.setState({ view: 'dash' }); window.scrollTo(0, 0); },
       payConfirming: s.payBanner === 'confirming', paySlow: s.payBanner === 'slow',
       signedIn: !!s.userEmail, signedOut: !s.userEmail, signedInAs: s.userEmail, goLogin: () => { this.savePlan(); this.toLogin('/platform?view=checkout'); },
       coBack: () => { if (s.checkout === 0 || (s.checkout === 1 && s.userEmail)) this.setState({ view: 'build', step: 3 }); else this.setState({ checkout: s.checkout - 1, coTried: false }); window.scrollTo(0, 0); },
