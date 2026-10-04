@@ -96,7 +96,7 @@
                   </sc-for>
                 </div>
                 <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; margin-top: 14px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.06em; color: rgba(11,12,14,0.6);">
-                  <span>{{ footprint }} m² reserved · 1 000 zł / m² storage</span>
+                  <span>{{ footprint }} m² reserved · 300 zł / m² storage</span>
                   <span style="color: #0B0C0E;">{{ storageFmt }} / month</span>
                 </div>
               </div>
@@ -1191,9 +1191,9 @@ class Component extends DCLogic {
   };
 
   STORAGE = {
-    shelf: { name: 'Shelf bins', unit: 'bins', price: 300, min: 10, max: 2000, step: 5, m2: 0.3, def: 40, desc: 'Small items, many SKUs. Picked by hand from racked bins.' },
-    pallet: { name: 'Pallets', unit: 'pallets', price: 1200, min: 1, max: 1000, step: 1, m2: 1.2, def: 12, desc: 'Cartons and bulk stock on standard EUR pallets.' },
-    zone: { name: 'Private zone', unit: '× 50 m²', price: 50000, min: 1, max: 40, step: 1, m2: 50, def: 1, desc: 'A fenced area of the floor with your own racking and team.' }
+    shelf: { name: 'Shelf bins', unit: 'bins', price: 90, min: 10, max: 2000, step: 5, m2: 0.3, def: 40, desc: 'Small items, many SKUs. Picked by hand from racked bins.' },
+    pallet: { name: 'Pallets', unit: 'pallets', price: 360, min: 1, max: 1000, step: 1, m2: 1.2, def: 12, desc: 'Cartons and bulk stock on standard EUR pallets.' },
+    zone: { name: 'Private zone', unit: '× 50 m²', price: 15000, min: 1, max: 40, step: 1, m2: 50, def: 1, desc: 'A fenced area of the floor with your own racking and team.' }
   };
 
   COUNTRIES = [

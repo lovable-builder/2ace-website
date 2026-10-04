@@ -2,9 +2,9 @@
 // Keep in sync with the browser version; the browser total is display only.
 
 export const STORAGE = {
-  shelf: { name: 'Shelf bins', unit: 'bins', price: 300, min: 10, max: 2000, m2: 0.3 },
-  pallet: { name: 'Pallets', unit: 'pallets', price: 1200, min: 1, max: 1000, m2: 1.2 },
-  zone: { name: 'Private zone', unit: '× 50 m²', price: 50000, min: 1, max: 40, m2: 50 },
+  shelf: { name: 'Shelf bins', unit: 'bins', price: 90, min: 10, max: 2000, m2: 0.3 },
+  pallet: { name: 'Pallets', unit: 'pallets', price: 360, min: 1, max: 1000, m2: 1.2 },
+  zone: { name: 'Private zone', unit: '× 50 m²', price: 15000, min: 1, max: 40, m2: 50 },
 } as const;
 
 export type PlanConfig = {
