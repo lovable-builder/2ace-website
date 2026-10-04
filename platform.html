@@ -162,7 +162,7 @@
             <div>
               <p style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: #A8701A; margin: 0 0 10px;">Sell</p>
               <h2 style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 108; font-weight: 700; font-size: 28px; letter-spacing: -0.015em; margin: 0 0 6px;">How will you sell?</h2>
-              <p style="font-size: 15px; line-height: 1.55; color: rgba(11,12,14,0.62); margin: 0; max-width: 62ch;">Pick either option below, both, or neither and add it later. Nothing is charged until you sign up.</p>
+              <p style="font-size: 15px; line-height: 1.55; color: rgba(11,12,14,0.62); margin: 0; max-width: 62ch;">Pick either option below, both, or neither and add it later. Nothing is charged until you review and pay.</p>
             </div>
           </sc-if>
 
@@ -1585,7 +1585,7 @@ class Component extends DCLogic {
       step0: s.step === 0, step4: s.step === 2, step6: s.step === 2, step7: s.step === 3, stepSvc: s.step === 1, stepSell: s.step === 2,
       next, back: () => this.setState({ step: Math.max(0, s.step - 1) }),
       backVis: s.step === 0 ? 'hidden' : 'visible',
-      ctaLabel: s.step === 3 ? 'Continue to sign-up' : 'Continue to ' + stepNames[s.step + 1].toLowerCase(),
+      ctaLabel: s.step === 3 ? (s.userEmail ? 'Continue to agreement and payment' : 'Continue to sign-up') : 'Continue to ' + stepNames[s.step + 1].toLowerCase(),
 
       storageOpts: Object.keys(this.STORAGE).map((k) => {
         const o = this.STORAGE[k];
