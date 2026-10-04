@@ -2,6 +2,70 @@
 // `image`: set to '/assets/news/<file>.jpg' once a photo exists; until then the on-brand drawn cover is used.
 export const articles = [
   {
+    slug: 'open-a-company-in-poland-pesel-trusted-profile',
+    title: 'Opening a company in Poland as a foreigner: PESEL, trusted profile and the steps that follow',
+    summary: 'A plain-language route from nothing to a registered Polish company: which form to choose, how to get a PESEL and a Profil Zaufany, how the registration works, and what to sort out afterwards.',
+    date: '2026-10-04', minutes: 6, tag: 'Company setup', cover: 'company', image: null,
+    cta: { title: 'Want help with all of this?', text: 'We can walk you through every step, from your PESEL appointment and trusted profile to registering the company and setting up your first import. Tell us where you are in the process and we will reply within one working day.', href: '/#talk', label: 'Talk to us' },
+    body: `
+<p>Selling into the EU is easier with a company inside it: you can register for VAT, import goods in your own name and hold stock in a hub such as Poland. Foreigners can do this, and much of it can be done online. This guide explains the order of the steps and the two things people most often get stuck on: the <strong>PESEL</strong> number and the <strong>Profil Zaufany</strong> (trusted profile).</p>
+<h2>1. Choose the form</h2>
+<ul>
+<li><strong>Sole proprietorship (JDG):</strong> registered with CEIDG, free, no minimum capital. Whether you may register one depends on your residence status, so check that first. From <strong>1 November 2026</strong>, applications for new sole proprietorships are accepted only online, through Biznes.gov.pl or the mObywatel app.</li>
+<li><strong>Limited liability company (sp. z o.o.):</strong> minimum share capital of <strong>PLN 5,000</strong>, which stays in the company as working money. It can be registered online through the S24 system. Foreign founders can be shareholders and board members.</li>
+</ul>
+<p>Most overseas sellers who want to import and hold stock choose the sp. z o.o., because it separates the business from you personally.</p>
+<h2>2. PESEL: your Polish identification number</h2>
+<p><strong>PESEL</strong> is the 11-digit national identification number. It is free. You do <strong>not</strong> need to live in Poland to get one: you need a legal reason that requires it. For example, a member of the management board of a Polish company can obtain a PESEL even without residing in Poland.</p>
+<ul>
+<li><strong>Where:</strong> at any municipal office (<em>urząd gminy</em>, or <em>urząd dzielnicy</em> in Warsaw).</li>
+<li><strong>How:</strong> from 1 January 2026, most non-EU nationals must apply <strong>in person</strong>. Bring your passport and a hand-signed application, and state the legal basis for needing the number.</li>
+<li><strong>Cost:</strong> free of charge. The office issues the decision at the same place.</li>
+</ul>
+<p>Strictly, you do not need a PESEL to be a shareholder or board member. But without one you cannot get the trusted profile described next, and that is the most convenient way to sign everything online.</p>
+<h2>3. Profil Zaufany: your online identity for the state</h2>
+<p>The <strong>Profil Zaufany</strong> is a free electronic identity that lets you log in to government services and sign documents electronically. You can have one once you have a PESEL and can prove who you are. There are three ways to confirm it:</p>
+<ol>
+<li><strong>Through your Polish online bank</strong>, if the bank supports it. This is the fastest route.</li>
+<li><strong>By video call</strong> with an operator, using a smartphone and your identity document. The profile is usually active within 24 hours.</li>
+<li><strong>In person</strong> at a confirmation point, within 14 days of applying on the official site, pz.gov.pl.</li>
+</ol>
+<p>With the profile you can authenticate on Biznes.gov.pl and sign your company application. The mObywatel app can then be used to log in, but it normally relies on a trusted profile you already have.</p>
+<h2>4. Registering the company</h2>
+<p><strong>For an sp. z o.o. through S24:</strong> create an account, authenticate and sign with either a trusted profile (which needs a PESEL) or a <strong>qualified electronic signature</strong> (which does not). Choose the standard articles template, enter the company name, seat, share capital, board members and activity codes, and pay the court fee, quoted by advisers at about <strong>PLN 350</strong>. Check the current fee on the official site. Registration commonly takes about a day.</p>
+<p><strong>For a JDG:</strong> file the CEIDG application on Biznes.gov.pl with your trusted profile, electronic ID or qualified signature.</p>
+<h2>5. What to do after registration</h2>
+<ul>
+<li><strong>Tax and statistical numbers:</strong> the company receives its NIP (tax ID), REGON and KRS number.</li>
+<li><strong>VAT registration:</strong> file the VAT-R form to become an active VAT payer. Sellers who import will want this.</li>
+<li><strong>Bank account:</strong> a Polish business account is usually opened with a visit by a board member, while some fintechs onboard remotely.</li>
+<li><strong>KSeF e-invoicing:</strong> the national e-invoice system has applied to most VAT payers since 1 April 2026, and the smallest businesses follow later. Check which phase applies to you.</li>
+<li><strong>EORI number:</strong> importers normally need one before customs will clear goods in the company's name.</li>
+<li><strong>Product rules:</strong> if you ship packaged goods or electronics, see our articles on <a href="/news/eu-packaging-regulation-ppwr-epr-online-sellers">packaging registration (EPR)</a> and on <a href="/news/selling-electronics-in-the-eu-ce-rohs-weee-checklist">CE, RoHS and WEEE</a>. Also read how the new <a href="/news/eu-3-euro-customs-duty-small-parcels">€3 customs duty</a> affects small parcels.</li>
+</ul>
+<h2>The order, in short</h2>
+<ol>
+<li>Choose JDG or sp. z o.o.</li>
+<li>Get your PESEL at a municipal office.</li>
+<li>Activate your Profil Zaufany through your bank or by video.</li>
+<li>Register the company online.</li>
+<li>Register for VAT, open a bank account, set up KSeF and apply for an EORI number.</li>
+</ol>
+<h2>We can help you do all of this</h2>
+<p>None of these steps is difficult, but together they take many appointments, forms and portals, in Polish. 2ACE can help you through the whole route, from the first office visit to a registered company and your first shipment into our warehouse in Poland, so you can start selling instead of chasing paperwork.</p>
+<p class="note">This article is general information, not legal or tax advice. Rules, fees and deadlines change, and your own case depends on your nationality and residence, so confirm the details with the offices concerned or a Polish lawyer or accountant.</p>`,
+    sources: [
+      ['Gov.pl: Get a PESEL ID, a service for foreigners', 'https://www.gov.pl/web/gov/uzyskaj-numer-pesel--usluga-dla-cudzoziemcow-en'],
+      ['Lexology: Poland, new PESEL requirements for foreign nationals', 'https://www.lexology.com/library/detail.aspx?g=ae9b7d48-323e-440a-b750-3088ae61482d'],
+      ['Legalsol: how to get a PESEL number as a foreigner in 2026', 'https://www.legalsol.pl/blog/pesel-guide-en'],
+      ['Careers in Poland: Trusted Profile, what it is and how to get one', 'https://www.careersinpoland.com/article/arrival-and-stay/trusted-profile-in-poland-what-is-it-and-how-go-you-get-one'],
+      ['Izibiz: Profil Zaufany for foreigners', 'https://izibiz.pl/en/profil-zaufany-trusted-profile/'],
+      ['Zunapro: forming an sp. z o.o. in Poland as a foreigner (S24)', 'https://www.zunapro.com/poland/en/blog/form-sp-z-oo-poland-complete-guide'],
+      ['CEO.com.pl: Poland moves business registration fully online from November 2026', 'https://ceo.com.pl/en/poland-ceidg-business-registration-online-november-2026/'],
+      ['Dudkowiak: e-invoicing in Poland (KSeF) 2026 to 2027', 'https://www.dudkowiak.com/tax-law-in-poland/e-invoicing-in-poland-ksef/'],
+    ],
+  },
+  {
     slug: 'eu-3-euro-customs-duty-small-parcels',
     title: 'The €3 customs duty on small parcels is here: what it means for sellers shipping from China',
     summary: 'Since 1 July 2026 the EU charges a flat €3 duty on every item in parcels worth up to €150. Here is how it is counted and how to keep your cost per order under control.',

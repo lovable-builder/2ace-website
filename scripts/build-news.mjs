@@ -40,6 +40,17 @@ const covers = {
       <path d="M-120 100 L-175 5 L-105 -95"/><path d="M-128 -62 L-105 -95 L-70 -80" stroke-width="22"/>
     </g>
     <text x="110" y="120" font-family="IBM Plex Mono, monospace" font-size="30" letter-spacing="7" fill="#E39A2B">PPWR · EPR · 12 AUG 2026</text>`),
+  company: () => frame(`
+    <g transform="translate(560 270)">
+      <rect width="560" height="360" rx="30" fill="#14161A" stroke="#F5F4F1" stroke-opacity=".4" stroke-width="4"/>
+      <rect x="40" y="48" width="130" height="160" rx="12" fill="#E39A2B"/>
+      <circle cx="105" cy="108" r="30" fill="#0B0C0E" fill-opacity=".85"/><path d="M58 190 Q105 130 152 190 Z" fill="#0B0C0E" fill-opacity=".85"/>
+      <g stroke="#F5F4F1" stroke-opacity=".5" stroke-width="10" stroke-linecap="round"><path d="M215 70H500M215 112H440M215 154H480"/></g>
+      <text x="40" y="290" font-family="IBM Plex Mono, monospace" font-weight="500" font-size="44" letter-spacing="8" fill="#E39A2B">PESEL</text>
+      <text x="40" y="332" font-family="IBM Plex Mono, monospace" font-size="26" letter-spacing="6" fill="#F5F4F1" fill-opacity=".55">0 0 0 0 0 0 0 0 0 0 0</text>
+    </g>
+    <g transform="translate(1180 560)"><circle r="86" fill="#E39A2B"/><path d="M-34 6 L-10 30 L38 -26" fill="none" stroke="#0B0C0E" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/></g>
+    <text x="110" y="120" font-family="IBM Plex Mono, monospace" font-size="30" letter-spacing="7" fill="#E39A2B">PESEL · TRUSTED PROFILE · KRS</text>`),
   electronics: () => frame(`
     <g transform="translate(800 450)">
       <rect x="-190" y="-190" width="380" height="380" rx="26" fill="#14161A" stroke="#F5F4F1" stroke-opacity=".4" stroke-width="4"/>
@@ -116,7 +127,7 @@ for (const a of sorted) {
     `<main><article><p class="kicker"><a href="/news" style="text-decoration:none">News</a> · ${esc(a.tag)}</p><h1>${esc(a.title)}</h1><p class="lede">${esc(a.summary)}</p><p class="meta">${fmtDate(a.date)} · ${a.minutes} min read</p>
 <div class="hero">${coverHtml(a, 'cover')}</div>${a.body}
 <div class="sources"><h3>Sources</h3><ul>${a.sources.map(([t, u]) => `<li><a href="${esc(u)}" target="_blank" rel="noopener">${esc(t)}</a></li>`).join('')}</ul></div>
-<div class="cta-box"><h3>Importing into the EU?</h3><p>Tell us what you sell and where it ships from. We quote import and customs per shipment and fulfil from our hub in Poland.</p><a class="btn" href="/platform">Build your plan</a></div></article>
+${(() => { const c = a.cta || { title: 'Importing into the EU?', text: 'Tell us what you sell and where it ships from. We quote import and customs per shipment and fulfil from our hub in Poland.', href: '/platform', label: 'Build your plan' }; return `<div class="cta-box"><h3>${esc(c.title)}</h3><p>${esc(c.text)}</p><a class="btn" href="${esc(c.href)}">${esc(c.label)}</a></div>`; })()}</article>
 <div class="related" style="max-width:1180px;margin-left:auto;margin-right:auto"><h3>More news</h3><div class="grid">${related.map(card).join('')}</div></div></main>` + footer + '</body></html>');
 }
 
