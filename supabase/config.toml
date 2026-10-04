@@ -345,3 +345,6 @@ verify_jwt = true
 
 [functions.domain-check]
 verify_jwt = false
+
+[functions.domain-checkout]
+verify_jwt = true

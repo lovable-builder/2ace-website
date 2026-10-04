@@ -538,6 +538,12 @@
 
         <sc-if value="{{ tabOverview }}" hint-placeholder-val="{{ true }}">
           <div style="display: flex; flex-direction: column; gap: 20px;">
+            <sc-if value="{{ domainOffer }}" hint-placeholder-val="{{ false }}">
+              <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px; background: #FFFFFF; border: 2px solid #E39A2B; border-radius: 4px;">
+                <span style="font-size: 15px;"><strong>Get your own .pl domain.</strong> We register it in your company name. 99 zł one-time, first year included.</span>
+                <button onClick="{{ goDomain }}" style="cursor: pointer; padding: 11px 18px; border: 0; border-radius: 3px; background: #E39A2B; color: #0B0C0E; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;">Choose a domain</button>
+              </div>
+            </sc-if>
             <sc-if value="{{ activated }}" hint-placeholder-val="{{ false }}">
               <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px; background: #0B0C0E; color: #F5F4F1; border-radius: 4px;">
                 <span style="font-size: 15px;"><strong style="color: #E39A2B;">Your plan is live.</strong> Your account manager will call to book the first inbound slot.</span>
@@ -959,6 +965,53 @@
           </div>
         </sc-if>
 
+        <sc-if value="{{ tabDomain }}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; flex-direction: column; gap: 20px; max-width: 680px;">
+            <div>
+              <h1 style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 108; font-weight: 800; font-size: clamp(26px, 3vw, 36px); letter-spacing: -0.02em; margin: 0 0 6px;">Your .pl domain</h1>
+              <p style="font-size: 14px; color: rgba(11,12,14,0.6); margin: 0;">{{ dmIntro }}</p>
+            </div>
+            <sc-if value="{{ dmNote }}" hint-placeholder-val="{{ false }}">
+              <div role="status" style="padding: 14px 18px; background: #0B0C0E; color: #F5F4F1; border-radius: 4px; font-size: 15px;">{{ dmNoteText }}</div>
+            </sc-if>
+            <sc-if value="{{ dmLoading }}" hint-placeholder-val="{{ false }}">
+              <p style="margin: 0; font-size: 14px; color: rgba(11,12,14,0.6);">Loading…</p>
+            </sc-if>
+            <sc-if value="{{ dmErr }}" hint-placeholder-val="{{ false }}">
+              <p style="margin: 0; font-size: 14px; color: #B4442E;">{{ dmErrText }}</p>
+            </sc-if>
+            <sc-if value="{{ dmHas }}" hint-placeholder-val="{{ false }}">
+              <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px; display: flex; flex-direction: column; gap: 10px;">
+                <sc-for list="{{ dmOrders }}" as="d" hint-placeholder-count="1">
+                  <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; font-size: 15px;">
+                    <strong style="font-family: 'IBM Plex Mono', monospace;">{{ d.domain }}</strong>
+                    <span style="color: rgba(11,12,14,0.65);">{{ d.text }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+            <sc-if value="{{ dmForm }}" hint-placeholder-val="{{ false }}">
+              <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(11,12,14,0.55);">Choose a name</span>
+                <div style="display: flex; gap: 8px; align-items: stretch;">
+                  <span style="display: flex; align-items: center; flex: 1; min-width: 0; border: 1px solid rgba(11,12,14,0.25); border-radius: 3px; background: #FFFFFF;">
+                    <input type="text" value="{{ dmName }}" onChange="{{ onDmName }}" placeholder="yourbrand" maxlength="63" style="flex: 1; min-width: 0; border: 0; padding: 12px; font-size: 16px; background: transparent; outline: 0;" />
+                    <span style="padding-right: 12px; font-family: 'IBM Plex Mono', monospace; color: rgba(11,12,14,0.6);">.pl</span>
+                  </span>
+                  <button onClick="{{ dmCheck }}" style="cursor: pointer; padding: 12px 20px; border: 0; border-radius: 3px; background: #0B0C0E; color: #F5F4F1; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;">Check</button>
+                </div>
+                <p style="font-size: 14px; margin: 0; color: {{ dmMsgColor }};">{{ dmMsg }}</p>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                  <sc-for list="{{ dmAlts }}" as="a" hint-placeholder-count="3">
+                    <button onClick="{{ a.onClick }}" style="cursor: pointer; min-height: 40px; padding: 8px 14px; border-radius: 20px; border: 1px solid rgba(11,12,14,0.25); background: #FFFFFF; font-size: 14px;">{{ a.label }}</button>
+                  </sc-for>
+                </div>
+                <button onClick="{{ dmGo }}" style="cursor: pointer; align-self: flex-start; min-height: 48px; padding: 14px 22px; border: 0; border-radius: 3px; background: #E39A2B; color: #0B0C0E; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; opacity: {{ dmGoOpacity }};">{{ dmGoLabel }}</button>
+              </div>
+            </sc-if>
+          </div>
+        </sc-if>
+
         <sc-if value="{{ tabMarket }}" hint-placeholder-val="{{ false }}">
           <div style="display: flex; flex-direction: column; gap: 20px;">
             <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 12px;">
@@ -1176,7 +1229,7 @@
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900}}">
 class Component extends DCLogic {
   state = {
-    view: 'build', step: 0, userEmail: '', menuOpen: false, logoUrl: '', orgName: '', userName: '', payErr: '', domainAlts: [], mkCat: 'home', payNotice: '', payBanner: '',
+    view: 'build', step: 0, userEmail: '', menuOpen: false, logoUrl: '', orgName: '', userName: '', payErr: '', domainOffer: false, dmInfo: null, dmErr: '', dmName: '', dmStatus: null, dmAlts: [], dmNote: '', dmBusy: false, domainAlts: [], mkCat: 'home', payNotice: '', payBanner: '',
     storageType: 'pallet', qty: 12, estUnits: 6000, estSize: 'medium',
     pkgs: { ful: false, ret: false, imp: false }, orders: 1500,
     storeOn: false, domain: '', domainStatus: null, theme: 'mono',
@@ -1252,6 +1305,60 @@ class Component extends DCLogic {
     } catch (e) { return {}; }
   }
 
+  // ---- Domain tab: customers with an active plan and no domain ----
+  async dmCall(body) {
+    const sess = this.authSession();
+    if (!sess) { this.toLogin('/platform?tab=domain'); throw new Error('Please log in again'); }
+    const r = await fetch(this.API + '/functions/v1/domain-checkout', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', apikey: this.ANON, Authorization: 'Bearer ' + sess.access_token }, body: JSON.stringify(body)
+    });
+    const out = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(out.error || 'Request failed');
+    return out;
+  }
+  async dmLoad() {
+    this.setState({ dmInfo: null, dmErr: '' });
+    try { this.setState({ dmInfo: await this.dmCall({ action: 'info' }) }); }
+    catch (e) { this.setState({ dmErr: String(e.message || e) }); }
+  }
+  async dmCheck(name) {
+    name = String(name || '').trim();
+    if (name.length < 2) return this.setState({ dmStatus: 'empty', dmAlts: [] });
+    this.setState({ dmStatus: 'checking', dmAlts: [] });
+    const token = ++this.dmToken;
+    try {
+      const r = await fetch(this.API + '/functions/v1/domain-check', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: this.ANON }, body: JSON.stringify({ name }) });
+      const out = await r.json().catch(() => ({}));
+      if (token !== this.dmToken) return;
+      if (r.status === 429) return this.setState({ dmStatus: 'limited' });
+      if (!r.ok) return this.setState({ dmStatus: 'unknown' });
+      this.setState({ dmStatus: out.status || 'unknown', dmAlts: out.alternatives || [] });
+    } catch (e) { if (token === this.dmToken) this.setState({ dmStatus: 'unknown' }); }
+  }
+  dmToken = 0;
+  async dmSubmit() {
+    const s = this.state;
+    if (s.dmBusy) return;
+    if (s.dmStatus !== 'free') { this.setState({ dmStatus: s.dmName.length < 2 ? 'empty' : 'unchecked' }); return; }
+    this.setState({ dmBusy: true });
+    try {
+      const out = await this.dmCall({ name: s.dmName });
+      if (out.url) { window.location.href = out.url; return; }
+      this.setState({ dmBusy: false, dmName: '', dmStatus: null, dmNote: 'Request sent. We register ' + s.dmName + '.pl for you and email you within one working day.', domainOffer: false });
+      this.dmLoad();
+    } catch (e) { this.setState({ dmBusy: false, dmStatus: 'error', dmErr: '' }); this.setState({ dmStatus: 'error', dmErr: String(e.message || e) }); }
+  }
+  // Back from Stripe: wait for the webhook to record the order (the info call then reports has_domain).
+  waitForDomain() {
+    let tries = 0;
+    const tick = async () => {
+      tries += 1;
+      try { const info = await this.dmCall({ action: 'info' }); this.setState({ dmInfo: info, dmErr: '' }); if (!info.eligible && info.reason === 'has_domain') { this.setState({ domainOffer: false }); return; } } catch (e) { /* keep waiting */ }
+      if (tries < 12) this.domPoll = setTimeout(tick, 3000);
+    };
+    this.domPoll = setTimeout(tick, 1500);
+  }
+
   // Free .pl availability check through our domain-check function (NASK's public RDAP).
   async checkDomainName(name) {
     if (!name) return;
@@ -1304,11 +1411,13 @@ class Component extends DCLogic {
     const get = (path) => fetch(base + '/rest/v1/' + path, { headers: H }).then((r) => (r.ok ? r.json() : [])).catch(() => []);
     const uid = sess.user.id;
     const [m, pr] = await Promise.all([
-      get('members?select=organizations(name,country,vat_id,logo_path,status)&user_id=eq.' + uid + '&limit=1'),
+      get('members?select=role,organizations(name,country,vat_id,logo_path,status,domain_orders(domain,status))&user_id=eq.' + uid + '&limit=1'),
       get('profiles?select=full_name&user_id=eq.' + uid + '&limit=1')
     ]);
     const o = m[0] && m[0].organizations;
     const patch = { userName: (pr[0] && pr[0].full_name) || '' };
+    // Offer a domain to active customers (owner/finance) who have none yet.
+    patch.domainOffer = !!(o && o.status === 'active' && ['owner', 'finance'].includes(m[0].role) && !(o.domain_orders || []).some((d) => ['pending', 'registered'].includes(d.status)));
     if (o) {
       patch.orgName = o.name || '';
       patch.activated = o.status === 'active';
@@ -1326,12 +1435,19 @@ class Component extends DCLogic {
   componentDidMount() {
     const sess = this.authSession();
     const q = new URLSearchParams(location.search);
-    const view = q.get('view'), co = q.get('checkout');
+    const view = q.get('view'), co = q.get('checkout'), dom = q.get('domain'), tabQ = q.get('tab');
     if (co === 'success') this.clearPlan();
     const patch = Object.assign({ userEmail: sess && sess.user ? sess.user.email : '' }, co === 'success' ? {} : this.restorePlan());
     if (view === 'checkout') { patch.view = 'checkout'; patch.checkout = sess ? 1 : 0; }
     if (co === 'cancelled') { patch.view = 'checkout'; patch.checkout = 2; patch.payNotice = 'Payment was cancelled, nothing was charged. Your plan is saved, so you can try again whenever you are ready.'; }
+    if (dom || tabQ === 'domain') {
+      if (!sess) { this.toLogin('/platform?tab=domain'); return; }
+      patch.view = 'dash'; patch.tab = 'domain';
+      if (dom === 'success') patch.dmNote = 'Payment received. We are registering your domain and will email you within one working day.';
+      if (dom === 'cancelled') patch.dmNote = 'Payment cancelled. Nothing was charged.';
+    }
     this.setState(patch);
+    if (patch.tab === 'domain') { if (dom === 'success') this.waitForDomain(); else this.dmLoad(); }
     window.addEventListener('popstate', this.onPop);
     if (sess) this.loadOrg(sess);
     if (view === 'dash') { if (sess) this.setState({ view: 'dash' }); else this.toLogin(); }
@@ -1340,7 +1456,7 @@ class Component extends DCLogic {
       this.setState({ view: 'dash', tab: 'overview', payBanner: 'confirming' });
       this.waitForPayment(sess);
     }
-    if (view || co) { try { history.replaceState(null, '', '/platform'); } catch (e) { /* ignore */ } }
+    if (view || co || dom || tabQ) { try { history.replaceState(null, '', '/platform'); } catch (e) { /* ignore */ } }
   }
 
   // After Stripe redirects back, the webhook flips the company to active. Poll until it does.
@@ -1357,7 +1473,7 @@ class Component extends DCLogic {
   }
 
 
-  componentWillUnmount() { clearTimeout(this.toastT); clearTimeout(this.domT); clearTimeout(this.syncT); clearTimeout(this.payT); clearTimeout(this.payPoll); clearTimeout(this.saveT); window.removeEventListener('popstate', this.onPop); }
+  componentWillUnmount() { clearTimeout(this.toastT); clearTimeout(this.domT); clearTimeout(this.syncT); clearTimeout(this.payT); clearTimeout(this.payPoll); clearTimeout(this.domPoll); clearTimeout(this.saveT); window.removeEventListener('popstate', this.onPop); }
 
   fmt(n) { return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' ') + ' zł'; }
   num(n) { return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
@@ -1545,9 +1661,9 @@ class Component extends DCLogic {
     const missingCount = s.products.filter((p) => !p.hs || !(p.l && p.w && p.h)).length;
     const tabs = [
       ['overview', 'Overview', ''], ['imports', 'Imports', s.invoiceUp ? '4' : '1 !'], ['tracking', 'Shipment tracking', '3 live'], ['inbound', 'Book inbound', s.inbounds.length ? String(s.inbounds.length) : 'New'], ['products', 'Products', missingCount ? missingCount + ' !' : String(s.products.length)], ['inventory', 'Inventory', lowCount + ' low'],
-      ['orders', 'Orders', '214'], ['returns', 'Returns', '23'], ['growth', 'Storefront & marketing', ''], ['market', '2ACE Market', s.marketOn ? 'Live' : 'New'], ['team', 'Team', String(s.team.length + 1)]
+      ['orders', 'Orders', '214'], ['returns', 'Returns', '23'], ['growth', 'Storefront & marketing', ''], ['market', '2ACE Market', s.marketOn ? 'Live' : 'New'], ['domain', 'Domain', s.domainOffer ? 'New' : ''], ['team', 'Team', String(s.team.length + 1)]
     ];
-    const tabSet = (t) => () => { this.setState({ tab: t, menuOpen: false }); window.scrollTo(0, 0); };
+    const tabSet = (t) => () => { this.setState({ tab: t, menuOpen: false }); window.scrollTo(0, 0); if (t === 'domain') this.dmLoad(); };
 
     const X = this.extraVals(s, P, customer, cc, tabSet);
     return Object.assign(X, {
@@ -1558,6 +1674,21 @@ class Component extends DCLogic {
           this.setState({ view: v }); window.scrollTo(0, 0);
         }
       })),
+      domainOffer: s.domainOffer,
+      goDomain: () => { this.setState({ tab: 'domain', menuOpen: false }); window.scrollTo(0, 0); this.dmLoad(); },
+      dmLoading: !s.dmInfo && !s.dmErr, dmErr: !!s.dmErr, dmErrText: s.dmErr, dmNote: !!s.dmNote, dmNoteText: s.dmNote,
+      dmHas: !!(s.dmInfo && !s.dmInfo.eligible && s.dmInfo.reason === 'has_domain'),
+      dmOrders: ((s.dmInfo && s.dmInfo.domains) || []).map((d) => ({ domain: d.domain, text: d.status === 'registered' ? 'Registered' : 'We are registering it. You will get an email within one working day.' })),
+      dmForm: !!(s.dmInfo && s.dmInfo.eligible), 
+      dmIntro: !s.dmInfo ? '' : s.dmInfo.eligible ? (s.dmInfo.free ? 'Your plan includes a .pl domain. Pick a name and we register it in your company name.' : 'Get a .pl domain for ' + s.dmInfo.fee + ' zł one-time (excl. VAT), first year included. We register it in your company name.') : s.dmInfo.reason === 'has_domain' ? 'Your domain and its status.' : 'Domains can be added once your plan is active.',
+      dmName: s.dmName, onDmName: (e) => this.setState({ dmName: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''), dmStatus: null, dmAlts: [] }),
+      dmCheck: () => this.dmCheck(s.dmName),
+      dmMsg: { null: 'Pick a name, then click Check. We check it against the .pl registry.', checking: 'Checking ' + s.dmName + '.pl…', free: s.dmName + '.pl looks available.', taken: s.dmName + '.pl is already registered.' + (s.dmAlts.length ? ' Try:' : ' Try another name.'), invalid: 'Use 2 to 63 letters, numbers or hyphens, with no hyphen at the start or end.', empty: 'Enter a name first.', unchecked: 'Click Check first to make sure ' + s.dmName + '.pl is available.', unknown: 'We could not reach the registry. Please try again.', limited: 'Too many checks. Please wait a minute.', busy: 'Working on it…', error: s.dmErr || 'Something went wrong.' }[String(s.dmStatus)],
+      dmMsgColor: s.dmStatus === 'free' ? '#2F7D55' : ['taken', 'invalid', 'empty', 'unchecked', 'error'].includes(s.dmStatus) ? '#B4442E' : 'rgba(11,12,14,0.6)',
+      dmAlts: s.dmAlts.map((n) => ({ label: n + '.pl', onClick: () => { this.setState({ dmName: n }); this.dmCheck(n); } })),
+      dmGo: () => this.dmSubmit(),
+      dmGoOpacity: s.dmStatus === 'free' && !s.dmBusy ? '1' : '0.5',
+      dmGoLabel: s.dmBusy ? 'Please wait…' : s.dmInfo && s.dmInfo.free ? 'Request my included domain' : 'Pay ' + ((s.dmInfo && s.dmInfo.fee) || 99) + ' zł and request',
       navCls: s.menuOpen ? 'dashnav open' : 'dashnav', scrimCls: s.menuOpen ? 'dashscrim open' : 'dashscrim',
       toggleMenu: () => this.setState({ menuOpen: !s.menuOpen }), closeMenu: () => this.setState({ menuOpen: false }),
       welcome: s.userEmail ? 'Welcome, ' + (s.orgName || s.userName || s.userEmail) : '',
@@ -1902,7 +2033,7 @@ class Component extends DCLogic {
         { t: 'Throw colour question', d: 'Answered with product photos', st: 'Solved · 6 min' },
         { t: 'Invoice with NIP', d: 'VAT invoice re-issued to buyer', st: 'Solved · 12 min' }
       ],
-      tabInbound: s.tab === 'inbound', tabProducts: s.tab === 'products', tabTeam: s.tab === 'team',
+      tabInbound: s.tab === 'inbound', tabProducts: s.tab === 'products', tabTeam: s.tab === 'team', tabDomain: s.tab === 'domain',
       slotDays, ibUnits: s.ibUnits, onIbUnits: fld('ibUnits'), ibCount: s.ibCount, onIbCount: fld('ibCount'),
       ibCarrier: s.ibCarrier, onIbCarrier: fld('ibCarrier'), ibRef: s.ibRef, onIbRef: fld('ibRef'),
       ibCountBd: bd(s.ibTried && !(Number(s.ibCount) > 0)), plainBd: 'rgba(11,12,14,0.2)',

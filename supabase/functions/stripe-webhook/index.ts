@@ -1,10 +1,7 @@
 import Stripe from 'npm:stripe';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { sendEmail, layout, esc } from '../_shared/email.ts';
-import { validName, rdapStatus } from '../_shared/domain.ts';
-import { autoRegisterPl, type Reg, type OrgData } from '../_shared/hostinger.ts';
-
-const NOTIFY = Deno.env.get('LEAD_NOTIFY_TO') ?? 'warsaw@2ace.eu';
+import { createDomainOrder } from '../_shared/domainOrder.ts';
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!);
 const secret = Deno.env.get('STRIPE_WEBHOOK_SECRET')!;
@@ -12,61 +9,6 @@ const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SE
 
 async function setOrg(orgId: string | undefined | null, status: string) {
   if (orgId) await db.from('organizations').update({ status }).eq('id', orgId);
-}
-
-// After payment, record the domain this plan needs. With HOSTINGER_AUTO_REGISTER=true we try to buy it
-// automatically (safe fallbacks inside autoRegisterPl); otherwise, or on any problem, the team registers it by hand.
-async function createDomainOrder(s: Stripe.Checkout.Session) {
-  const name = s.metadata?.domain, orgId = s.metadata?.org_id ?? s.client_reference_id;
-  if (!name || !validName(name) || !orgId) return;
-  const domain = name + '.pl';
-  const availability = await rdapStatus(name);
-  const { data: ins, error } = await db.from('domain_orders').insert({ org_id: orgId, plan_id: s.metadata?.plan_id ?? null, domain, availability }).select('id').single();
-  if (error) { if (error.code === '23505') return; throw error; } // 23505: already recorded by an earlier delivery of this event
-  const orderId = ins.id as string;
-
-  const { data: o } = await db.from('organizations').select('name, country, vat_id, address_line, city, postal_code, phone, region').eq('id', orgId).single();
-  const email = s.customer_details?.email ?? '';
-
-  // Automatic purchase: never let a failure here break the webhook (a retry must not buy twice).
-  let reg: Reg | null = null;
-  if (Deno.env.get('HOSTINGER_AUTO_REGISTER') === 'true' && availability === 'free' && o) {
-    try {
-      const { data: m } = await db.from('members').select('user_id').eq('org_id', orgId).eq('role', 'owner').limit(1).maybeSingle();
-      const { data: pr } = m ? await db.from('profiles').select('full_name').eq('user_id', m.user_id).maybeSingle() : { data: null };
-      const start = new Date(); start.setUTCDate(1); start.setUTCHours(0, 0, 0, 0);
-      const { count } = await db.from('domain_orders').select('id', { count: 'exact', head: true }).eq('auto', true).gte('created_at', start.toISOString());
-      reg = await autoRegisterPl({ name, org: o as OrgData, fullName: pr?.full_name ?? null, email, monthCount: count ?? 0 });
-      await db.from('domain_orders').update({
-        auto: reg.outcome !== 'manual', whois_id: reg.whoisId ?? null, order_ref: reg.orderRef ?? null, notes: reg.message,
-        status: reg.outcome === 'registered' ? 'registered' : 'pending', registered_at: reg.outcome === 'registered' ? new Date().toISOString() : null,
-      }).eq('id', orderId);
-    } catch (e) { console.error('auto register failed', e); reg = { outcome: 'manual', message: 'Unexpected error: ' + String(e).slice(0, 120) }; }
-  }
-
-  const row = (k: string, v?: string | null) => `<tr><td style="padding:4px 14px 4px 0;color:#666">${esc(k)}</td><td>${esc(v || '-')}</td></tr>`;
-  const done = reg?.outcome === 'registered', processing = reg?.outcome === 'processing';
-  const headline = done ? `Registered ${domain} automatically` : processing ? `Check ${domain} in hPanel` : `Register ${domain} for ${o?.name ?? 'a new customer'}`;
-  await sendEmail({
-    to: NOTIFY, replyTo: email || undefined, subject: headline,
-    html: layout(headline, `
-      ${done ? `<p style="color:#2F7D55"><b>Done.</b> The domain was bought through the Hostinger API${reg?.orderRef ? ` (order ${esc(reg.orderRef)})` : ''}. Nothing else to do.</p>` : ''}
-      ${processing ? `<p style="color:#B3392C"><b>Check hPanel:</b> ${esc(reg!.message)}. Do not buy it again until you have checked.</p>` : ''}
-      ${reg?.outcome === 'manual' ? `<p><b>Automatic registration did not run:</b> ${esc(reg.message)}.</p>` : ''}
-      ${availability === 'taken' ? '<p style="color:#B3392C"><b>Heads up:</b> the registry now shows this name as already registered. Contact the customer for another name.</p>' : ''}
-      ${availability === 'unknown' ? '<p><b>Note:</b> the registry check did not answer. Check availability in Hostinger first.</p>' : ''}
-      ${done ? '' : '<p>Register the domain in Hostinger in <b>the customer\'s company name</b>, then set the order to registered.</p>'}
-      <table style="font-size:14px;border-collapse:collapse">${row('Domain', domain)}${row('Availability now', availability)}${row('Company', o?.name)}${row('Country', o?.country)}${row('Voivodeship', o?.region)}${row('Tax / VAT ID', o?.vat_id)}${row('Address', [o?.address_line, o?.postal_code, o?.city].filter(Boolean).join(', '))}${row('Phone', o?.phone)}${row('Customer email', email)}</table>
-      <p style="font-size:13px;color:#666">Order row: <code>domain_orders</code> id ${esc(orderId)}. Set status to <code>registered</code> when done.</p>`),
-  });
-  if (email) {
-    await sendEmail({
-      to: email, subject: done ? `Your domain ${domain} is registered` : 'Your plan is active: we are registering your domain',
-      html: layout(done ? 'Your domain is registered' : 'Your plan is active',
-        done ? `<p>Good news: <b>${esc(domain)}</b> is registered in your company's name. We are connecting it to your store.</p>`
-             : `<p>Thank you. We are registering <b>${esc(domain)}</b> for you and will confirm within one working day. If the name is no longer available we will contact you first.</p>`),
-    });
-  }
 }
 
 async function syncSub(sub: Stripe.Subscription) {
@@ -104,11 +46,15 @@ Deno.serve(async (req) => {
       case 'checkout.session.async_payment_succeeded': {
         const s = event.data.object as Stripe.Checkout.Session;
         if (s.payment_status === 'paid' || s.payment_status === 'no_payment_required') {
+          if (s.metadata?.kind === 'domain') {
+            await createDomainOrder({ orgId: s.metadata.org_id, planId: null, name: s.metadata.domain, email: s.customer_details?.email ?? '', sessionId: s.id });
+            break;
+          }
           const orgId = s.metadata?.org_id ?? s.client_reference_id;
           await setOrg(orgId, 'active');
           if (s.metadata?.plan_id) await db.from('plans').update({ status: 'active' }).eq('id', s.metadata.plan_id);
           if (typeof s.subscription === 'string') await syncSub(await stripe.subscriptions.retrieve(s.subscription));
-          await createDomainOrder(s);
+          if (s.metadata?.domain) await createDomainOrder({ orgId: (s.metadata?.org_id ?? s.client_reference_id) as string, planId: s.metadata?.plan_id ?? null, name: s.metadata.domain, email: s.customer_details?.email ?? '', sessionId: s.id });
         }
         break;
       }
