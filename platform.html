@@ -636,6 +636,128 @@
           </div>
         </sc-if>
 
+        <sc-if value="{{ tabInventory }}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; flex-direction: column; gap: 20px; max-width: 860px;">
+            <h1 style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 108; font-weight: 800; font-size: clamp(26px, 3vw, 36px); letter-spacing: -0.02em; margin: 0;">Inventory</h1>
+            <sc-if value="{{ whLoading }}" hint-placeholder-val="{{ false }}"><p style="margin: 0; font-size: 14px; color: rgba(11,12,14,0.6);">Loading…</p></sc-if>
+            <sc-if value="{{ whErrShow }}" hint-placeholder-val="{{ false }}"><p style="margin: 0; font-size: 14px; color: #B4442E;">{{ whErrText }}</p></sc-if>
+            <sc-if value="{{ invEmpty }}" hint-placeholder-val="{{ false }}">
+              <div style="background: #FFFFFF; border: 1px dashed rgba(11,12,14,0.3); border-radius: 4px; padding: clamp(24px, 4vw, 40px); display: flex; flex-direction: column; gap: 12px;">
+                <span style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 106; font-weight: 700; font-size: 22px; line-height: 1.2;">No stock yet</span>
+                <p style="margin: 0; font-size: 15px; line-height: 1.6; color: rgba(11,12,14,0.68); max-width: 56ch;">{{ invEmptyText }}</p>
+                <button onClick="{{ invGo }}" style="cursor: pointer; min-height: 46px; padding: 13px 20px; border: 0; border-radius: 3px; background: #E39A2B; color: #0B0C0E; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; align-self: flex-start;">{{ invGoLabel }}</button>
+              </div>
+            </sc-if>
+            <sc-if value="{{ invHas }}" hint-placeholder-val="{{ false }}">
+              <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px; overflow-x: auto;">
+                <div style="min-width: 520px; display: flex; flex-direction: column;">
+                  <div style="display: grid; grid-template-columns: 2.4fr 1fr 1fr 1fr 1fr; gap: 12px; padding-bottom: 10px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(11,12,14,0.55);">
+                    <span>Product</span><span>On hand</span><span>Available</span><span>Awaiting put-away</span><span>Incoming</span>
+                  </div>
+                  <sc-for list="{{ invRows }}" as="r" hint-placeholder-count="3">
+                    <div style="display: grid; grid-template-columns: 2.4fr 1fr 1fr 1fr 1fr; gap: 12px; padding: 12px 0; border-top: 1px solid rgba(11,12,14,0.08); font-size: 15px; align-items: baseline;">
+                      <span><strong>{{ r.sku }}</strong><br><span style="color: rgba(11,12,14,0.65); font-size: 13px;">{{ r.name }}</span></span>
+                      <span style="font-family: 'IBM Plex Mono', monospace;">{{ r.onHand }}</span><span style="font-family: 'IBM Plex Mono', monospace;">{{ r.available }}</span><span style="font-family: 'IBM Plex Mono', monospace;">{{ r.awaiting }}</span><span style="font-family: 'IBM Plex Mono', monospace;">{{ r.incoming }}</span>
+                    </div>
+                  </sc-for>
+                </div>
+              </div>
+            </sc-if>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ tabProducts }}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; flex-direction: column; gap: 20px; max-width: 760px;">
+            <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; align-items: center;">
+              <h1 style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 108; font-weight: 800; font-size: clamp(26px, 3vw, 36px); letter-spacing: -0.02em; margin: 0;">Products</h1>
+              <button onClick="{{ pdToggle }}" style="cursor: pointer; min-height: 46px; padding: 13px 20px; border: 0; border-radius: 3px; background: #E39A2B; color: #0B0C0E; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;">{{ pdBtnLabel }}</button>
+            </div>
+            <sc-if value="{{ whNoteShow }}" hint-placeholder-val="{{ false }}"><div role="status" onClick="{{ whNoteClear }}" style="padding: 14px 18px; background: #0B0C0E; color: #F5F4F1; border-radius: 4px; font-size: 15px; cursor: pointer;">{{ whNoteText }}</div></sc-if>
+            <sc-if value="{{ pdForm }}" hint-placeholder-val="{{ false }}">
+              <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+                <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.6);">SKU<input type="text" value="{{ pdSku }}" onChange="{{ onPdSku }}" maxlength="60" placeholder="MUG-BLUE" style="padding: 12px; border-radius: 3px; border: 1px solid rgba(11,12,14,0.25); background: #FFFFFF; font-family: 'IBM Plex Sans', sans-serif; font-size: 16px; min-width: 0;" /></label>
+                <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.6);">Product name<input type="text" value="{{ pdName }}" onChange="{{ onPdName }}" maxlength="200" placeholder="Blue ceramic mug" style="padding: 12px; border-radius: 3px; border: 1px solid rgba(11,12,14,0.25); background: #FFFFFF; font-family: 'IBM Plex Sans', sans-serif; font-size: 16px; min-width: 0;" /></label>
+                <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.6);">Barcode (EAN), optional<input type="text" value="{{ pdEan }}" onChange="{{ onPdEan }}" maxlength="40" placeholder="5901234123457" style="padding: 12px; border-radius: 3px; border: 1px solid rgba(11,12,14,0.25); background: #FFFFFF; font-family: 'IBM Plex Sans', sans-serif; font-size: 16px; min-width: 0;" /></label>
+                <sc-if value="{{ pdErrShow }}" hint-placeholder-val="{{ false }}"><p style="margin: 0; font-size: 14px; color: #B4442E;">{{ pdErrText }}</p></sc-if>
+                <button onClick="{{ pdSave }}" style="cursor: pointer; min-height: 46px; padding: 13px 20px; border: 0; border-radius: 3px; background: #E39A2B; color: #0B0C0E; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; align-self: flex-start;">{{ pdSaveLabel }}</button>
+              </div>
+            </sc-if>
+            <sc-if value="{{ whLoading }}" hint-placeholder-val="{{ false }}"><p style="margin: 0; font-size: 14px; color: rgba(11,12,14,0.6);">Loading…</p></sc-if>
+            <sc-if value="{{ whErrShow }}" hint-placeholder-val="{{ false }}"><p style="margin: 0; font-size: 14px; color: #B4442E;">{{ whErrText }}</p></sc-if>
+            <sc-if value="{{ pdEmpty }}" hint-placeholder-val="{{ false }}">
+              <div style="background: #FFFFFF; border: 1px dashed rgba(11,12,14,0.3); border-radius: 4px; padding: clamp(24px, 4vw, 40px); display: flex; flex-direction: column; gap: 12px;">
+                <span style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 106; font-weight: 700; font-size: 22px; line-height: 1.2;">Your product catalogue</span>
+                <p style="margin: 0; font-size: 15px; line-height: 1.6; color: rgba(11,12,14,0.68); max-width: 56ch;">Add each product you will store with us: a SKU, a name and its barcode. You need them before you can book a delivery.</p>
+              </div>
+            </sc-if>
+            <sc-if value="{{ pdHas }}" hint-placeholder-val="{{ false }}">
+              <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px; display: flex; flex-direction: column;">
+                <sc-for list="{{ pdRows }}" as="p" hint-placeholder-count="3">
+                  <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; padding: 12px 0; border-top: 1px solid rgba(11,12,14,0.08); font-size: 15px;">
+                    <span><strong>{{ p.sku }}</strong>{{ p.off }}<br><span style="color: rgba(11,12,14,0.65); font-size: 13px;">{{ p.name }}</span></span>
+                    <span style="text-align: right; font-size: 13px; color: rgba(11,12,14,0.65);">{{ p.code }}<br><span style="font-family: 'IBM Plex Mono', monospace; color: #0B0C0E; font-size: 14px;">{{ p.onHand }} in stock</span></span>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ tabInbound }}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; flex-direction: column; gap: 20px; max-width: 760px;">
+            <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; align-items: center;">
+              <h1 style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 108; font-weight: 800; font-size: clamp(26px, 3vw, 36px); letter-spacing: -0.02em; margin: 0;">Inbound</h1>
+              <button onClick="{{ inToggle }}" style="cursor: pointer; min-height: 46px; padding: 13px 20px; border: 0; border-radius: 3px; background: #E39A2B; color: #0B0C0E; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;">{{ inBtnLabel }}</button>
+            </div>
+            <sc-if value="{{ whNoteShow }}" hint-placeholder-val="{{ false }}"><div role="status" onClick="{{ whNoteClear }}" style="padding: 14px 18px; background: #0B0C0E; color: #F5F4F1; border-radius: 4px; font-size: 15px; cursor: pointer;">{{ whNoteText }}</div></sc-if>
+            <sc-if value="{{ inNotActive }}" hint-placeholder-val="{{ false }}"><p style="margin: 0; font-size: 14px; color: rgba(11,12,14,0.65);">You can book deliveries once your plan is active.</p></sc-if>
+            <sc-if value="{{ inForm }}" hint-placeholder-val="{{ false }}">
+              <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+                <sc-if value="{{ inNeedProducts }}" hint-placeholder-val="{{ false }}"><p style="margin: 0; font-size: 15px; color: #B4442E;">Add your products first (Products tab), then book a delivery.</p></sc-if>
+                <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.6);">Expected arrival date<input type="date" value="{{ inDate }}" onChange="{{ onInDate }}" style="padding: 12px; border-radius: 3px; border: 1px solid rgba(11,12,14,0.25); background: #FFFFFF; font-family: 'IBM Plex Sans', sans-serif; font-size: 16px; min-width: 0;" /></label>
+                <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.6);">Carrier<input type="text" value="{{ inCarrier }}" onChange="{{ onInCarrier }}" maxlength="80" placeholder="DHL, DSV, a freight forwarder…" style="padding: 12px; border-radius: 3px; border: 1px solid rgba(11,12,14,0.25); background: #FFFFFF; font-family: 'IBM Plex Sans', sans-serif; font-size: 16px; min-width: 0;" /></label>
+                <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.6);">Tracking number, optional<input type="text" value="{{ inTracking }}" onChange="{{ onInTracking }}" maxlength="120" style="padding: 12px; border-radius: 3px; border: 1px solid rgba(11,12,14,0.25); background: #FFFFFF; font-family: 'IBM Plex Sans', sans-serif; font-size: 16px; min-width: 0;" /></label>
+                <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.6);">What is arriving</span>
+                <sc-for list="{{ inLineRows }}" as="l" hint-placeholder-count="2">
+                  <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 12px; background: #F5F4F1; border-radius: 3px; font-size: 15px;">
+                    <span>{{ l.label }} <strong>× {{ l.qty }}</strong></span>
+                    <button onClick="{{ l.remove }}" aria-label="Remove" style="cursor: pointer; border: 0; background: none; font-size: 22px; line-height: 1; color: rgba(11,12,14,0.6);">×</button>
+                  </div>
+                </sc-for>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch;">
+                  <select value="{{ inPick }}" onChange="{{ onInPick }}" style="padding: 12px; border-radius: 3px; border: 1px solid rgba(11,12,14,0.25); background: #FFFFFF; font-family: 'IBM Plex Sans', sans-serif; font-size: 16px; min-width: 0; flex: 1; min-width: 180px;">
+                    <sc-for list="{{ inPickOpts }}" as="o" hint-placeholder-count="3"><option value="{{ o.v }}">{{ o.label }}</option></sc-for>
+                  </select>
+                  <input type="number" min="1" value="{{ inQty }}" onChange="{{ onInQty }}" aria-label="Quantity" style="padding: 12px; border-radius: 3px; border: 1px solid rgba(11,12,14,0.25); background: #FFFFFF; font-family: 'IBM Plex Sans', sans-serif; font-size: 16px; min-width: 0; width: 100px;" />
+                  <button onClick="{{ inAdd }}" style="cursor: pointer; min-height: 46px; padding: 13px 20px; border: 1px solid rgba(11,12,14,0.3); border-radius: 3px; background: transparent; color: #0B0C0E; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;">Add</button>
+                </div>
+                <sc-if value="{{ inErrShow }}" hint-placeholder-val="{{ false }}"><p style="margin: 0; font-size: 14px; color: #B4442E;">{{ inErrText }}</p></sc-if>
+                <button onClick="{{ inSave }}" style="cursor: pointer; min-height: 46px; padding: 13px 20px; border: 0; border-radius: 3px; background: #E39A2B; color: #0B0C0E; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; align-self: flex-start;">{{ inSaveLabel }}</button>
+              </div>
+            </sc-if>
+            <sc-if value="{{ whLoading }}" hint-placeholder-val="{{ false }}"><p style="margin: 0; font-size: 14px; color: rgba(11,12,14,0.6);">Loading…</p></sc-if>
+            <sc-if value="{{ whErrShow }}" hint-placeholder-val="{{ false }}"><p style="margin: 0; font-size: 14px; color: #B4442E;">{{ whErrText }}</p></sc-if>
+            <sc-if value="{{ inEmpty }}" hint-placeholder-val="{{ false }}">
+              <div style="background: #FFFFFF; border: 1px dashed rgba(11,12,14,0.3); border-radius: 4px; padding: clamp(24px, 4vw, 40px); display: flex; flex-direction: column; gap: 12px;">
+                <span style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 106; font-weight: 700; font-size: 22px; line-height: 1.2;">No deliveries yet</span>
+                <p style="margin: 0; font-size: 15px; line-height: 1.6; color: rgba(11,12,14,0.68); max-width: 56ch;">Book a delivery to tell us what is arriving and when. We receive it, scan it in and put it in your bin. Stock then shows under Inventory.</p>
+              </div>
+            </sc-if>
+            <sc-if value="{{ inHas }}" hint-placeholder-val="{{ false }}">
+              <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px; display: flex; flex-direction: column;">
+                <sc-for list="{{ inRows }}" as="b" hint-placeholder-count="2">
+                  <div style="display: flex; flex-direction: column; gap: 4px; padding: 14px 0; border-top: 1px solid rgba(11,12,14,0.08); font-size: 15px;">
+                    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px;"><strong style="font-family: 'IBM Plex Mono', monospace;">{{ b.ref }}</strong><span>{{ b.status }}</span></div>
+                    <span style="color: rgba(11,12,14,0.65); font-size: 14px;">{{ b.when }} · {{ b.units }} {{ b.info }}</span>
+                    <span style="color: rgba(11,12,14,0.65); font-size: 13px;">{{ b.items }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+          </div>
+        </sc-if>
+
+
 <sc-if value="{{ tabDomain }}" hint-placeholder-val="{{ false }}">
           <div style="display: flex; flex-direction: column; gap: 20px; max-width: 680px;">
             <div>
@@ -728,6 +850,7 @@
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900}}">
 class Component extends DCLogic {
   state = {
+    orgId: '', whLoaded: false, whErr: '', whInv: [], whCodes: {}, whBook: [], pdOpen: false, pdSku: '', pdName: '', pdEan: '', pdBusy: false, pdErr: '', inOpen: false, inDate: '', inCarrier: '', inTracking: '', inLines: [], inPick: '', inQty: '1', inBusy: false, inErr: '', whNote: '',
     contactOpen: false, contactSubject: 'other', contactMsg: '', contactBusy: false, contactDone: false, contactErr: '',
     logoUrl: '', orgName: '', domainName: '', curPlan: null, hasDomain: false,
     view: 'build', step: 0, userEmail: '', menuOpen: false, userName: '', payErr: '', changeMode: false, chPrev: null, chBusy: false, chErr: '', chDone: '', domainOffer: false, dmInfo: null, dmErr: '', dmName: '', dmStatus: null, dmAlts: [], dmNote: '', dmBusy: false, domainAlts: [], mkCat: 'home', payNotice: '', payBanner: '',
@@ -898,6 +1021,58 @@ class Component extends DCLogic {
     if (!r.ok) throw new Error(out.error || 'Request failed');
     return out;
   }
+  // ---- products, inbound and inventory: read with the user's token under row-level security; writes are database functions ----
+  authHeaders() { const sess = this.authSession(); return sess ? { apikey: this.ANON, Authorization: 'Bearer ' + sess.access_token, 'Content-Type': 'application/json' } : null; }
+  async whGet(path) {
+    const H = this.authHeaders(); if (!H) throw new Error('Please log in again.');
+    const r = await fetch(this.API + '/rest/v1/' + path, { headers: H });
+    if (!r.ok) throw new Error('Could not load your data. Please refresh.');
+    return r.json();
+  }
+  async whRpc(fn, args) {
+    const H = this.authHeaders(); if (!H) throw new Error('Please log in again.');
+    const r = await fetch(this.API + '/rest/v1/rpc/' + fn, { method: 'POST', headers: H, body: JSON.stringify(args) });
+    const out = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(out.message || 'Something went wrong. Nothing was saved.');
+    return out;
+  }
+  async whLoad() {
+    if (!this.state.orgId || !this.authSession()) return;
+    try {
+      const [inv, codes, book] = await Promise.all([
+        this.whGet('v_inventory_by_product?select=product_id,sku,name,active,on_hand,available,unplaced,quarantined,incoming&order=sku'),
+        this.whGet('product_barcodes?select=product_id,barcode'),
+        this.whGet('inbound_bookings?select=id,ref,status,expected_date,carrier,tracking,created_at,inbound_lines(expected_qty,products(sku,name))&order=created_at.desc&limit=50')
+      ]);
+      const map = {}; codes.forEach((c) => { (map[c.product_id] = map[c.product_id] || []).push(c.barcode); });
+      this.setState({ whLoaded: true, whErr: '', whInv: inv, whCodes: map, whBook: book });
+    } catch (e) { this.setState({ whLoaded: true, whErr: String(e.message || e) }); }
+  }
+  async pdSubmit() {
+    const s = this.state; if (s.pdBusy) return;
+    if (!s.pdSku.trim() || !s.pdName.trim()) return this.setState({ pdErr: 'Enter a SKU and a product name.' });
+    this.setState({ pdBusy: true, pdErr: '' });
+    try {
+      await this.whRpc('create_product', { p_org: s.orgId, p_sku: s.pdSku, p_name: s.pdName, p_ean: s.pdEan || null });
+      this.setState({ pdBusy: false, pdOpen: false, pdSku: '', pdName: '', pdEan: '', whNote: 'Product added.' }); this.whLoad();
+    } catch (e) { this.setState({ pdBusy: false, pdErr: String(e.message || e) }); }
+  }
+  inAddLine() {
+    const s = this.state, q = parseInt(s.inQty, 10);
+    if (!s.inPick) return this.setState({ inErr: 'Choose a product first.' });
+    if (!(q >= 1)) return this.setState({ inErr: 'Enter a quantity of at least 1.' });
+    if (s.inLines.some((l) => l.pid === s.inPick)) return this.setState({ inErr: 'That product is already on this delivery.' });
+    this.setState({ inLines: s.inLines.concat([{ pid: s.inPick, qty: q }]), inPick: '', inQty: '1', inErr: '' });
+  }
+  async inSubmit() {
+    const s = this.state; if (s.inBusy) return;
+    if (!s.inLines.length) return this.setState({ inErr: 'Add at least one product to the delivery.' });
+    this.setState({ inBusy: true, inErr: '' });
+    try {
+      await this.whRpc('book_inbound', { p_org: s.orgId, p_carrier: s.inCarrier || null, p_tracking: s.inTracking || null, p_expected: s.inDate || null, p_notes: null, p_lines: s.inLines.map((l) => ({ product_id: l.pid, qty: l.qty })) });
+      this.setState({ inBusy: false, inOpen: false, inLines: [], inDate: '', inCarrier: '', inTracking: '', whNote: 'Delivery booked. We will receive it when it arrives.' }); this.whLoad();
+    } catch (e) { this.setState({ inBusy: false, inErr: String(e.message || e) }); }
+  }
   async dmLoad() {
     this.setState({ dmInfo: null, dmErr: '' });
     try { this.setState({ dmInfo: await this.dmCall({ action: 'info' }) }); }
@@ -1004,6 +1179,7 @@ class Component extends DCLogic {
     const o = m[0] && m[0].organizations;
     const patch = { userName: (pr[0] && pr[0].full_name) || '' };
     if (o) {
+      patch.orgId = m[0].org_id;
       const dom = (o.domain_orders || []).find((d) => ['pending', 'registered'].includes(d.status));
       patch.hasDomain = !!dom; patch.domainName = dom ? dom.domain : '';
       const pl = await get('plans?select=config,monthly_pln,once_pln&org_id=eq.' + m[0].org_id + '&status=eq.active&order=created_at.desc&limit=1');
@@ -1023,6 +1199,7 @@ class Component extends DCLogic {
       if (!st.email && sess.user.email) patch.email = sess.user.email;
     }
     this.setState(patch);
+    if (patch.orgId) this.whLoad();
   }
 
   componentDidMount() {
@@ -1170,10 +1347,10 @@ class Component extends DCLogic {
     ];
 
     const tabs = [
-      ['overview', 'Overview', ''], ['imports', 'Imports', ''], ['tracking', 'Shipment tracking', ''], ['inbound', 'Book inbound', ''], ['products', 'Products', ''], ['inventory', 'Inventory', ''],
+      ['overview', 'Overview', ''], ['imports', 'Imports', ''], ['tracking', 'Shipment tracking', ''], ['inbound', 'Inbound', ''], ['products', 'Products', ''], ['inventory', 'Inventory', ''],
       ['orders', 'Orders', ''], ['returns', 'Returns', ''], ['growth', 'Storefront', ''], ['market', '2ACE Market', ''], ['domain', 'Domain', s.domainOffer ? 'New' : ''], ['team', 'Team', '']
     ];
-    const tabSet = (t) => () => { this.setState({ tab: t, menuOpen: false }); window.scrollTo(0, 0); if (t === 'domain') this.dmLoad(); };
+    const tabSet = (t) => () => { this.setState({ tab: t, menuOpen: false }); window.scrollTo(0, 0); if (t === 'domain') this.dmLoad(); if (['products', 'inbound', 'inventory'].includes(t)) this.whLoad(); };
 
     const X = this.extraVals(s, P, customer, cc, tabSet);
 
@@ -1198,17 +1375,14 @@ class Component extends DCLogic {
     if (s.hasDomain || s.domainOffer || (pc && pc.storeOn)) {
       startList.push(mkStep(startList.length + 1, 'Your .pl domain', s.hasDomain ? 'Requested. We confirm by email.' : pc && pc.storeOn ? 'Included in your plan. Choose a name.' : 'Optional: 99 zł one-time, first year included.', !!s.hasDomain, 'Choose', () => { this.setState({ tab: 'domain' }); this.dmLoad(); }));
     }
-    startList.push(mkStep(startList.length + 1, 'Add your products', 'Share your SKU list so we can prepare your stock.', false, 'Open', tabSet('products')));
-    startList.push(mkStep(startList.length + 1, 'Book your first inbound delivery', 'Tell us what is arriving and when.', false, 'Open', tabSet('inbound')));
+    startList.push(mkStep(startList.length + 1, 'Add your products', 'Add the products you will store with us.', s.whInv.length > 0, 'Open', tabSet('products')));
+    startList.push(mkStep(startList.length + 1, 'Book your first inbound delivery', 'Tell us what is arriving and when.', s.whBook.length > 0, 'Open', tabSet('inbound')));
     startList.push(mkStep(startList.length + 1, 'Invite your team', 'Give colleagues their own access.', false, 'Open', tabSet('team')));
 
     const goTab = (t) => tabSet(t);
     const EMPTY = {
       imports: { tab: 'Imports', title: 'No imports yet', text: 'Your shipments appear here after you book an inbound delivery: milestones, customs documents and landed cost, live.', cta: 'Book your first inbound', go: goTab('inbound') },
       tracking: { tab: 'Shipment tracking', title: 'No shipments to track', text: 'Live tracking starts as soon as a shipment is booked with us.', cta: 'Book inbound', go: goTab('inbound') },
-      inbound: { tab: 'Book inbound', title: 'Book your first inbound delivery', text: 'Tell us what is arriving and when, and we confirm a dock slot at our warehouse in Poland. Online booking is opening soon. Until then, send us the details here and your account manager sets it up.', cta: 'Request a booking', go: () => this.openContact('inbound') },
-      products: { tab: 'Products', title: 'Your product catalogue', text: 'Importing your products (names, barcodes, dimensions and customs codes) is opening soon. Until then, send your product list to your account manager.', cta: 'Send my products', go: () => this.openContact('products') },
-      inventory: { tab: 'Inventory', title: 'No stock yet', text: 'Stock levels appear here once your first delivery has been received and scanned in.', cta: 'Book inbound', go: goTab('inbound') },
       orders: { tab: 'Orders', title: 'No orders yet', text: 'Orders appear here once your stock has arrived and your store or sales channel is connected.', cta: 'Back to overview', go: goTab('overview') },
       returns: { tab: 'Returns', title: 'No returns yet', text: 'Returns appear here, graded and with their outcome, once you have orders and returns handling in your plan.', cta: 'Back to overview', go: goTab('overview') },
       growth: pc && pc.storeOn
@@ -1238,6 +1412,28 @@ class Component extends DCLogic {
           this.setState({ view: v }); window.scrollTo(0, 0);
         }
       })),
+      // ---- products / inbound / inventory ----
+      tabProducts: s.tab === 'products', tabInbound: s.tab === 'inbound', tabInventory: s.tab === 'inventory',
+      whLoading: !s.whLoaded && !!s.orgId, whErrShow: !!s.whErr, whErrText: s.whErr, whNoteShow: !!s.whNote, whNoteText: s.whNote, whNoteClear: () => this.setState({ whNote: '' }),
+      whNoOrg: !s.orgId && !!s.userEmail,
+      invHas: s.whInv.some((p) => p.on_hand > 0 || p.incoming > 0), invEmpty: s.whLoaded && !s.whErr && !s.whInv.some((p) => p.on_hand > 0 || p.incoming > 0),
+      invEmptyText: s.whInv.length ? 'Stock appears here once your first delivery has been received and scanned in.' : 'Add your products first, then book a delivery. Stock appears here once it has been received and scanned in.',
+      invGo: () => (s.whInv.length ? tabSet('inbound')() : tabSet('products')()), invGoLabel: s.whInv.length ? 'Book a delivery' : 'Add products',
+      invRows: s.whInv.filter((p) => p.on_hand > 0 || p.incoming > 0).map((p) => ({ sku: p.sku, name: p.name, onHand: String(p.on_hand), available: String(p.available), awaiting: String(p.unplaced + p.quarantined), incoming: String(p.incoming) })),
+      pdHas: s.whInv.length > 0, pdEmpty: s.whLoaded && !s.whErr && s.whInv.length === 0,
+      pdRows: s.whInv.map((p) => ({ sku: p.sku, name: p.name, code: (s.whCodes[p.product_id] || []).join(', ') || 'No barcode', onHand: String(p.on_hand), off: p.active ? '' : ' (switched off)' })),
+      pdToggle: () => this.setState({ pdOpen: !s.pdOpen, pdErr: '' }), pdForm: s.pdOpen, pdBtnLabel: s.pdOpen ? 'Cancel' : 'Add a product',
+      pdSku: s.pdSku, onPdSku: (e) => this.setState({ pdSku: e.target.value, pdErr: '' }), pdName: s.pdName, onPdName: (e) => this.setState({ pdName: e.target.value, pdErr: '' }),
+      pdEan: s.pdEan, onPdEan: (e) => this.setState({ pdEan: e.target.value, pdErr: '' }), pdErrShow: !!s.pdErr, pdErrText: s.pdErr, pdSave: () => this.pdSubmit(), pdSaveLabel: s.pdBusy ? 'Saving…' : 'Save product',
+      inToggle: () => this.setState({ inOpen: !s.inOpen, inErr: '' }), inForm: s.inOpen, inBtnLabel: s.inOpen ? 'Cancel' : 'Book a delivery',
+      inNeedProducts: s.inOpen && s.whInv.filter((p) => p.active).length === 0, inNotActive: !!s.userEmail && !s.activated,
+      inDate: s.inDate, onInDate: (e) => this.setState({ inDate: e.target.value }), inCarrier: s.inCarrier, onInCarrier: (e) => this.setState({ inCarrier: e.target.value }), inTracking: s.inTracking, onInTracking: (e) => this.setState({ inTracking: e.target.value }),
+      inPickOpts: [{ v: '', label: 'Choose a product' }].concat(s.whInv.filter((p) => p.active).map((p) => ({ v: p.product_id, label: p.sku + ' - ' + p.name }))), inPick: s.inPick, onInPick: (e) => this.setState({ inPick: e.target.value, inErr: '' }),
+      inQty: s.inQty, onInQty: (e) => this.setState({ inQty: e.target.value, inErr: '' }), inAdd: () => this.inAddLine(),
+      inLineRows: s.inLines.map((l, i) => { const p = s.whInv.find((x) => x.product_id === l.pid) || {}; return { label: (p.sku || '') + ' - ' + (p.name || ''), qty: String(l.qty), remove: () => this.setState({ inLines: s.inLines.filter((_, j) => j !== i) }) }; }),
+      inHasLines: s.inLines.length > 0, inErrShow: !!s.inErr, inErrText: s.inErr, inSave: () => this.inSubmit(), inSaveLabel: s.inBusy ? 'Booking…' : 'Book delivery',
+      inRows: s.whBook.map((b) => ({ ref: b.ref, status: { booked: 'Booked', receiving: 'Being received', received: 'Received', cancelled: 'Cancelled' }[b.status] || b.status, when: b.expected_date ? new Date(b.expected_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'No date', info: [b.carrier, b.tracking].filter(Boolean).join(' · '), units: String((b.inbound_lines || []).reduce((t, l) => t + l.expected_qty, 0)) + ' units', items: (b.inbound_lines || []).map((l) => l.products.sku + ' × ' + l.expected_qty).join(', ') })),
+      inHas: s.whBook.length > 0, inEmpty: s.whLoaded && !s.whErr && s.whBook.length === 0,
       domainOffer: s.domainOffer,
       goDomain: () => { this.setState({ tab: 'domain', menuOpen: false }); window.scrollTo(0, 0); this.dmLoad(); },
       dmLoading: !s.dmInfo && !s.dmErr, dmErr: !!s.dmErr, dmErrText: s.dmErr, dmNote: !!s.dmNote, dmNoteText: s.dmNote,

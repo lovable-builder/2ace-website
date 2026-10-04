@@ -20,10 +20,11 @@ async function api(action, payload) {
   return out;
 }
 
+const WH_READ = [['inbound', 'Inbound'], ['stock', 'Stock'], ['products', 'Products'], ['discrepancies', 'Discrepancies']];
 const NAV = {
-  admin: [['', 'Overview'], ['customers', 'Customers'], ['requests', 'Requests'], ['domains', 'Domains'], ['staff', 'Staff'], ['audit', 'Audit log']],
-  support: [['', 'Overview'], ['customers', 'Customers'], ['requests', 'Requests'], ['domains', 'Domains'], ['audit', 'Audit log']],
-  warehouse: [['', 'Overview']],
+  admin: [['', 'Overview'], ['customers', 'Customers'], ['requests', 'Requests'], ['domains', 'Domains'], ...WH_READ, ['locations', 'Locations'], ['staff', 'Staff'], ['audit', 'Audit log'], ['/scan', 'Scan app ↗']],
+  support: [['', 'Overview'], ['customers', 'Customers'], ['requests', 'Requests'], ['domains', 'Domains'], ...WH_READ, ['audit', 'Audit log']],
+  warehouse: [['', 'Overview'], ...WH_READ, ['locations', 'Locations'], ['/scan', 'Scan app ↗']],
 };
 const screen = (children) => clear(app).append(el('div', { class: 'center' }, el('div', { class: 'auth-card' }, children)));
 
@@ -101,7 +102,7 @@ async function start() {
   if (me.role !== 'warehouse') { try { staff = (await api('staff.directory')).staff; } catch { /* names only */ } }
   const ctx = { sb, api, me, staff, session: {}, go: (r) => { location.hash = r; } };
   const main = el('main', { class: 'main' });
-  const nav = el('nav', { class: 'side' }, NAV[me.role].map(([r, label]) => el('a', { href: '#' + r, 'data-route': r, text: label })));
+  const nav = el('nav', { class: 'side' }, NAV[me.role].map(([r, label]) => el('a', { href: r.startsWith('/') ? r : '#' + r, 'data-route': r, text: label })));
   clear(app).append(el('div', { class: 'shell' },
     el('header', { class: 'top' }, el('a', { class: 'logo', href: '#', text: '2ACE' }), el('span', { class: 'tag', text: 'admin' }), el('span', { class: 'sp' }),
       el('span', { class: 'who', text: me.email }), el('span', { class: 'pill', text: me.role }), signOutLink()),
@@ -113,7 +114,6 @@ async function start() {
     nav.querySelectorAll('a').forEach((a) => a.classList.toggle('on', a.dataset.route === name));
     if (name && !NAV[me.role].some(([r]) => r === name)) return clear(main).append(el('h1', { text: 'Not available' }), el('p', { class: 'muted', text: 'Your role cannot open this page.' }));
     try {
-      if (me.role === 'warehouse') return clear(main).append(el('h1', { text: 'Warehouse' }), el('p', { class: 'muted', text: 'Warehouse tools (receiving, putaway, stock, orders) are the next phase of the build.' }));
       const mod = await import(`./${name || 'home'}.js${V}`);
       await mod.render(ctx, main, parts.slice(1));
     } catch (e) { console.error(e); clear(main).append(el('h1', { text: 'Something went wrong' }), el('p', { class: 'err', text: e.message })); }
