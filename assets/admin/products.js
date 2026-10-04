@@ -1,4 +1,4 @@
-import { el, clear, table, pill, field, modal, toast, kv, fmtDate } from './ui.js';
+import { el, clear, table, pill, field, modal, toast, kv, fmtDate, confirmBox } from './ui.js';
 import { rpc, canAct, loadOrgs, orgName, orgSelect, guarded } from './wms.js';
 
 const num = (v) => (v === '' || v == null ? null : Number(v));
@@ -49,6 +49,7 @@ async function detail(ctx, root, id) {
       await rpc(ctx, 'update_product', { p_id: id, p_patch: patch }); done(true); }) });
     body.append(field('Name', f.name), el('div', { class: 'row' }, field('Length cm', f.length_cm), field('Width cm', f.width_cm), field('Height cm', f.height_cm), field('Weight g', f.weight_g)), el('div', { class: 'row' }, field('HS code', f.hs_code), field('Origin (2 letters)', f.origin_country)), field('Status', act2), err, el('div', { class: 'row end' }, el('button', { class: 'btn ghost', onclick: () => done(null), text: 'Cancel' }), go));
   }).then((ok) => { if (ok) { toast('Saved'); detail(ctx, root, id); } });
+  const del = async () => { if (!(await confirmBox('Delete ' + pr.sku + '?', 'Only products that were never used can be deleted. Otherwise switch it off from Edit.', 'Delete'))) return; try { await rpc(ctx, 'delete_product', { p_id: id }); toast('Deleted'); ctx.go('products'); } catch (e) { toast(e.message, true); } };
   const addBc = () => modal('Add barcode', (body, done) => {
     const i = el('input', { placeholder: 'Scan or type the barcode' }), err = el('p', { class: 'err' });
     const go = el('button', { class: 'btn', text: 'Add', onclick: () => guarded(go, err, async () => { await rpc(ctx, 'add_product_barcode', { p_product: id, p_barcode: i.value }); done(true); }) });
@@ -56,7 +57,7 @@ async function detail(ctx, root, id) {
     body.append(field('Barcode', i), err, el('div', { class: 'row end' }, el('button', { class: 'btn ghost', onclick: () => done(null), text: 'Cancel' }), go));
   }).then((ok) => { if (ok) { toast('Barcode added'); detail(ctx, root, id); } });
   clear(root).append(
-    el('div', { class: 'row between' }, el('div', {}, el('button', { class: 'btn ghost tiny', onclick: () => ctx.go('products'), text: '← Products' }), el('h1', { text: pr.name })), act && el('div', { class: 'row' }, el('button', { class: 'btn ghost', onclick: addBc, text: 'Add barcode' }), el('button', { class: 'btn', onclick: edit, text: 'Edit' }))),
+    el('div', { class: 'row between' }, el('div', {}, el('button', { class: 'btn ghost tiny', onclick: () => ctx.go('products'), text: '← Products' }), el('h1', { text: pr.name })), act && el('div', { class: 'row' }, el('button', { class: 'btn ghost', onclick: addBc, text: 'Add barcode' }), el('button', { class: 'btn ghost', onclick: del, text: 'Delete' }), el('button', { class: 'btn', onclick: edit, text: 'Edit' }))),
     el('div', { class: 'cols' },
       el('section', { class: 'card' }, el('h2', { text: 'Details' }), kv([['Customer', orgName(orgs, pr.org_id)], ['SKU', pr.sku], ['Barcodes', (bc.data || []).map((b) => b.barcode).join(', ')], ['Size cm', [pr.length_cm, pr.width_cm, pr.height_cm].every((x) => x) ? `${pr.length_cm} × ${pr.width_cm} × ${pr.height_cm}` : null], ['Weight', pr.weight_g ? pr.weight_g + ' g' : null], ['HS code', pr.hs_code], ['Origin', pr.origin_country], ['Status', pr.active ? 'active' : 'switched off']])),
       el('section', { class: 'card' }, el('h2', { text: 'Stock by location' }), table([{ label: 'Location', render: (r) => el('strong', { text: r.locations.code }) }, { label: 'Type', render: (r) => r.locations.kind }, { label: 'On hand', render: (r) => String(r.on_hand) }, { label: 'Reserved', render: (r) => String(r.reserved) }], (lv.data || []).filter((r) => r.on_hand > 0)))),

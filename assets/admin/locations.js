@@ -26,6 +26,13 @@ export async function render(ctx, root) {
     body.append(field('Customer', sel), err, el('div', { class: 'row end' }, el('button', { class: 'btn ghost', onclick: () => done(null), text: 'Cancel' }), go));
   }).then((ok) => { if (ok) { toast('Assigned'); reload(); } });
 
+  const editLoc = (l) => modal('Edit ' + l.code, (body, done) => {
+    const label = el('input', { value: l.label || '', placeholder: 'Optional note' }), err = el('p', { class: 'err' });
+    const save = el('button', { class: 'btn', text: 'Save', onclick: () => guarded(save, err, async () => { await rpc(ctx, 'update_location', { p_id: l.id, p_label: label.value }); done('saved'); }) });
+    const del = el('button', { class: 'btn ghost', text: 'Delete location', onclick: () => guarded(del, err, async () => { if (!(await confirmBox('Delete ' + l.code + '?', 'Only a location that was never used can be deleted. Otherwise switch it off.', 'Delete'))) return; await rpc(ctx, 'delete_location', { p_id: l.id }); done('deleted'); }) });
+    body.append(el('p', { class: 'muted', text: 'The code is printed on labels and cannot be changed. To use a different code, create a new location.' }), field('Note', label), err, el('div', { class: 'row between' }, del, el('div', { class: 'row' }, el('button', { class: 'btn ghost', onclick: () => done(null), text: 'Cancel' }), save)));
+  }).then((r) => { if (r) { toast(r === 'deleted' ? 'Deleted' : 'Saved'); reload(); } });
+
   const draw = () => {
     const t = q.value.trim().toUpperCase();
     const rows = locs.data.filter((l) => (!kind.value || l.kind === kind.value) && (!t || l.code.includes(t)));
@@ -39,7 +46,7 @@ export async function render(ctx, root) {
       act && { label: '', render: (l) => el('div', { class: 'row' },
         (l.kind === 'bin' || l.kind === 'pallet') && l.active && el('button', { class: 'btn ghost tiny', text: owner[l.id] ? 'Reassign' : 'Assign', onclick: () => doAssign(l) }),
         owner[l.id] && el('button', { class: 'btn ghost tiny', text: 'Release', onclick: async () => { try { await rpc(ctx, 'release_location', { p_location: l.id }); toast('Released'); reload(); } catch (e) { toast(e.message, true); } } }),
-        el('button', { class: 'btn ghost tiny', text: l.active ? 'Switch off' : 'Switch on', onclick: async () => { try { await rpc(ctx, 'set_location_active', { p_location: l.id, p_active: !l.active }); reload(); } catch (e) { toast(e.message, true); } } })) },
+        el('button', { class: 'btn ghost tiny', text: 'Edit', onclick: () => editLoc(l) }), el('button', { class: 'btn ghost tiny', text: l.active ? 'Switch off' : 'Switch on', onclick: async () => { try { await rpc(ctx, 'set_location_active', { p_location: l.id, p_active: !l.active }); reload(); } catch (e) { toast(e.message, true); } } })) },
     ].filter(Boolean), rows));
   };
   q.addEventListener('input', draw); kind.addEventListener('change', draw); draw();

@@ -21,17 +21,38 @@ export async function render(ctx, root, params) {
     ], data, (b) => ctx.go('inbound/' + b.id)));
   };
   st.addEventListener('change', load);
-  const book = () => modal('Book a delivery for a customer', (body, done) => {
-    const o = orgSelect(orgs, '', 'Choose a customer'), date = el('input', { type: 'date' }), carrier = el('input', { placeholder: 'Carrier' }), tracking = el('input', { placeholder: 'Tracking' });
-    const lines = el('div'), err = el('p', { class: 'err' }); let prods = [];
-    const addLine = () => { const sel = el('select', {}, el('option', { value: '', text: 'Product' }), prods.map((p) => el('option', { value: p.id, text: p.sku + ' - ' + p.name }))); const qty = el('input', { type: 'number', min: '1', value: '1', style: 'width:90px' }); lines.append(el('div', { class: 'row line' }, sel, qty)); };
-    o.addEventListener('change', async () => { clear(lines); prods = o.value ? (await ctx.sb.from('products').select('id, sku, name').eq('org_id', o.value).eq('active', true).order('sku')).data || [] : []; if (o.value && !prods.length) lines.append(el('p', { class: 'muted', text: 'This customer has no products yet. Create them under Products first.' })); else if (o.value) addLine(); });
-    const go = el('button', { class: 'btn', text: 'Book', onclick: () => guarded(go, err, async () => {
-      const ls = [...lines.querySelectorAll('.line')].map((r) => ({ product_id: r.querySelector('select').value, qty: Number(r.querySelector('input').value) })).filter((l) => l.product_id);
-      await rpc(ctx, 'book_inbound', { p_org: o.value, p_carrier: carrier.value, p_tracking: tracking.value, p_expected: date.value || null, p_notes: null, p_lines: ls }); done(true); }) });
-    body.append(field('Customer', o), el('div', { class: 'row' }, field('Expected date', date), field('Carrier', carrier), field('Tracking', tracking)), lines, el('button', { class: 'btn ghost tiny', text: '+ Add line', onclick: () => prods.length && addLine() }), err, el('div', { class: 'row end' }, el('button', { class: 'btn ghost', onclick: () => done(null), text: 'Cancel' }), go));
-  }).then((ok) => { if (ok) { toast('Delivery booked'); load(); } });
+  const book = () => deliveryDialog(ctx, orgs, null).then((ok) => { if (ok) { toast('Delivery booked'); load(); } });
   clear(root).append(el('div', { class: 'row between' }, el('h1', { text: 'Inbound' }), canAct(ctx) && el('button', { class: 'btn', onclick: book, text: 'Book a delivery' })), el('div', { class: 'row' }, st), holder); load();
+}
+
+// One dialog for booking a new delivery and editing a booked one: pick the customer (new only), details, and lines with units that can be changed or removed.
+export function deliveryDialog(ctx, orgs, existing) {
+  const editing = !!existing;
+  return modal(editing ? 'Edit ' + existing.booking.ref : 'Book a delivery for a customer', (body, done) => {
+    const o = editing ? el('input', { value: orgName(orgs, existing.booking.org_id), disabled: true }) : orgSelect(orgs, '', 'Choose a customer');
+    const date = el('input', { type: 'date', value: editing ? existing.booking.expected_date || '' : '' }), carrier = el('input', { placeholder: 'Carrier', value: editing ? existing.booking.carrier || '' : '' }), tracking = el('input', { placeholder: 'Tracking', value: editing ? existing.booking.tracking || '' : '' });
+    const lines = el('div', { class: 'lines' }), note = el('div'), err = el('p', { class: 'err' }); let prods = [];
+    const addLine = (pid, qty) => {
+      const sel = el('select', {}, el('option', { value: '', text: 'Product' }), prods.map((p) => el('option', { value: p.id, text: p.sku + ' - ' + p.name, ...(p.id === pid ? { selected: true } : {}) })));
+      const q = el('input', { type: 'number', min: '1', value: String(qty || 1), 'aria-label': 'Units', style: 'width:90px' });
+      const row = el('div', { class: 'row line' }, sel, q, el('button', { class: 'btn ghost tiny', 'aria-label': 'Remove line', text: 'Remove', onclick: () => row.remove() }));
+      lines.append(row);
+    };
+    const loadProducts = async (orgId) => {
+      clear(lines); clear(note);
+      prods = orgId ? (await ctx.sb.from('products').select('id, sku, name').eq('org_id', orgId).eq('active', true).order('sku')).data || [] : [];
+      if (orgId && !prods.length) note.append(el('p', { class: 'err', text: 'This customer has no products yet. Add one under Products first (or the customer can add their own), then book the delivery.' }), el('button', { class: 'btn ghost tiny', text: 'Go to Products', onclick: () => { done(null); ctx.go('products'); } }));
+      else if (orgId) { if (editing) existing.lines.forEach((l) => addLine(l.product_id, l.expected_qty)); else addLine(); }
+    };
+    if (editing) loadProducts(existing.booking.org_id); else o.addEventListener('change', () => loadProducts(o.value));
+    const go = el('button', { class: 'btn', text: editing ? 'Save changes' : 'Book', onclick: () => guarded(go, err, async () => {
+      const ls = [...lines.querySelectorAll('.line')].map((r) => ({ product_id: r.querySelector('select').value, qty: Number(r.querySelector('input').value) })).filter((l) => l.product_id);
+      if (editing) await rpc(ctx, 'update_inbound', { p_id: existing.booking.id, p_carrier: carrier.value, p_tracking: tracking.value, p_expected: date.value || null, p_notes: existing.booking.notes || null, p_lines: ls });
+      else { if (!o.value) throw new Error('Choose a customer'); await rpc(ctx, 'book_inbound', { p_org: o.value, p_carrier: carrier.value, p_tracking: tracking.value, p_expected: date.value || null, p_notes: null, p_lines: ls }); }
+      done(true); }) });
+    body.append(field('Customer', o), el('div', { class: 'row' }, field('Expected date', date), field('Carrier', carrier), field('Tracking', tracking)), note, el('strong', { text: 'Products and units' }), lines,
+      el('button', { class: 'btn ghost tiny', text: '+ Add another product', onclick: () => prods.length && addLine() }), err, el('div', { class: 'row end' }, el('button', { class: 'btn ghost', onclick: () => done(null), text: 'Cancel' }), go));
+  });
 }
 
 async function detail(ctx, root, id) {
@@ -66,10 +87,13 @@ async function detail(ctx, root, id) {
     const ok = await confirmBox('Close receiving?', short ? `${short} product(s) arrived short. Closing creates a discrepancy for each difference and cannot be undone.` : 'Everything booked has arrived. Close this delivery?', 'Close receiving');
     if (!ok) return; try { const r = await rpc(ctx, 'receive_close', { p_booking: id }); toast(r.discrepancies ? r.discrepancies + ' discrepancies opened' : 'Closed, no differences'); reload(); } catch (e) { toast(e.message, true); }
   };
+  const editable = b.status === 'booked' && !(rc.data || []).length;
+  const edit = () => deliveryDialog(ctx, orgs, { booking: b, lines: ln.data || [] }).then((ok) => { if (ok) { toast('Saved'); reload(); } });
+  const del = async () => { if (!(await confirmBox('Delete this delivery?', 'It is removed completely. This cannot be undone.', 'Delete'))) return; try { await rpc(ctx, 'delete_inbound', { p_id: id }); toast('Deleted'); ctx.go('inbound'); } catch (e) { toast(e.message, true); } };
   const cancel = async () => { if (!(await confirmBox('Cancel delivery?', 'It has not arrived. This cannot be undone.', 'Cancel delivery'))) return; try { await rpc(ctx, 'cancel_inbound', { p_id: id }); toast('Cancelled'); reload(); } catch (e) { toast(e.message, true); } };
   clear(root).append(
     el('div', { class: 'row between' }, el('div', {}, el('button', { class: 'btn ghost tiny', onclick: () => ctx.go('inbound'), text: '← Inbound' }), el('h1', { text: b.ref + ' ' }), pill(b.status, KIND[b.status])),
-      act && el('div', { class: 'row' }, b.status === 'booked' && el('button', { class: 'btn ghost', onclick: cancel, text: 'Cancel delivery' }), open && el('button', { class: 'btn', onclick: close, text: 'Close receiving' }))),
+      act && el('div', { class: 'row' }, editable && el('button', { class: 'btn ghost', onclick: edit, text: 'Edit' }), (editable || b.status === 'cancelled') && el('button', { class: 'btn ghost', onclick: del, text: 'Delete' }), b.status === 'booked' && el('button', { class: 'btn ghost', onclick: cancel, text: 'Cancel delivery' }), open && el('button', { class: 'btn', onclick: close, text: 'Close receiving' }))),
     el('section', { class: 'card' }, kv([['Customer', orgName(orgs, b.org_id)], ['Expected', fmtDay(b.expected_date)], ['Carrier', b.carrier], ['Tracking', b.tracking], ['Notes', b.notes], ['Booked', fmtDate(b.created_at)], ['Received', b.received_at ? fmtDate(b.received_at) : null]])),
     act && open && form(),
     el('section', { class: 'card' }, el('h2', { text: 'Expected vs received' }), table([
