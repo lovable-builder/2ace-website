@@ -13,7 +13,6 @@
 
 ## Pages
 - [Home](https://2ace.pl/): overview of the five services.
-- [Strona główna po polsku](https://2ace.pl/pl): the same overview in Polish.
 - [Build your plan](https://2ace.pl/platform): choose space and services, see the monthly price, sign and pay online.
 - [2ACE Market](https://2ace.pl/market): the marketplace and its commission by category.
 - [Help and user guide](https://2ace.pl/help): step-by-step guide to the customer account with examples (PDF: https://2ace.pl/assets/2ACE-Customer-Guide.pdf).

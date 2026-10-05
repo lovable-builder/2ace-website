@@ -29,14 +29,6 @@ h1{font:800 76px/.98 'Archivo',sans-serif;font-variation-settings:'wdth' 108;let
 p{font-size:26px;line-height:1.4;color:rgba(245,244,241,.82);max-width:700px}</style>
 <div class="bg"></div><div class="sh"></div><div class="c"><div class="mark">2ACE</div><div><div class="mono">Poland · European Union</div><div class="bar"></div><h1>Warehousing and fulfillment in Poland</h1><p style="margin-top:22px">Space by the m², fulfillment, returns, import and customs, a .pl storefront. One plan, one dashboard.</p></div><div class="mono" style="color:rgba(245,244,241,.6)">2ace.pl</div></div>`, 1200, 630, path.join(root, 'assets/og/default.jpg'), true);
 
-// Polish card for the Polish homepage.
-shot(`<!doctype html><meta charset="utf-8">${fonts}<style>${base}
-.bg{position:absolute;inset:0;background:url('${photo}') center/cover}.sh{position:absolute;inset:0;background:linear-gradient(90deg,rgba(8,9,11,.94) 0%,rgba(8,9,11,.82) 45%,rgba(8,9,11,.25) 100%)}
-.c{position:absolute;left:72px;right:72px;top:64px;bottom:64px;display:flex;flex-direction:column;justify-content:space-between}
-h1{font:800 76px/.98 'Archivo',sans-serif;font-variation-settings:'wdth' 108;letter-spacing:-.025em;max-width:780px}.bar{width:96px;height:8px;background:#E39A2B;margin:26px 0}
-p{font-size:26px;line-height:1.4;color:rgba(245,244,241,.82);max-width:720px}</style>
-<div class="bg"></div><div class="sh"></div><div class="c"><div class="mark">2ACE</div><div><div class="mono">Polska · Unia Europejska</div><div class="bar"></div><h1>Magazyn i fulfillment w Polsce</h1><p style="margin-top:22px">Powierzchnia za m², fulfillment, zwroty, import i odprawa celna, sklep .pl. Jeden plan, jeden panel.</p></div><div class="mono" style="color:rgba(245,244,241,.6)">2ace.pl/pl</div></div>`, 1200, 630, path.join(root, 'assets/og/default-pl.jpg'), true);
-
 // One card per article: the headline is the picture.
 for (const a of articles) {
   const long = a.title.length > 70;
