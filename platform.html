@@ -859,6 +859,7 @@
 
   <div style="padding: 22px clamp(18px, 4vw, 48px) 30px; display: flex; flex-wrap: wrap; gap: 6px 22px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(11,12,14,0.55);">
     <span>2ACE · Poland</span><a href="/terms" target="_blank" rel="noopener" style="color: rgba(11,12,14,0.7);">Terms</a><a href="/privacy" target="_blank" rel="noopener" style="color: rgba(11,12,14,0.7);">Privacy</a><a href="mailto:hello@2ace.pl" style="color: rgba(11,12,14,0.7);">hello@2ace.pl</a>
+    <span style="flex-basis: 100%; text-transform: none; letter-spacing: 0.04em;">2ACE sp. z o.o. · ul. Ostrobramska 101A lok. 301, 04-041 Warszawa · NIP 1133212948 · REGON 545746743 · KRS 0001267111 · tel. +48 608 180 946</span>
   </div>
 
   <sc-if value="{{ contactOpen }}" hint-placeholder-val="{{ false }}">
@@ -1786,6 +1787,7 @@ class Component extends DCLogic {
         onClick: () => { if (i <= s.checkout) this.setState({ checkout: i, coTried: false }); } })),
       co0: s.checkout === 0, co1: s.checkout === 1, co2: s.checkout === 2,
       terms: [
+        { k: 'Provider', v: '2ACE sp. z o.o., ul. Ostrobramska 101A lok. 301, 04-041 Warszawa. NIP 1133212948. Tel. +48 608 180 946.' },
         { k: 'Term', v: 'Monthly, rolling. Cancel or resize with 30 days notice.' },
         { k: 'Billing', v: 'Space billed on reserved m² in advance on the 1st. Add-ons from the day they start.' },
         { k: 'Service levels', v: 'Orders before 15:00 ship the same day. Returns graded within 48 h. 99.5% stock accuracy.' },

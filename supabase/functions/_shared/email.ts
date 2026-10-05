@@ -22,5 +22,5 @@ export function layout(title: string, body: string) {
   return `<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;padding:24px;color:#0B0C0E">
   <div style="font-weight:800;font-size:22px;letter-spacing:.02em;margin-bottom:20px">2ACE</div>
   <h1 style="font-size:22px;margin:0 0 14px">${esc(title)}</h1>${body}
-  <p style="margin-top:28px;font-size:12px;color:#666">2ACE, Poland. Questions? Reply to this email.</p></div>`;
+  <p style="margin-top:28px;font-size:12px;color:#666">2ACE sp. z o.o., ul. Ostrobramska 101A lok. 301, 04-041 Warszawa. NIP 1133212948. Tel. +48 608 180 946. Questions? Reply to this email.</p></div>`;
 }
