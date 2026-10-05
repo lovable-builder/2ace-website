@@ -5,6 +5,9 @@ RedirectMatch 404 ^/skills-lock\.json$
 
 # Clean URLs: /platform instead of /platform.html, / instead of /index.html
 RewriteEngine On
+# One address for the site: www goes to the bare domain, so search engines and link previews see a single canonical host.
+RewriteCond %{HTTP_HOST} ^www\.2ace\.pl$ [NC]
+RewriteRule ^ https://2ace.pl%{REQUEST_URI} [R=301,L]
 RewriteCond %{THE_REQUEST} \s/+index(\.html)?[\s?] [NC]
 RewriteRule ^ / [R=301,L]
 RewriteCond %{THE_REQUEST} \s/+([^\s?]+?)\.html[\s?] [NC]
@@ -12,6 +15,8 @@ RewriteRule ^ /%1 [R=301,L]
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME}.html -f
 RewriteRule ^([^.]+)$ $1.html [L]
+
+AddType application/manifest+json .webmanifest
 
 # Our pages and scripts change often: always revalidate so visitors never run a stale copy next to new HTML.
 <IfModule mod_headers.c>

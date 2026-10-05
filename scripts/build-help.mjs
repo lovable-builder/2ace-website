@@ -3,6 +3,7 @@
 //   supabase/functions/_shared/helpContent.ts   staff and owner guides, served only to signed-in staff by admin-api (action help.get)
 // Run: node scripts/build-help.mjs   (the news build is separate)
 import fs from 'node:fs';
+import { iconTags, socialTags } from './seo-head.mjs';
 const read = (f) => fs.readFileSync(new URL('../content/help/' + f, import.meta.url), 'utf8');
 const css = read('help.css'), customer = read('customer.html'), staff = read('staff.html'), owner = read('owner.html');
 const SITE = 'https://2ace.pl';
@@ -27,8 +28,8 @@ const cols = (label, body) => `<div class="cols"><nav class="toc" id="toc" data-
 const head = (title, desc, extraHead = '') => `<!DOCTYPE html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>${title}</title><meta name="description" content="${desc}">${extraHead}${fonts}<style>${css}${extra}</style></head>`;
 
 // ---- public customer guide ----
-const pub = head('Help and user guide | 2ACE', 'Step-by-step guide to your 2ACE account: build a plan, add products, book a delivery, read inventory, change your plan, get a .pl domain and handle invoices. With an example for every step.',
-  `<link rel="canonical" href="${SITE}/help"><meta property="og:site_name" content="2ACE"><meta property="og:type" content="website"><meta property="og:title" content="Help and user guide | 2ACE"><meta property="og:url" content="${SITE}/help">`) + `
+const HELP_DESC = 'Step-by-step guide to your 2ACE account: build a plan, add products, book a delivery, read inventory, change your plan and get a domain, with examples.';
+const pub = head('Help and user guide | 2ACE', HELP_DESC, iconTags() + socialTags({ title: 'Help and user guide | 2ACE', desc: HELP_DESC, url: '/help' })) + `
 <body>
 <header class="top"><a class="brand" href="/">2ACE<small>Help</small></a><nav class="sitenav"><a href="/news">News</a><a href="/platform">Build your plan</a><a href="/login">Log in</a></nav></header>
 <div class="wrap">

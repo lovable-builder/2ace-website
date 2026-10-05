@@ -1,8 +1,11 @@
 // News articles. Add one entry, run `node scripts/build-news.mjs`, commit the generated files.
+// `seoTitle` and `seoDesc` (optional): the shorter wording search results show (about 60 and 155 characters). Without them the title and summary are used.
 // `image`: set to '/assets/news/<file>.jpg' once a photo exists; until then the on-brand drawn cover is used.
 export const articles = [
   {
     slug: 'open-a-company-in-poland-pesel-trusted-profile',
+    seoTitle: 'Opening a company in Poland: PESEL and trusted profile',
+    seoDesc: 'A plain route to a registered Polish company: choosing the form, getting a PESEL and a Profil Zaufany, registering online, and what to do next.',
     title: 'Opening a company in Poland as a foreigner: PESEL, trusted profile and the steps that follow',
     summary: 'A plain-language route from nothing to a registered Polish company: which form to choose, how to get a PESEL and a Profil Zaufany, how the registration works, and what to sort out afterwards.',
     date: '2026-10-04', minutes: 6, tag: 'Company setup', cover: 'company', image: null,
@@ -67,6 +70,8 @@ export const articles = [
   },
   {
     slug: 'eu-3-euro-customs-duty-small-parcels',
+    seoTitle: 'The €3 EU customs duty on small parcels: what sellers need to know',
+    seoDesc: 'Since 1 July 2026 the EU charges a flat €3 duty per item in parcels up to €150. What it means for sellers shipping from China.',
     title: 'The €3 customs duty on small parcels is here: what it means for sellers shipping from China',
     summary: 'Since 1 July 2026 the EU charges a flat €3 duty on every item in parcels worth up to €150. Here is how it is counted and how to keep your cost per order under control.',
     date: '2026-10-04', minutes: 4, tag: 'Customs', cover: 'customs', image: null,
@@ -102,6 +107,8 @@ export const articles = [
   },
   {
     slug: 'eu-packaging-regulation-ppwr-epr-online-sellers',
+    seoTitle: 'EU packaging rules (PPWR): EPR registration for online sellers',
+    seoDesc: 'The Packaging and Packaging Waste Regulation applies from 12 August 2026. What online sellers must register and label for EPR.',
     title: 'EU packaging rules now apply: what online sellers must do about EPR registration',
     summary: 'The Packaging and Packaging Waste Regulation applies from 12 August 2026. If you ship packaged goods into an EU country, you may need to register there, with a local representative if you are not established.',
     date: '2026-10-03', minutes: 4, tag: 'Packaging', cover: 'packaging', image: null,
@@ -139,6 +146,8 @@ export const articles = [
   },
   {
     slug: 'selling-electronics-in-the-eu-ce-rohs-weee-checklist',
+    seoTitle: 'Selling electronics in the EU: CE, RoHS and WEEE checklist',
+    seoDesc: 'Electronics need more than a supplier\'s promise. The steps from the CE mark and RoHS to WEEE registration before you sell in the EU.',
     title: 'Selling electronics in the EU: the CE, RoHS and WEEE checklist',
     summary: 'Electronic products need more than a supplier\'s promise. Here are the steps, from the CE mark and declaration of conformity to WEEE registration in each country you sell to.',
     date: '2026-10-02', minutes: 5, tag: 'Compliance', cover: 'electronics', image: null,

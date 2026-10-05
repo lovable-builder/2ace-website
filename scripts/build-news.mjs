@@ -1,5 +1,6 @@
 // Generates /news (list) and /news/<slug> (articles) from content/news.mjs, the landing-page teaser, and sitemap.xml.
 // Run: node scripts/build-news.mjs
+import { iconTags, socialTags, DEFAULT_OG } from './seo-head.mjs';
 import { articles } from '../content/news.mjs';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -108,11 +109,11 @@ footer{padding:36px clamp(18px,4vw,48px);border-top:1px solid rgba(11,12,14,.1);
 footer a{text-decoration:none}footer a:hover{color:#A8701A}`;
 const header = `<header><a class="mark" href="/">2ACE</a><nav><a class="hide" href="/#services">Services</a><a class="hide" href="/#pricing">Pricing</a><a class="hide" href="/#market">Market</a><a href="/news">News</a><a class="hide" href="/login">Log in</a><a class="cta" href="/platform">Build your plan</a></nav></header>`;
 const footer = `<footer><span>2ACE · Warehousing and fulfillment in Poland</span><span><a href="/">Home</a> · <a href="/news">News</a> · <a href="/platform">Build your plan</a> · <a href="/help">Help</a> · <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a> · <a href="mailto:hello@2ace.pl">Contact</a></span><span style="flex-basis:100%;font-size:13px">2ACE sp. z o.o. · ul. Ostrobramska 101A lok. 301, 04-041 Warszawa · NIP 1133212948 · REGON 545746743 · KRS 0001267111 · tel. +48 608 180 946</span></footer>`;
+// `image` is the 1200x630 link-preview picture (assets/og/...); pages without their own use the default card.
 const head = (title, desc, url, image, extra = '') => `<!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${esc(title)}</title><meta name="description" content="${esc(desc)}"><link rel="canonical" href="${SITE}${url}">
-<meta property="og:site_name" content="2ACE"><meta property="og:type" content="${extra ? 'article' : 'website'}"><meta property="og:title" content="${esc(title)}"><meta property="og:description" content="${esc(desc)}"><meta property="og:url" content="${SITE}${url}">${image ? `<meta property="og:image" content="${SITE}${image}">` : ''}
-<meta name="twitter:card" content="${image ? 'summary_large_image' : 'summary'}">${extra}
+<title>${esc(title)}</title><meta name="description" content="${esc(desc)}">${iconTags()}
+${socialTags({ title, desc, url, image: image || DEFAULT_OG, type: extra ? 'article' : 'website' })}${extra}
 ${fonts}<style>${css}</style></head><body>`;
 
 // ---- pages ----
@@ -123,10 +124,10 @@ write('news/index.html', head('News | 2ACE', 'Customs, packaging and product-com
   `<main><p class="kicker">News</p><h1 style="font-size:clamp(34px,5.4vw,72px)">What is changing for sellers in the EU.</h1><p class="lede" style="margin-top:18px;max-width:60ch">Customs duties, packaging law and product compliance, explained in plain language for brands importing into Europe.</p><div class="grid">${sorted.map(card).join('')}</div></main>` + footer + '</body></html>');
 
 for (const a of sorted) {
-  const url = `/news/${a.slug}`, image = hasImg(a) ? a.image : null;
+  const url = `/news/${a.slug}`, ogFile = `assets/og/news-${a.slug}.jpg`, image = hasImg(a) ? a.image : fs.existsSync(path.join(root, ogFile)) ? '/' + ogFile : null;
   const ld = `<script type="application/ld+json">${JSON.stringify({ '@context': 'https://schema.org', '@type': 'NewsArticle', headline: a.title, description: a.summary, datePublished: a.date, dateModified: a.date, author: { '@type': 'Organization', name: '2ACE' }, publisher: { '@type': 'Organization', name: '2ACE' }, mainEntityOfPage: SITE + url, ...(image ? { image: [SITE + image] } : {}) })}</script>`;
   const related = sorted.filter((x) => x.slug !== a.slug).slice(0, 2);
-  write(`news${url.slice(5)}.html`, head(`${a.title} | 2ACE`, a.summary, url, image, ld) + header +
+  write(`news${url.slice(5)}.html`, head(`${a.seoTitle || a.title} | 2ACE`, a.seoDesc || a.summary, url, image, ld) + header +
     `<main><article><p class="kicker"><a href="/news" style="text-decoration:none">News</a> · ${esc(a.tag)}</p><h1>${esc(a.title)}</h1><p class="lede">${esc(a.summary)}</p><p class="meta">${fmtDate(a.date)} · ${a.minutes} min read</p>
 <div class="hero">${coverHtml(a, 'cover')}</div>${a.body}
 <div class="sources"><h3>Sources</h3><ul>${a.sources.map(([t, u]) => `<li><a href="${esc(u)}" target="_blank" rel="noopener">${esc(t)}</a></li>`).join('')}</ul></div>
