@@ -15,7 +15,12 @@ export async function caller(req: Request) {
 
 // ---------- staff (admin panel) ----------
 export type StaffRole = 'admin' | 'support' | 'warehouse';
-export type StaffCtx = { user: { id: string; email?: string }; role: StaffRole; ip: string | null };
+export type StaffCtx = { user: { id: string; email?: string }; role: StaffRole; ip: string | null; token: string };
+
+// A database client that acts as the signed-in person (their JWT), so row-level security and auth.uid() apply to what it does.
+export function userClient(token: string) {
+  return createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_ANON_KEY')!, { global: { headers: { Authorization: 'Bearer ' + token } }, auth: { persistSession: false } });
+}
 
 function claims(token: string): Record<string, unknown> {
   try { return JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))); } catch { return {}; }
@@ -34,7 +39,7 @@ export async function staffCaller(req: Request, roles?: StaffRole[]): Promise<St
   const role = s.role as StaffRole;
   if (roles && !roles.includes(role)) return { error: 'forbidden', status: 403 };
   if (role !== 'warehouse' && claims(token).aal !== 'aal2') return { error: 'mfa_required', status: 403 };
-  return { user: { id: user.id, email: user.email }, role, ip: req.headers.get('x-forwarded-for')?.split(',')[0] ?? null };
+  return { user: { id: user.id, email: user.email }, role, ip: req.headers.get('x-forwarded-for')?.split(',')[0] ?? null, token };
 }
 
 // Every staff write records who did what; this is awaited so a write never succeeds without its audit row.

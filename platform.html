@@ -678,7 +678,8 @@
             <sc-if value="{{ whNoteShow }}" hint-placeholder-val="{{ false }}"><div role="status" onClick="{{ whNoteClear }}" style="padding: 14px 18px; background: #0B0C0E; color: #F5F4F1; border-radius: 4px; font-size: 15px; cursor: pointer;">{{ whNoteText }}</div></sc-if>
             <sc-if value="{{ pdEditForm }}" hint-placeholder-val="{{ false }}">
               <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px; display: flex; flex-direction: column; gap: 14px;">
-                <span style="font-family: Archivo, sans-serif; font-weight: 800; font-size: 20px;">Edit {{ pdEditSku }}</span>
+                <span style="font-family: Archivo, sans-serif; font-weight: 800; font-size: 20px;">Request a change to {{ pdEditSku }}</span>
+                <p style="margin: 0; font-size: 13px; color: rgba(11,12,14,0.65);">We review changes to products before they apply. Until then your product stays as it is.</p>
                 <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.6);">Product name<input type="text" value="{{ pdEditName }}" onChange="{{ onPdEditName }}" maxlength="200" style="padding: 12px; border-radius: 3px; border: 1px solid rgba(11,12,14,0.25); background: #FFFFFF; font-family: 'IBM Plex Sans', sans-serif; font-size: 16px; min-width: 0;" /></label>
                 <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.6);">Add another barcode, optional<input type="text" value="{{ pdEditEan }}" onChange="{{ onPdEditEan }}" maxlength="40" placeholder="5901234123457" style="padding: 12px; border-radius: 3px; border: 1px solid rgba(11,12,14,0.25); background: #FFFFFF; font-family: 'IBM Plex Sans', sans-serif; font-size: 16px; min-width: 0;" /></label>
                 <sc-if value="{{ pdErrShow2 }}" hint-placeholder-val="{{ false }}"><p style="margin: 0; font-size: 14px; color: #B4442E;">{{ pdErrText2 }}</p></sc-if>
@@ -686,7 +687,7 @@
                   <button onClick="{{ pdEditSaveGo }}" style="cursor: pointer; min-height: 46px; padding: 13px 20px; border: 0; border-radius: 3px; background: #E39A2B; color: #0B0C0E; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;">{{ pdBusyLabel }}</button>
                   <button onClick="{{ pdEditCancel }}" style="cursor: pointer; min-height: 38px; padding: 8px 14px; border: 1px solid rgba(11,12,14,0.3); border-radius: 3px; background: transparent; color: #0B0C0E; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;">Cancel</button>
                   <button onClick="{{ pdSwitchGo }}" style="cursor: pointer; min-height: 38px; padding: 8px 14px; border: 1px solid rgba(11,12,14,0.3); border-radius: 3px; background: transparent; color: #0B0C0E; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;">{{ pdSwitchLabel }}</button>
-                  <button onClick="{{ pdDeleteGo }}" style="cursor: pointer; min-height: 38px; padding: 8px 14px; border: 1px solid rgba(11,12,14,0.3); border-radius: 3px; background: transparent; color: #0B0C0E; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #B4442E; border-color: #B4442E;">Delete</button>
+                  <button onClick="{{ pdDeleteGo }}" style="cursor: pointer; min-height: 38px; padding: 8px 14px; border: 1px solid rgba(11,12,14,0.3); border-radius: 3px; background: transparent; color: #0B0C0E; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #B4442E; border-color: #B4442E;"> Request delete</button>
                 </div>
                 <p style="margin: 0; font-size: 13px; color: rgba(11,12,14,0.6);">A product that was already on a delivery or in stock cannot be deleted. Switch it off instead and it is kept in your history.</p>
               </div>
@@ -713,7 +714,8 @@
                 <sc-for list="{{ pdRows }}" as="p" hint-placeholder-count="3">
                   <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; padding: 12px 0; border-top: 1px solid rgba(11,12,14,0.08); font-size: 15px;">
                     <span><strong>{{ p.sku }}</strong>{{ p.off }}<br><span style="color: rgba(11,12,14,0.65); font-size: 13px;">{{ p.name }}</span></span>
-                    <span style="text-align: right; font-size: 13px; color: rgba(11,12,14,0.65);">{{ p.code }}<br><span style="font-family: 'IBM Plex Mono', monospace; color: #0B0C0E; font-size: 14px;">{{ p.onHand }} in stock</span><br><button onClick="{{ p.onEdit }}" style="cursor: pointer; min-height: 38px; padding: 8px 14px; border: 1px solid rgba(11,12,14,0.3); border-radius: 3px; background: transparent; color: #0B0C0E; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; margin-top: 6px;">Edit</button></span>
+                    <span style="text-align: right; font-size: 13px; color: rgba(11,12,14,0.65);">{{ p.code }}<br><span style="font-family: 'IBM Plex Mono', monospace; color: #0B0C0E; font-size: 14px;">{{ p.onHand }} in stock</span><br><button onClick="{{ p.onEdit }}" style="cursor: pointer; min-height: 38px; padding: 8px 14px; border: 1px solid rgba(11,12,14,0.3); border-radius: 3px; background: transparent; color: #0B0C0E; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; margin-top: 6px; display: {{ p.editDisplay }};">Request edit</button></span>
+                    <div style="flex-basis: 100%; font-size: 13px;"><span style="display: {{ p.pendDisplay }}; color: #8A5A10;">Waiting for approval: {{ p.pendText }} <button onClick="{{ p.onCancelReq }}" style="border: 0; background: none; cursor: pointer; text-decoration: underline; color: #0B0C0E; font-size: 13px;">Cancel request</button></span><span style="display: {{ p.rejDisplay }}; color: #B4442E;">Last request declined: {{ p.rejText }}</span></div>
                   </div>
                 </sc-for>
               </div>
@@ -732,6 +734,7 @@
             <sc-if value="{{ inForm }}" hint-placeholder-val="{{ false }}">
               <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px; display: flex; flex-direction: column; gap: 14px;">
                 <span style="font-family: Archivo, sans-serif; font-weight: 800; font-size: 20px;">{{ inFormTitle }}</span>
+                <p style="margin: 0; font-size: 13px; color: rgba(11,12,14,0.65);">{{ inFormNote }}</p>
                 <sc-if value="{{ inNeedProducts }}" hint-placeholder-val="{{ false }}"><p style="margin: 0; font-size: 15px; color: #B4442E;">Add your products first (Products tab), then book a delivery.</p></sc-if>
                 <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.6);">Expected arrival date<input type="date" value="{{ inDate }}" onChange="{{ onInDate }}" style="padding: 12px; border-radius: 3px; border: 1px solid rgba(11,12,14,0.25); background: #FFFFFF; font-family: 'IBM Plex Sans', sans-serif; font-size: 16px; min-width: 0;" /></label>
                 <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.6);">Carrier<input type="text" value="{{ inCarrier }}" onChange="{{ onInCarrier }}" maxlength="80" placeholder="DHL, DSV, a freight forwarder…" style="padding: 12px; border-radius: 3px; border: 1px solid rgba(11,12,14,0.25); background: #FFFFFF; font-family: 'IBM Plex Sans', sans-serif; font-size: 16px; min-width: 0;" /></label>
@@ -771,9 +774,11 @@
                     <span style="color: rgba(11,12,14,0.65); font-size: 13px;">{{ b.items }}</span>
                     <span style="display: {{ b.issuesDisplay }}; font-size: 14px; color: #B4442E;">Differences found: {{ b.issues }}</span>
                     <span style="font-size: 13px;"><a href="{{ b.ph1 }}" target="_blank" rel="noopener" style="display: {{ b.ph1d }}; margin-right: 10px;">Photo 1</a><a href="{{ b.ph2 }}" target="_blank" rel="noopener" style="display: {{ b.ph2d }}; margin-right: 10px;">Photo 2</a><a href="{{ b.ph3 }}" target="_blank" rel="noopener" style="display: {{ b.ph3d }}; margin-right: 10px;">Photo 3</a><a href="{{ b.ph4 }}" target="_blank" rel="noopener" style="display: {{ b.ph4d }}; margin-right: 10px;">Photo 4</a></span>
+                    <span style="display: {{ b.pendDisplay }}; font-size: 14px; color: #8A5A10;">Waiting for approval: {{ b.pendText }} <button onClick="{{ b.onCancelReq }}" style="border: 0; background: none; cursor: pointer; text-decoration: underline; color: #0B0C0E; font-size: 14px;">Cancel request</button></span>
+                    <span style="display: {{ b.rejDisplay }}; font-size: 14px; color: #B4442E;">Last request declined: {{ b.rejText }}</span>
                     <div style="display: flex; gap: 8px; margin-top: 6px;">
-                      <button onClick="{{ b.onEdit }}" style="cursor: pointer; min-height: 38px; padding: 8px 14px; border: 1px solid rgba(11,12,14,0.3); border-radius: 3px; background: transparent; color: #0B0C0E; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; display: {{ b.canEditDisplay }};">Edit</button>
-                      <button onClick="{{ b.onDelete }}" style="cursor: pointer; min-height: 38px; padding: 8px 14px; border: 1px solid rgba(11,12,14,0.3); border-radius: 3px; background: transparent; color: #0B0C0E; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; display: {{ b.canDeleteDisplay }}; color: #B4442E; border-color: #B4442E;">Delete</button>
+                      <button onClick="{{ b.onEdit }}" style="cursor: pointer; min-height: 38px; padding: 8px 14px; border: 1px solid rgba(11,12,14,0.3); border-radius: 3px; background: transparent; color: #0B0C0E; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; display: {{ b.canEditDisplay }};">Request edit</button>
+                      <button onClick="{{ b.onDelete }}" style="cursor: pointer; min-height: 38px; padding: 8px 14px; border: 1px solid rgba(11,12,14,0.3); border-radius: 3px; background: transparent; color: #0B0C0E; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; display: {{ b.canDeleteDisplay }}; color: #B4442E; border-color: #B4442E;">Request delete</button>
                     </div>
                   </div>
                 </sc-for>
@@ -880,7 +885,7 @@
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900}}">
 class Component extends DCLogic {
   state = {
-    orgId: '', whLoaded: false, whErr: '', whInv: [], whCodes: {}, whBook: [], whIssues: {}, whPhotos: {}, pdOpen: false, pdSku: '', pdName: '', pdEan: '', pdBusy: false, pdErr: '', pdEditId: '', pdEditName: '', pdEditEan: '', pdEditActive: true, inEditId: '', inNotes: '', inOpen: false, inDate: '', inCarrier: '', inTracking: '', inLines: [], inPick: '', inQty: '1', inBusy: false, inErr: '', whNote: '',
+    orgId: '', whLoaded: false, whErr: '', whInv: [], whCodes: {}, whBook: [], whIssues: {}, whPhotos: {}, whChanges: {}, pdOpen: false, pdSku: '', pdName: '', pdEan: '', pdBusy: false, pdErr: '', pdEditId: '', pdEditName: '', pdEditEan: '', pdEditActive: true, inEditId: '', inNotes: '', inOpen: false, inDate: '', inCarrier: '', inTracking: '', inLines: [], inPick: '', inQty: '1', inBusy: false, inErr: '', whNote: '',
     contactOpen: false, contactSubject: 'other', contactMsg: '', contactBusy: false, contactDone: false, contactErr: '',
     logoUrl: '', orgName: '', domainName: '', curPlan: null, hasDomain: false,
     view: 'build', step: 0, userEmail: '', menuOpen: false, userName: '', payErr: '', changeMode: false, chPrev: null, chBusy: false, chErr: '', chDone: '', domainOffer: false, dmInfo: null, dmErr: '', dmAccept: false, dmName: '', dmStatus: null, dmAlts: [], dmNote: '', dmBusy: false, domainAlts: [], mkCat: 'home', payNotice: '', payBanner: '',
@@ -1069,13 +1074,15 @@ class Component extends DCLogic {
   async whLoad() {
     if (!this.state.orgId || !this.authSession()) return;
     try {
-      const [inv, codes, book, dis, dmg] = await Promise.all([
+      const [inv, codes, book, dis, dmg, chg] = await Promise.all([
         this.whGet('v_inventory_by_product?select=product_id,sku,name,active,on_hand,available,unplaced,quarantined,incoming&order=sku'),
         this.whGet('product_barcodes?select=product_id,barcode'),
         this.whGet('inbound_bookings?select=id,ref,status,expected_date,carrier,tracking,notes,created_at,inbound_lines(product_id,expected_qty,products(sku,name))&order=created_at.desc&limit=50'),
         this.whGet('discrepancies?select=booking_id,kind,expected_qty,received_qty,products(sku)&order=created_at'),
-        this.whGet('receipt_lines?select=booking_id,photo_paths&condition=eq.damaged')
+        this.whGet('receipt_lines?select=booking_id,photo_paths&condition=eq.damaged'),
+        this.whGet('change_requests?select=id,entity_id,summary,status,decision_note&order=requested_at.desc&limit=200')
       ]);
+      const changes = {}; chg.forEach((c) => { if (!changes[c.entity_id] && (c.status === 'pending' || c.status === 'rejected')) changes[c.entity_id] = c; else if (!changes[c.entity_id]) changes[c.entity_id] = { status: 'done' }; });
       const map = {}; codes.forEach((c) => { (map[c.product_id] = map[c.product_id] || []).push(c.barcode); });
       const WHY = { short: (d) => d.received_qty + ' of ' + d.expected_qty + ' arrived', over: (d) => d.received_qty + ' arrived, ' + d.expected_qty + ' booked', damaged: (d) => d.received_qty + ' damaged', unexpected: (d) => d.received_qty + ' not on the booking' };
       const issues = {}; dis.forEach((d) => { (issues[d.booking_id] = issues[d.booking_id] || []).push(((d.products && d.products.sku) || '') + ': ' + (WHY[d.kind] ? WHY[d.kind](d) : d.kind)); });
@@ -1089,7 +1096,7 @@ class Component extends DCLogic {
         } catch (e) { /* photos are optional */ }
       }
       const photos = {}; Object.keys(byBooking).forEach((k) => { photos[k] = byBooking[k].map((pth) => urls[pth]).filter(Boolean); });
-      this.setState({ whLoaded: true, whErr: '', whInv: inv, whCodes: map, whBook: book, whIssues: issues, whPhotos: photos });
+      this.setState({ whLoaded: true, whErr: '', whInv: inv, whCodes: map, whBook: book, whIssues: issues, whPhotos: photos, whChanges: changes });
     } catch (e) { this.setState({ whLoaded: true, whErr: String(e.message || e) }); }
   }
   async pdSubmit() {
@@ -1114,32 +1121,44 @@ class Component extends DCLogic {
     this.setState({ inBusy: true, inErr: '' });
     try {
       const lines = s.inLines.map((l) => ({ product_id: l.pid, qty: l.qty }));
-      if (s.inEditId) await this.whRpc('update_inbound', { p_id: s.inEditId, p_carrier: s.inCarrier || null, p_tracking: s.inTracking || null, p_expected: s.inDate || null, p_notes: s.inNotes || null, p_lines: lines });
+      if (s.inEditId) await this.whChange({ action: 'request', entity: 'inbound', id: s.inEditId, kind: 'update', payload: { carrier: s.inCarrier || null, tracking: s.inTracking || null, expected: s.inDate || null, notes: s.inNotes || null, lines } });
       else await this.whRpc('book_inbound', { p_org: s.orgId, p_carrier: s.inCarrier || null, p_tracking: s.inTracking || null, p_expected: s.inDate || null, p_notes: null, p_lines: lines });
-      this.setState({ inBusy: false, inOpen: false, inEditId: '', inLines: [], inDate: '', inCarrier: '', inTracking: '', inNotes: '', whNote: s.inEditId ? 'Delivery updated.' : 'Delivery booked. We will receive it when it arrives.' }); this.whLoad();
+      this.setState({ inBusy: false, inOpen: false, inEditId: '', inLines: [], inDate: '', inCarrier: '', inTracking: '', inNotes: '', whNote: s.inEditId ? 'Sent for approval. Your delivery stays as booked until we approve the change. We email you the result.' : 'Delivery booked. We will receive it when it arrives.' }); this.whLoad();
     } catch (e) { this.setState({ inBusy: false, inErr: String(e.message || e) }); }
+  }
+  // Edits and deletes of existing items are requests: staff approve or decline them. Nothing changes until then.
+  async whChange(body) {
+    const sess = this.authSession(); if (!sess) throw new Error('Please log in again.');
+    const r = await fetch(this.API + '/functions/v1/change-request', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: this.ANON, Authorization: 'Bearer ' + sess.access_token }, body: JSON.stringify(body) });
+    const out = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(out.error || 'Something went wrong. Nothing was sent.');
+    return out;
+  }
+  async whCancelRequest(id) {
+    try { await this.whChange({ action: 'cancel', id }); this.setState({ whNote: 'Request cancelled.', whErr: '' }); this.whLoad(); }
+    catch (e) { this.setState({ whNote: '', whErr: String(e.message || e) }); }
   }
   async pdEditSave() {
     const s = this.state; if (s.pdBusy) return;
     if (!s.pdEditName.trim()) return this.setState({ pdErr: 'The name cannot be empty.' });
     this.setState({ pdBusy: true, pdErr: '' });
     try {
-      await this.whRpc('update_product', { p_id: s.pdEditId, p_patch: { name: s.pdEditName } });
-      if (s.pdEditEan.trim()) await this.whRpc('add_product_barcode', { p_product: s.pdEditId, p_barcode: s.pdEditEan.trim() });
-      this.setState({ pdBusy: false, pdEditId: '', whNote: 'Product updated.' }); this.whLoad();
+      const payload = { name: s.pdEditName }; if (s.pdEditEan.trim()) payload.ean = s.pdEditEan.trim();
+      await this.whChange({ action: 'request', entity: 'product', id: s.pdEditId, kind: 'update', payload });
+      this.setState({ pdBusy: false, pdEditId: '', whNote: 'Sent for approval. Your product stays as it is until we approve the change. We email you the result.' }); this.whLoad();
     } catch (e) { this.setState({ pdBusy: false, pdErr: String(e.message || e) }); }
   }
   async pdSwitch() {
     const s = this.state; if (s.pdBusy) return;
     this.setState({ pdBusy: true, pdErr: '' });
-    try { await this.whRpc('update_product', { p_id: s.pdEditId, p_patch: { active: !s.pdEditActive } }); this.setState({ pdBusy: false, pdEditId: '', whNote: s.pdEditActive ? 'Product switched off. It is kept in your history.' : 'Product switched on.' }); this.whLoad(); }
+    try { await this.whChange({ action: 'request', entity: 'product', id: s.pdEditId, kind: 'update', payload: { active: !s.pdEditActive } }); this.setState({ pdBusy: false, pdEditId: '', whNote: 'Sent for approval. We email you the result.' }); this.whLoad(); }
     catch (e) { this.setState({ pdBusy: false, pdErr: String(e.message || e) }); }
   }
   async pdDelete() {
     const s = this.state; if (s.pdBusy) return;
-    if (!window.confirm('Delete this product? This cannot be undone.')) return;
+    if (!window.confirm('Ask us to delete this product? We review the request and email you the result.')) return;
     this.setState({ pdBusy: true, pdErr: '' });
-    try { await this.whRpc('delete_product', { p_id: s.pdEditId }); this.setState({ pdBusy: false, pdEditId: '', whNote: 'Product deleted.' }); this.whLoad(); }
+    try { await this.whChange({ action: 'request', entity: 'product', id: s.pdEditId, kind: 'delete' }); this.setState({ pdBusy: false, pdEditId: '', whNote: 'Deletion requested. The product stays until we approve it.' }); this.whLoad(); }
     catch (e) { this.setState({ pdBusy: false, pdErr: String(e.message || e) }); }
   }
   inEdit(b) {
@@ -1147,8 +1166,8 @@ class Component extends DCLogic {
     window.scrollTo(0, 0);
   }
   async inDelete(b) {
-    if (!window.confirm('Delete delivery ' + b.ref + '? This cannot be undone.')) return;
-    try { await this.whRpc('delete_inbound', { p_id: b.id }); this.setState({ whNote: 'Delivery deleted.', inOpen: false, inEditId: '' }); this.whLoad(); }
+    if (!window.confirm('Ask us to delete delivery ' + b.ref + '? We review the request and email you the result.')) return;
+    try { await this.whChange({ action: 'request', entity: 'inbound', id: b.id, kind: 'delete' }); this.setState({ whNote: 'Deletion requested. The delivery stays booked until we approve it.', whErr: '', inOpen: false, inEditId: '' }); this.whLoad(); }
     catch (e) { this.setState({ whNote: '', whErr: String(e.message || e) }); }
   }
   async dmLoad() {
@@ -1500,20 +1519,20 @@ class Component extends DCLogic {
       invGo: () => (s.whInv.length ? tabSet('inbound')() : tabSet('products')()), invGoLabel: s.whInv.length ? 'Book a delivery' : 'Add products',
       invRows: s.whInv.filter((p) => p.on_hand > 0 || p.incoming > 0).map((p) => ({ sku: p.sku, name: p.name, onHand: String(p.on_hand), available: String(p.available), awaiting: String(p.unplaced + p.quarantined), incoming: String(p.incoming) })),
       pdHas: s.whInv.length > 0, pdEmpty: s.whLoaded && !s.whErr && s.whInv.length === 0,
-      pdRows: s.whInv.map((p) => ({ sku: p.sku, name: p.name, code: (s.whCodes[p.product_id] || []).join(', ') || 'No barcode', onHand: String(p.on_hand), off: p.active ? '' : ' (switched off)', onEdit: () => { this.setState({ pdEditId: p.product_id, pdEditName: p.name, pdEditEan: '', pdEditActive: p.active, pdOpen: false, pdErr: '', whNote: '' }); window.scrollTo(0, 0); } })),
+      pdRows: s.whInv.map((p) => ({ sku: p.sku, name: p.name, code: (s.whCodes[p.product_id] || []).join(', ') || 'No barcode', onHand: String(p.on_hand), off: p.active ? '' : ' (switched off)', editDisplay: (s.whChanges[p.product_id] || {}).status === 'pending' ? 'none' : 'inline-block', pendDisplay: (s.whChanges[p.product_id] || {}).status === 'pending' ? 'block' : 'none', pendText: (s.whChanges[p.product_id] || {}).summary || '', rejDisplay: (s.whChanges[p.product_id] || {}).status === 'rejected' ? 'block' : 'none', rejText: (s.whChanges[p.product_id] || {}).decision_note || 'Declined', onCancelReq: () => this.whCancelRequest((s.whChanges[p.product_id] || {}).id), onEdit: () => { this.setState({ pdEditId: p.product_id, pdEditName: p.name, pdEditEan: '', pdEditActive: p.active, pdOpen: false, pdErr: '', whNote: '' }); window.scrollTo(0, 0); } })),
       pdEditForm: !!s.pdEditId, pdEditSku: (s.whInv.find((p) => p.product_id === s.pdEditId) || {}).sku || '', pdEditName: s.pdEditName, onPdEditName: (e) => this.setState({ pdEditName: e.target.value, pdErr: '' }), pdEditEan: s.pdEditEan, onPdEditEan: (e) => this.setState({ pdEditEan: e.target.value, pdErr: '' }),
-      pdEditSaveGo: () => this.pdEditSave(), pdEditCancel: () => this.setState({ pdEditId: '', pdErr: '' }), pdSwitchGo: () => this.pdSwitch(), pdSwitchLabel: s.pdEditActive ? 'Switch off' : 'Switch on', pdDeleteGo: () => this.pdDelete(), pdBusyLabel: s.pdBusy ? 'Working…' : 'Save changes', pdErrShow2: !!s.pdErr && !!s.pdEditId, pdErrText2: s.pdErr,
+      pdEditSaveGo: () => this.pdEditSave(), pdEditCancel: () => this.setState({ pdEditId: '', pdErr: '' }), pdSwitchGo: () => this.pdSwitch(), pdSwitchLabel: s.pdEditActive ? 'Request switch off' : 'Request switch on', pdDeleteGo: () => this.pdDelete(), pdBusyLabel: s.pdBusy ? 'Sending…' : 'Send for approval', pdErrShow2: !!s.pdErr && !!s.pdEditId, pdErrText2: s.pdErr,
       pdToggle: () => this.setState({ pdOpen: !s.pdOpen, pdErr: '' }), pdForm: s.pdOpen, pdBtnLabel: s.pdOpen ? 'Cancel' : 'Add a product',
       pdSku: s.pdSku, onPdSku: (e) => this.setState({ pdSku: e.target.value, pdErr: '' }), pdName: s.pdName, onPdName: (e) => this.setState({ pdName: e.target.value, pdErr: '' }),
       pdEan: s.pdEan, onPdEan: (e) => this.setState({ pdEan: e.target.value, pdErr: '' }), pdErrText: s.pdErr, pdErrShow: !!s.pdErr && !s.pdEditId, pdSave: () => this.pdSubmit(), pdSaveLabel: s.pdBusy ? 'Saving…' : 'Save product',
-      inToggle: () => this.setState(s.inOpen ? { inOpen: false, inEditId: '', inLines: [], inErr: '', inDate: '', inCarrier: '', inTracking: '', inNotes: '' } : { inOpen: true, inErr: '' }), inForm: s.inOpen, inBtnLabel: s.inOpen ? 'Cancel' : 'Book a delivery', inFormTitle: s.inEditId ? 'Edit delivery' : 'New delivery',
+      inToggle: () => this.setState(s.inOpen ? { inOpen: false, inEditId: '', inLines: [], inErr: '', inDate: '', inCarrier: '', inTracking: '', inNotes: '' } : { inOpen: true, inErr: '' }), inForm: s.inOpen, inBtnLabel: s.inOpen ? 'Cancel' : 'Book a delivery', inFormTitle: s.inEditId ? 'Request a change to this delivery' : 'New delivery', inFormNote: s.inEditId ? 'We review changes to deliveries before they apply. Your delivery stays as booked until we approve it.' : '',
       inNeedProducts: s.inOpen && s.whInv.filter((p) => p.active).length === 0, inNotActive: !!s.userEmail && !s.activated,
       inDate: s.inDate, onInDate: (e) => this.setState({ inDate: e.target.value }), inCarrier: s.inCarrier, onInCarrier: (e) => this.setState({ inCarrier: e.target.value }), inTracking: s.inTracking, onInTracking: (e) => this.setState({ inTracking: e.target.value }),
       inPickOpts: [{ v: '', label: 'Choose a product' }].concat(s.whInv.filter((p) => p.active).map((p) => ({ v: p.product_id, label: p.sku + ' - ' + p.name }))), inPick: s.inPick, onInPick: (e) => this.setState({ inPick: e.target.value, inErr: '' }),
       inQty: s.inQty, onInQty: (e) => this.setState({ inQty: e.target.value, inErr: '' }), inAdd: () => this.inAddLine(),
       inLineRows: s.inLines.map((l, i) => { const p = s.whInv.find((x) => x.product_id === l.pid) || {}; return { label: (p.sku || '') + ' - ' + (p.name || ''), qty: String(l.qty), remove: () => this.setState({ inLines: s.inLines.filter((_, j) => j !== i) }) }; }),
-      inHasLines: s.inLines.length > 0, inErrShow: !!s.inErr, inErrText: s.inErr, inSave: () => this.inSubmit(), inSaveLabel: s.inBusy ? 'Saving…' : s.inEditId ? 'Save changes' : 'Book delivery',
-      inRows: s.whBook.map((b) => ({ issues: (s.whIssues[b.id] || []).join(' · '), issuesDisplay: (s.whIssues[b.id] || []).length ? 'block' : 'none', ph1: (s.whPhotos[b.id] || [])[0] || '', ph1d: (s.whPhotos[b.id] || [])[0] ? 'inline' : 'none', ph2: (s.whPhotos[b.id] || [])[1] || '', ph2d: (s.whPhotos[b.id] || [])[1] ? 'inline' : 'none', ph3: (s.whPhotos[b.id] || [])[2] || '', ph3d: (s.whPhotos[b.id] || [])[2] ? 'inline' : 'none', ph4: (s.whPhotos[b.id] || [])[3] || '', ph4d: (s.whPhotos[b.id] || [])[3] ? 'inline' : 'none', canEditDisplay: b.status === 'booked' ? 'inline-block' : 'none', canDeleteDisplay: b.status === 'booked' || b.status === 'cancelled' ? 'inline-block' : 'none', onEdit: () => this.inEdit(b), onDelete: () => this.inDelete(b), ref: b.ref, status: { booked: 'Booked', receiving: 'Being received', received: 'Received', cancelled: 'Cancelled' }[b.status] || b.status, when: b.expected_date ? new Date(b.expected_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'No date', info: [b.carrier, b.tracking].filter(Boolean).join(' · '), units: String((b.inbound_lines || []).reduce((t, l) => t + l.expected_qty, 0)) + ' units', items: (b.inbound_lines || []).map((l) => l.products.sku + ' × ' + l.expected_qty).join(', ') })),
+      inHasLines: s.inLines.length > 0, inErrShow: !!s.inErr, inErrText: s.inErr, inSave: () => this.inSubmit(), inSaveLabel: s.inBusy ? 'Sending…' : s.inEditId ? 'Send for approval' : 'Book delivery',
+      inRows: s.whBook.map((b) => ({ pendDisplay: (s.whChanges[b.id] || {}).status === 'pending' ? 'block' : 'none', pendText: (s.whChanges[b.id] || {}).summary || '', rejDisplay: (s.whChanges[b.id] || {}).status === 'rejected' ? 'block' : 'none', rejText: (s.whChanges[b.id] || {}).decision_note || 'Declined', onCancelReq: () => this.whCancelRequest((s.whChanges[b.id] || {}).id), issues: (s.whIssues[b.id] || []).join(' · '), issuesDisplay: (s.whIssues[b.id] || []).length ? 'block' : 'none', ph1: (s.whPhotos[b.id] || [])[0] || '', ph1d: (s.whPhotos[b.id] || [])[0] ? 'inline' : 'none', ph2: (s.whPhotos[b.id] || [])[1] || '', ph2d: (s.whPhotos[b.id] || [])[1] ? 'inline' : 'none', ph3: (s.whPhotos[b.id] || [])[2] || '', ph3d: (s.whPhotos[b.id] || [])[2] ? 'inline' : 'none', ph4: (s.whPhotos[b.id] || [])[3] || '', ph4d: (s.whPhotos[b.id] || [])[3] ? 'inline' : 'none', canEditDisplay: b.status === 'booked' && (s.whChanges[b.id] || {}).status !== 'pending' ? 'inline-block' : 'none', canDeleteDisplay: (b.status === 'booked' || b.status === 'cancelled') && (s.whChanges[b.id] || {}).status !== 'pending' ? 'inline-block' : 'none', onEdit: () => this.inEdit(b), onDelete: () => this.inDelete(b), ref: b.ref, status: { booked: 'Booked', receiving: 'Being received', received: 'Received', cancelled: 'Cancelled' }[b.status] || b.status, when: b.expected_date ? new Date(b.expected_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'No date', info: [b.carrier, b.tracking].filter(Boolean).join(' · '), units: String((b.inbound_lines || []).reduce((t, l) => t + l.expected_qty, 0)) + ' units', items: (b.inbound_lines || []).map((l) => l.products.sku + ' × ' + l.expected_qty).join(', ') })),
       inHas: s.whBook.length > 0, inEmpty: s.whLoaded && !s.whErr && s.whBook.length === 0,
       domainOffer: s.domainOffer,
       goDomain: () => { this.setState({ tab: 'domain', menuOpen: false }); window.scrollTo(0, 0); this.dmLoad(); },

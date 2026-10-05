@@ -358,6 +358,9 @@ verify_jwt = true
 [functions.admin-api]
 verify_jwt = true
 
+[functions.change-request]
+verify_jwt = true
+
 [functions.my-invoices]
 verify_jwt = true
 

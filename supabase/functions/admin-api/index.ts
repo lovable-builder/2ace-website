@@ -1,5 +1,5 @@
 import { corsHeaders, json } from '../_shared/cors.ts';
-import { admin, staffCaller, audit, type StaffCtx, type StaffRole } from '../_shared/auth.ts';
+import { admin, staffCaller, audit, userClient, type StaffCtx, type StaffRole } from '../_shared/auth.ts';
 import { sendEmail, layout, esc } from '../_shared/email.ts';
 import { retryAutoRegister } from '../_shared/domainOrder.ts';
 import Stripe from 'npm:stripe';
@@ -192,6 +192,23 @@ const actions: Record<string, { roles?: StaffRole[]; run: (s: StaffCtx, b: Recor
       html: layout('Discrepancies opened', `<p>Delivery <b>${esc(bk.ref)}</b> was closed with differences:</p>${list}<p><a href="${SITE}/admin#discrepancies">Open the discrepancies list</a></p>`) });
     await audit(s, 'discrepancy.notify', 'inbound_bookings', id, bk.org_id, null, { count: claimed.length });
     return { notified: claimed.length };
+  } },
+
+  // ---------- customer change requests ----------
+  // The decision runs as the signed-in staff member (their JWT), so the database function sees who decided and applies the change atomically.
+  'change.decide': { roles: ['admin', 'warehouse'], run: async (s, b) => {
+    const id = b.id; if (!isUuid(id)) throw new Bad('Invalid request');
+    const approve = b.approve === true, note = text(b.note, 500);
+    const { data, error } = await userClient(s.token).rpc('decide_change', { p_id: id, p_approve: approve, p_note: note || null });
+    if (error) throw new Bad(error.message);
+    const c = data as { org_id: string; summary: string; status: string; decision_note: string | null };
+    const owner = await ownerOf(c.org_id);
+    if (owner?.email) {
+      await sendEmail({ to: owner.email, subject: `${approve ? 'Approved' : 'Declined'}: ${c.summary}`,
+        html: layout(approve ? 'Your change was approved' : 'Your change was declined',
+          `<p><b>${esc(c.summary)}</b></p><p>${approve ? 'We have applied it. You can see the result in your dashboard.' : 'Nothing was changed.'}</p>${c.decision_note ? `<p style="white-space:pre-wrap">${esc(c.decision_note)}</p>` : ''}`) });
+    }
+    return { ok: true, status: c.status };
   } },
 
   // ---------- requests inbox ----------
