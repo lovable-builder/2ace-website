@@ -31,6 +31,24 @@
     .dashtoggle { display: inline-flex; align-items: center; gap: 10px; margin: 0 0 18px; padding: 11px 16px; border: 1px solid rgba(11,12,14,0.25); border-radius: 3px; background: #FFFFFF; cursor: pointer; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: #0B0C0E; }
     .dashclose { display: block; align-self: flex-end; margin: 0 4px 8px; padding: 6px 10px; border: 0; background: none; cursor: pointer; font-size: 26px; line-height: 1; color: #E39A2B; }
   }
+
+  /* the journey of your goods, on the Overview */
+  @keyframes jyPulse { 0%,100% { box-shadow: 0 0 0 4px rgba(227,154,43,0.18); } 50% { box-shadow: 0 0 0 9px rgba(227,154,43,0.06); } }
+  @keyframes jyMarch { to { background-position: 12px 0; } } @keyframes jyRide { 0% { left: 0; } 100% { left: calc(100% - 24px); } }
+  .jy-card { background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 22px; }
+  .jy-title { display: block; font-family: Archivo, sans-serif; font-weight: 800; font-size: 20px; } .jy-sub { display: block; margin-top: 4px; font-size: 14px; color: rgba(11,12,14,0.6); }
+  .jy-lane { position: relative; margin-top: 16px; padding-top: 24px; overflow: hidden; } .jy-parcel { position: absolute; top: 0; left: 0; font-size: 20px; animation: jyRide 10s linear infinite; }
+  .jy-track { display: grid; grid-template-columns: repeat(7, 1fr); }
+  .jy-st { position: relative; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 0 4px; border: 0; background: none; cursor: pointer; text-align: center; color: #0B0C0E; }
+  .jy-ico { position: relative; width: 60px; height: 60px; border-radius: 50%; display: grid; place-items: center; font-size: 27px; background: #FFFFFF; border: 2px solid rgba(11,12,14,0.14); transition: transform 200ms ease; }
+  .jy-st.on .jy-ico { border-color: #E39A2B; animation: jyPulse 2.4s ease-in-out infinite; } .jy-st:hover .jy-ico, .jy-st:focus-visible .jy-ico { transform: translateY(-3px) scale(1.06); }
+  .jy-n { font: 800 26px Archivo, sans-serif; line-height: 1.1; } .jy-t { font-weight: 600; font-size: 15px; } .jy-st small { color: rgba(11,12,14,0.6); font-size: 12px; max-width: 16ch; }
+  .jy-badge { position: absolute; top: -8px; left: 42px; font-style: normal; font-size: 10px; background: #B3392C; color: #FFFFFF; padding: 2px 6px; border-radius: 9px; white-space: nowrap; }
+  .jy-hop { position: absolute; top: 29px; left: calc(50% + 37px); width: calc(100% - 74px); height: 2px; background: repeating-linear-gradient(90deg, rgba(11,12,14,0.3) 0 6px, transparent 6px 12px); background-size: 12px 2px; animation: jyMarch 0.8s linear infinite; }
+  .jy-st.on .jy-hop { background-image: repeating-linear-gradient(90deg, #E39A2B 0 6px, transparent 6px 12px); }
+  .jy-note { margin: 14px 0 0; font-size: 14px; color: rgba(11,12,14,0.7); }
+  @media (max-width: 820px) { .jy-track { grid-template-columns: repeat(2, 1fr); gap: 20px 0; } .jy-hop, .jy-parcel { display: none !important; } .jy-lane { padding-top: 0; } }
+  @media (prefers-reduced-motion: reduce) { .jy-parcel, .jy-hop, .jy-st.on .jy-ico { animation: none !important; } }
 </style>
 </helmet>
 
@@ -580,6 +598,28 @@
               <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 20px; background: #0B0C0E; color: #F5F4F1; border-radius: 4px;">
                 <span style="font-size: 15px;"><strong style="color: #E39A2B;">Your plan is live.</strong> Work through the steps below to get your first delivery moving.</span>
                 <span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: rgba(245,244,241,0.7);">{{ monthlyFmt }} / month</span>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ journeyShow }}" hint-placeholder-val="{{ true }}">
+              <div class="jy-card">
+                <span class="jy-title">Where your goods are</span>
+                <span class="jy-sub">The journey of your stock and orders, live. Tap a step to open it.</span>
+                <div class="jy-lane">
+                  <span class="jy-parcel" aria-hidden="true">📦</span>
+                  <div class="jy-track">
+                    <sc-for list="{{ journeySteps }}" as="j" hint-placeholder-count="7">
+                      <button class="{{ j.cls }}" onClick="{{ j.go }}" aria-label="{{ j.aria }}">
+                        <span class="jy-ico">{{ j.icon }}<em class="jy-badge" style="display: {{ j.badgeShow }};">{{ j.badge }}</em></span>
+                        <b class="jy-n">{{ j.n }}</b>
+                        <span class="jy-t">{{ j.title }}</span>
+                        <small>{{ j.hint }}</small>
+                        <i class="jy-hop" style="display: {{ j.hopShow }};"></i>
+                      </button>
+                    </sc-for>
+                  </div>
+                </div>
+                <p class="jy-note" style="display: {{ journeyNoteShow }};">{{ journeyNote }}</p>
               </div>
             </sc-if>
 
@@ -1192,7 +1232,7 @@ class Component extends DCLogic {
         this.whGet('discrepancies?select=booking_id,kind,expected_qty,received_qty,products(sku)&order=created_at'),
         this.whGet('receipt_lines?select=booking_id,photo_paths&condition=eq.damaged'),
         this.whGet('change_requests?select=id,entity_id,summary,status,decision_note&order=requested_at.desc&limit=200'),
-        this.whGet('orders?select=id,ref,external_ref,status,hold_reason,ship_name,ship_city,ship_country,created_at,order_lines(qty,products(sku,name))&order=created_at.desc&limit=100')
+        this.whGet('orders?select=id,ref,external_ref,status,hold_reason,ship_name,ship_city,ship_country,created_at,shipped_at,order_lines(qty,products(sku,name))&order=created_at.desc&limit=100')
       ]);
       const changes = {}; chg.forEach((c) => { if (!changes[c.entity_id] && (c.status === 'pending' || c.status === 'rejected')) changes[c.entity_id] = c; else if (!changes[c.entity_id]) changes[c.entity_id] = { status: 'done' }; });
       const map = {}; codes.forEach((c) => { (map[c.product_id] = map[c.product_id] || []).push(c.barcode); });
@@ -1705,6 +1745,19 @@ class Component extends DCLogic {
       { k: '.pl storefront', v: onOff(pc.storeOn) },
       this.MARKET_ENABLED && { k: '2ACE Market', v: onOff(pc.marketOn, this.mkRange() + ' per sale') }
     ].filter(Boolean) : [];
+    // The journey of the customer's goods, from what is already loaded (no extra requests). Nothing is shown as a number until it has loaded.
+    const wkAgo = Date.now() - 7 * 864e5, nOf = (arr, st) => arr.filter((x) => x.status === st).length;
+    const jn = s.whLoaded && !s.whErr ? { booked: nOf(s.whBook, 'booked'), arriving: nOf(s.whBook, 'receiving'), shelf: s.whInv.reduce((t, p) => t + (Number(p.available) || 0), 0), ordered: nOf(s.whOrders, 'allocated'), held: nOf(s.whOrders, 'held'), picking: nOf(s.whOrders, 'picking'), packed: nOf(s.whOrders, 'packed'), shipped: s.whOrders.filter((o) => o.status === 'shipped' && o.shipped_at && new Date(o.shipped_at).getTime() >= wkAgo).length } : null;
+    const jSteps = [
+      { k: 'booked', icon: '📋', title: 'Booked', hint: 'You announced a delivery', tab: 'inbound' },
+      { k: 'arriving', icon: '🚚', title: 'Arriving', hint: 'We are scanning it in', tab: 'inbound' },
+      { k: 'shelf', icon: '🗄️', title: 'On your shelf', hint: 'Units ready to sell', tab: 'inventory' },
+      { k: 'ordered', icon: '🛒', title: 'Ordered', hint: 'Stock reserved for your orders', tab: 'orders' },
+      { k: 'picking', icon: '🎯', title: 'Picking', hint: 'Being collected from the shelves', tab: 'orders' },
+      { k: 'packed', icon: '📦', title: 'Packed', hint: 'Boxed, waiting for the courier', tab: 'orders' },
+      { k: 'shipped', icon: '🚀', title: 'Shipped', hint: 'On its way (last 7 days)', tab: 'orders' }
+    ].map((j, i, all) => { const n = jn ? jn[j.k] : null; return { icon: j.icon, title: j.title, hint: j.hint, n: n === null ? '–' : this.num(n), cls: n > 0 ? 'jy-st on' : 'jy-st', go: tabSet(j.tab), aria: j.title + ': ' + (n === null ? 'loading' : n) + '. ' + j.hint, badge: j.k === 'ordered' && jn && jn.held > 0 ? jn.held + ' on hold' : '', badgeShow: j.k === 'ordered' && jn && jn.held > 0 ? 'inline-block' : 'none', hopShow: i < all.length - 1 ? 'block' : 'none' }; });
+    const journeyNote = !jn ? '' : !s.whInv.length ? 'Start by adding your products, then book your first delivery. Your goods appear on this journey as they move.' : !s.whBook.length && !jn.shelf ? 'Book your first inbound delivery to start the journey.' : jn.held > 0 ? jn.held + (jn.held === 1 ? ' order is' : ' orders are') + ' on hold because some stock is missing. It reserves itself when your next delivery arrives.' : '';
     const mkStep = (n, title, sub, done, cta, onClick) => ({
       title, sub, cta, onClick, btnDisplay: done ? 'none' : 'inline-block',
       dot: done ? '✓' : String(n), dotBg: done ? '#2F7D55' : 'transparent', dotFg: done ? '#FFFFFF' : '#0B0C0E', dotBd: done ? '#2F7D55' : 'rgba(11,12,14,0.35)',
@@ -1815,6 +1868,7 @@ class Component extends DCLogic {
       dmGo: () => this.dmSubmit(), dmAcceptTick: s.dmAccept ? '✓' : '', dmAcceptBg: s.dmAccept ? '#E39A2B' : 'transparent', toggleDmAccept: () => this.setState({ dmAccept: !s.dmAccept, dmStatus: s.dmStatus === 'accept' ? 'free' : s.dmStatus }),
       dmGoOpacity: s.dmStatus === 'free' && s.dmAccept && !s.dmBusy ? '1' : '0.5',
       dmGoLabel: s.dmBusy ? 'Please wait…' : s.dmInfo && s.dmInfo.free ? 'Request my included domain' : 'Pay ' + ((s.dmInfo && s.dmInfo.fee) || 99) + ' zł and request',
+      journeyShow: !!s.activated || !!s.whBook.length || !!s.whInv.length, journeySteps: jSteps, journeyNote, journeyNoteShow: journeyNote ? 'block' : 'none',
       navCls: s.menuOpen ? 'dashnav open' : 'dashnav', scrimCls: s.menuOpen ? 'dashscrim open' : 'dashscrim',
       toggleMenu: () => this.setState({ menuOpen: !s.menuOpen }), closeMenu: () => this.setState({ menuOpen: false }),
       welcome: s.userEmail ? 'Welcome, ' + (s.orgName || s.userName || s.userEmail) : '',
