@@ -15,6 +15,7 @@
     <tr><td><code>LEAD_NOTIFY_TO</code></td><td>The team inbox for contact forms, requests, discrepancies and change requests: <code>hello@2ace.pl</code>.</td></tr>
     <tr><td><code>SITE_URL</code></td><td>Links inside emails. <code>https://2ace.pl</code>.</td></tr>
     <tr><td><code>HOSTINGER_API_TOKEN</code>, <code>HOSTINGER_AUTO_REGISTER</code>, <code>HOSTINGER_MAX_FIRST_YEAR_PLN</code>, <code>HOSTINGER_MONTHLY_CAP</code></td><td>Optional automatic domain registration with a price ceiling and monthly limit. Keep it off until you trust the manual queue.</td></tr>
+    <tr><td><code>FURGONETKA_ENV</code>, <code>FURGONETKA_CLIENT_ID</code>, <code>FURGONETKA_CLIENT_SECRET</code>, <code>FURGONETKA_USERNAME</code>, <code>FURGONETKA_PASSWORD</code></td><td>The connection to Furgonetka for shipping labels. <code>FURGONETKA_ENV</code> is <code>sandbox</code> while testing and <code>production</code> when live. The Client ID and Secret must belong to that same environment. Keep two-step login off on that Furgonetka account, and use a password that is unique to it. Check it under <span class="ui">Shipping → Test connection</span>.</td></tr>
     <tr><td><code>STRIPE_AUTOMATIC_TAX</code></td><td>Turn on only after your VAT registration exists in Stripe.</td></tr>
     <tr><td>Supabase Auth: Site URL <code>https://2ace.pl</code>, redirect URLs <code>https://2ace.pl/**</code>, <code>https://www.2ace.pl/**</code></td><td>Where confirmation and password links send people. A wrong value sends them to localhost.</td></tr>
   </table></div>
@@ -26,6 +27,7 @@
     <tr><td>Customer paid but plan is not active.</td><td>The Stripe webhook is not reaching the server. Check the webhook endpoint and secret.</td></tr>
     <tr><td>A plan change shows an "ACTION NEEDED" email.</td><td>Stripe and our plan record disagree. Compare the customer's Plan card with the Stripe subscription, and fix the one that is wrong.</td></tr>
     <tr><td>Receiving photos or the customer change buttons fail.</td><td>The latest database migration or function deploy has not been run.</td></tr>
+    <tr><td>Shipping → Test connection says the login was refused.</td><td>Check the Furgonetka email and password, that the Client ID and Secret belong to the same environment as <code>FURGONETKA_ENV</code>, and that the account has a password set (an account created with Google sign-in has none).</td></tr>
     <tr><td>A staff member cannot see a screen.</td><td>Check their role. Admin and Support also need the two-step code.</td></tr>
   </table></div>
   <div class="ex"><b>Example</b><p>You add a new feature with Claude and it asks you to run the database step. You run <code>supabase db push --yes</code>, then deploy the functions it names, then tell it to "commit and push". After about a minute you hard-refresh the admin panel and the new screen is there.</p></div>

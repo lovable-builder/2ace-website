@@ -5,6 +5,7 @@ import { retryAutoRegister } from '../_shared/domainOrder.ts';
 import Stripe from 'npm:stripe';
 import { STAFF_GUIDE, OWNER_GUIDE } from '../_shared/helpContent.ts';
 import { notifyHeld } from '../_shared/orderNotice.ts';
+import { Furgonetka, FurgonetkaError, configFromEnv, type TokenStore } from '../_shared/furgonetka.ts';
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!);
 
@@ -19,6 +20,11 @@ const PRIORITY = ['low', 'normal', 'high'];
 const ROLES: StaffRole[] = ['admin', 'support', 'warehouse'];
 const isUuid = (v: unknown): v is string => typeof v === 'string' && /^[0-9a-f-]{36}$/i.test(v);
 const text = (v: unknown, max = 4000) => String(v ?? '').trim().slice(0, max);
+// The one cached Furgonetka login lives in a table only the server can read.
+const tokenStore: TokenStore = {
+  async get(key) { const { data } = await admin.from('shipping_tokens').select('access_token, refresh_token, expires_at').eq('key', key).maybeSingle(); return data ? { access_token: data.access_token as string, refresh_token: data.refresh_token as string | null, expires_at: Number(data.expires_at) } : null; },
+  async set(key, t) { const { error } = await admin.from('shipping_tokens').upsert({ key, access_token: t.access_token, refresh_token: t.refresh_token ?? null, expires_at: t.expires_at, updated_at: new Date().toISOString() }); if (error) console.error('token cache', error.message); },
+};
 class Bad extends Error { constructor(m: string, public status = 400) { super(m); } }
 
 // Who to email about an organization: its owner.
@@ -31,6 +37,24 @@ async function ownerOf(orgId: string) {
 
 const actions: Record<string, { roles?: StaffRole[]; run: (s: StaffCtx, b: Record<string, unknown>) => Promise<unknown> }> = {
   me: { run: async (s) => ({ id: s.user.id, role: s.role, email: s.user.email }) },
+
+  // ---------- shipping connection (Furgonetka) ----------
+  // Admin only. Logs in, reads the balance and the carrier services. Free: nothing is bought. Always answers with ok true/false so the screen can explain.
+  'shipping.test': { roles: ['admin'], run: async (s) => {
+    let api: Furgonetka;
+    try { api = new Furgonetka(configFromEnv((k) => Deno.env.get(k)), tokenStore); }
+    catch (e) { return { ok: false, step: 'settings', error: (e as Error).message }; }
+    try {
+      const balance = await api.balance();
+      const raw = await api.services();
+      const list = Array.isArray(raw) ? raw : (raw as { services?: unknown[]; data?: unknown[] })?.services ?? (raw as { data?: unknown[] })?.data ?? raw;
+      await audit(s, 'shipping.test', 'shipping', null, null, null, { ok: true, env: api.env });
+      return { ok: true, env: api.env, base: api.base, balance, services: Array.isArray(list) ? list.slice(0, 80) : list };
+    } catch (e) {
+      await audit(s, 'shipping.test', 'shipping', null, null, null, { ok: false, env: api.env });
+      return { ok: false, env: api.env, step: 'api', status: e instanceof FurgonetkaError ? e.status : null, error: (e as Error).message };
+    }
+  } },
 
   // ---------- orders ----------
   // After staff create an order that came out on hold, tell the customer once (the claim flag prevents duplicates).
