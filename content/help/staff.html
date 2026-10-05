@@ -13,6 +13,7 @@
     <tr><td>Staff management</td><td class="y">Yes</td><td class="no">No</td><td class="no">No</td></tr>
     <tr><td>Audit log</td><td class="y">Yes</td><td class="y">Yes</td><td class="no">No</td></tr>
     <tr><td>Orders (create, reserve, cancel)</td><td class="y">Yes</td><td class="ro">Read only</td><td class="y">Yes</td></tr>
+    <tr><td>Pick and pack (scan app)</td><td class="y">Yes</td><td class="no">No</td><td class="y">Yes</td></tr>
     <tr><td>Approvals (decide)</td><td class="y">Yes</td><td class="ro">Read only</td><td class="y">Yes</td></tr>
     <tr><td>Inbound, receiving, discrepancies</td><td class="y">Yes</td><td class="ro">Read only</td><td class="y">Yes</td></tr>
     <tr><td>Stock: move, adjust</td><td class="y">Yes, any size</td><td class="ro">Read only</td><td class="y">Yes, up to 20 units</td></tr>
@@ -247,9 +248,40 @@
   <div class="rule"><b>Rules</b><p>Support can see orders but not change them. A customer's own order number is unique per customer, so importing the same file twice never duplicates orders.</p></div>
 </section>
 
+<section id="s-pickpack">
+  <h2>Picking and packing</h2>
+  <p class="lead">A reserved order is picked from the shelves, checked and packed on the phone scan page. Every step moves real stock in the ledger and records the parcels.</p>
+  <h3>Set up once: a packing station</h3>
+  <p>Create a location of type <code>pack</code> (for example <code>PACK-1</code>) under <span class="ui">Locations</span>. Picked items go there. Picking is refused until one exists.</p>
+  <h3>Pick</h3>
+  <ol class="steps">
+    <li>On <code>/scan</code> tap <span class="ui">Pick</span> and choose an order. Lines are listed in bin order, so you walk the floor once.</li>
+    <li>Go to the bin shown. <b>Scan the bin label.</b> A wrong bin is refused and tells you where the line is.</li>
+    <li><b>Scan the product.</b> A wrong product is refused and names the one needed. The screen shows the product photo.</li>
+    <li>Tap <span class="ui">Picked 4</span>. The reservation becomes a real movement: the units leave the bin and arrive at the packing station. A repeated tap never moves them twice.</li>
+    <li>When the last line is done, tap <span class="ui">Pack this order</span>.</li>
+  </ol>
+  <div class="ex"><b>Example</b><p>ORD-000001 needs MUG-BLUE × 4 from bin A-01-01 and MUG-RED × 2 from A-02-01. Marta scans A-01-01, scans a blue mug, taps "Picked 4", then does the same for A-02-01. Bin A-01-01 now holds 4 fewer and PACK-1 holds 4 blue and 2 red mugs.</p></div>
+  <h3>Pack</h3>
+  <ol class="steps">
+    <li>Tap <span class="ui">Pack</span> and choose a picked order. The screen shows who it ships to.</li>
+    <li><b>Scan every item</b> going into the parcel. An item that is not on the order is refused, and so is a scan beyond the ordered quantity. For an item with no barcode tap <span class="ui">+1 (no barcode)</span>.</li>
+    <li>When everything is counted, weigh and measure each parcel: weight in kg, length, width and height in cm. Use <span class="ui">Add another parcel</span> for a second box.</li>
+    <li>Tap <span class="ui">Finish packing</span>. The order becomes <span class="pill ok">packed</span> with its parcels recorded, ready for its shipping label.</li>
+  </ol>
+  <div class="ex"><b>Example</b><p>Marta scans 4 blue and 2 red mugs, puts them in one box that weighs 1.8 kg and measures 30 × 20 × 15 cm, and taps Finish. The order shows Packed in the admin panel with that parcel.</p></div>
+  <h3>When something is wrong</h3>
+  <p>If a bin is empty or an item is damaged, tap <span class="ui">Can't find it</span>, say what is wrong, and tap <span class="ui">Stop this order</span>. The whole order goes on hold, every reservation is released and the reason is shown on the order. Then:</p>
+  <ol>
+    <li>Return anything already picked from the packing station to its shelf: <span class="ui">Stock → All stock → Move</span>, from PACK-1 back to the bin. The held order is retried automatically when stock lands in a bin.</li>
+    <li>Count the bin that was wrong and fix it with <span class="ui">Adjust</span>, so the system matches the shelf.</li>
+  </ol>
+  <div class="rule"><b>Rules</b><p>Only warehouse staff and admins pick and pack. An order that has started picking can no longer be cancelled. A packed order cannot be picked again.</p></div>
+</section>
+
 <section id="s-scan">
   <h2>13. The scan app on a phone</h2>
-  <p class="lead">Open <code>2ace.pl/scan</code> on a phone or handheld scanner. It works for Warehouse accounts, and for admins after the two-step check.</p>
+  <p class="lead">Open <code>2ace.pl/scan</code> on a phone or handheld scanner. It works for Warehouse accounts, and for admins after the two-step check. It has four jobs: Receive, Put away, Pick and Pack. Receiving and putting away are described here; picking and packing have their own section above.</p>
   <ol class="steps">
     <li>Sign in at <code>2ace.pl/login</code> with a Warehouse account, then open <code>/scan</code>. The first screen has <span class="ui">Receive</span> and <span class="ui">Put away</span>.</li>
     <li>A hardware scanner types into the big box and presses Enter. On a phone, tap <span class="ui">Camera</span>, or type the code and tap <span class="ui">OK</span>.</li>

@@ -64,7 +64,8 @@ async function notify(bookingId) {
 async function home() {
   say('');
   shell('Warehouse', null,
-    el('div', { class: 'tiles' }, el('button', { class: 'tile', onclick: receiveList }, el('b', { text: 'Receive' }), el('span', { text: 'Book goods in against a delivery' })), el('button', { class: 'tile', onclick: moveStart }, el('b', { text: 'Put away' }), el('span', { text: 'Move goods from receiving to a bin' }))));
+    el('div', { class: 'tiles' }, el('button', { class: 'tile', onclick: receiveList }, el('b', { text: 'Receive' }), el('span', { text: 'Book goods in against a delivery' })), el('button', { class: 'tile', onclick: moveStart }, el('b', { text: 'Put away' }), el('span', { text: 'Move goods from receiving to a bin' })),
+      el('button', { class: 'tile', onclick: pickList }, el('b', { text: 'Pick' }), el('span', { text: 'Collect the items of an order from the shelves' })), el('button', { class: 'tile', onclick: packList }, el('b', { text: 'Pack' }), el('span', { text: 'Check, weigh and measure the parcels' }))));
 }
 
 // ---------- receive ----------
@@ -137,6 +138,81 @@ async function moveTo(product, row, rows) {
   };
   shell('Put away', () => moveStart(), el('div', { class: 'card' }, pic, el('b', { text: product.sku }), el('div', { text: product.name }), el('small', { class: 'muted', text: orgName(row.org_id) + ' · ' + free + ' waiting at ' + row.locations.code }), el('div', { class: 'row2' }, el('span', { text: 'Quantity' }), qty)),
     el('p', { class: 'hint', text: 'Now scan the bin label' }), scanInput(onCode, 'Scan the bin'));
+}
+
+// ---------- pick ----------
+// Scan-to-pick: for each line, scan the bin label, then the product, then confirm. A wrong bin or a wrong product is refused with what was expected.
+async function pickList() {
+  shell('Pick', home, el('p', { class: 'muted', text: 'Loading orders…' }));
+  const { data, error } = await sb.from('orders').select('id, org_id, ref, status, ship_city, ship_country, created_at, allocations(status)').in('status', ['allocated', 'picking']).order('created_at', { ascending: true });
+  if (error) return say(error.message, true);
+  const todo = (data || []).filter((o) => o.allocations.some((a) => a.status === 'reserved'));
+  shell('Pick', home, todo.length ? el('div', { class: 'list' }, todo.map((o) => el('button', { class: 'row', onclick: () => pickOrder(o.id) }, el('b', { text: o.ref }), el('span', { text: orgName(o.org_id) + ' · ' + o.ship_city + ' ' + o.ship_country }), el('small', { text: o.allocations.filter((a) => a.status === 'reserved').length + ' lines to pick' + (o.status === 'picking' ? ' · started' : '') })))) : el('p', { class: 'muted', text: 'Nothing to pick right now.' }));
+}
+async function pickOrder(id, stage = 'bin') {
+  const [{ data: o }, { data: al }] = await Promise.all([
+    sb.from('orders').select('id, org_id, ref, status').eq('id', id).maybeSingle(),
+    sb.from('allocations').select('id, qty, status, product_id, location_id, locations(code), products(sku, name, photo_paths)').eq('order_id', id),
+  ]);
+  if (!o) return pickList();
+  const lines = (al || []).filter((a) => a.status !== 'released').sort((a, b) => a.locations.code.localeCompare(b.locations.code));
+  const cur = lines.find((a) => a.status === 'reserved');
+  const done = lines.filter((a) => a.status === 'picked').length;
+  const progress = el('div', { class: 'list' }, lines.map((a) => el('div', { class: 'row static' + (a.status === 'picked' ? ' done' : a === cur ? ' now' : '') }, el('b', { text: a.locations.code + ' · ' + a.products.sku }), el('span', { text: a.products.name }), el('small', { text: a.qty + ' × ' + (a.status === 'picked' ? 'picked' : a === cur ? 'next' : 'waiting') }))));
+  if (!cur) {
+    return shell(o.ref, pickList, el('div', { class: 'card' }, el('b', { text: 'All picked' }), el('div', { text: 'Take the items to the packing station.' }), el('button', { class: 'btn big', text: 'Pack this order', onclick: () => packOrder(id) })), progress);
+  }
+  const pic = await productPhoto(cur.product_id);
+  const problem = () => shell('Problem', () => pickOrder(id, 'bin'), el('div', { class: 'card' }, el('b', { text: 'What is wrong?' }), el('small', { class: 'muted', text: 'The whole order stops and goes on hold. Return anything already picked to the shelf, then count the bin.' }),
+    (() => { const t = el('textarea', { rows: '3', placeholder: 'For example: bin ' + cur.locations.code + ' is empty', 'aria-label': 'What is wrong' }); const b = el('button', { class: 'btn big warn', text: 'Stop this order', onclick: async () => { try { await rpc('report_pick_problem', { p_order: id, p_note: t.value }); say('Order stopped and put on hold'); pickList(); } catch (e) { say(e.message, true); } } }); return el('div', { class: 'row2' }, t, b); })()));
+  const head = el('div', { class: 'card' }, pic, el('small', { class: 'muted', text: 'Line ' + (done + 1) + ' of ' + lines.length }), el('b', { text: 'Go to ' + cur.locations.code }), el('div', { text: cur.products.sku + ' · ' + cur.products.name }), el('div', { class: 'row2' }, el('span', { text: 'Pick' }), el('b', { text: cur.qty + ' ×' })));
+  const stuck = el('button', { class: 'btn ghost', text: "Can't find it", onclick: problem });
+  if (stage === 'bin') {
+    const onCode = async (code) => { try { const r = await rpc('wms_lookup', { p_code: code }); if (r.type !== 'location') return say('Scan the bin label', true); if (r.id !== cur.location_id) return say('Wrong bin. This line is at ' + cur.locations.code, true); say('Bin ' + r.code + ' confirmed'); pickOrder(id, 'item'); } catch (e) { say(e.message, true); } };
+    return shell(o.ref, pickList, head, el('p', { class: 'hint', text: 'Scan the bin label' }), scanInput(onCode, 'Scan the bin ' + cur.locations.code), stuck, progress);
+  }
+  if (stage === 'item') {
+    const onCode = async (code) => { try { const r = await rpc('wms_lookup', { p_code: code, p_org: o.org_id }); if (r.type !== 'product') return say('No product with that code for this customer', true); if (r.id !== cur.product_id) return say('Wrong item. This line needs ' + cur.products.sku, true); say('Item confirmed'); pickOrder(id, 'confirm'); } catch (e) { say(e.message, true); } };
+    return shell(o.ref, () => pickOrder(id, 'bin'), head, el('p', { class: 'hint', text: 'Scan the product' }), scanInput(onCode, 'Scan ' + cur.products.sku), stuck, progress);
+  }
+  const confirm = el('button', { class: 'btn big', text: 'Picked ' + cur.qty, onclick: async () => { confirm.disabled = true; try { const r = await rpc('pick_line', { p_allocation: cur.id, p_key: key() }); say(r.remaining ? 'Picked. ' + r.remaining + ' to go' : 'Everything is picked'); pickOrder(id, 'bin'); } catch (e) { confirm.disabled = false; say(e.message, true); } } });
+  shell(o.ref, () => pickOrder(id, 'item'), head, el('p', { class: 'hint', text: 'Take ' + cur.qty + ' and confirm' }), confirm, stuck, progress);
+}
+
+// ---------- pack ----------
+// Scan-to-pack: every item of the order is scanned in (a wrong item is refused), then the parcels are weighed and measured.
+async function packList() {
+  shell('Pack', home, el('p', { class: 'muted', text: 'Loading orders…' }));
+  const { data, error } = await sb.from('orders').select('id, org_id, ref, ship_city, ship_country, allocations(status)').eq('status', 'picking').order('created_at', { ascending: true });
+  if (error) return say(error.message, true);
+  const ready = (data || []).filter((o) => o.allocations.length && !o.allocations.some((a) => a.status === 'reserved'));
+  shell('Pack', home, ready.length ? el('div', { class: 'list' }, ready.map((o) => el('button', { class: 'row', onclick: () => packOrder(o.id) }, el('b', { text: o.ref }), el('span', { text: orgName(o.org_id) + ' · ' + o.ship_city + ' ' + o.ship_country }), el('small', { text: 'Picked, ready to pack' })))) : el('p', { class: 'muted', text: 'No orders are waiting to be packed.' }));
+}
+async function packOrder(id, counts = {}, parcels = [{ kg: '', l: '', w: '', h: '' }]) {
+  const [{ data: o }, { data: ln }] = await Promise.all([
+    sb.from('orders').select('id, org_id, ref, status, ship_name, ship_line1, ship_postal, ship_city, ship_country').eq('id', id).maybeSingle(),
+    sb.from('order_lines').select('product_id, qty, products(sku, name)').eq('order_id', id),
+  ]);
+  if (!o) return packList();
+  if (o.status === 'packed') { say('This order is already packed'); return packList(); }
+  const lines = ln || [], got = (l) => counts[l.product_id] || 0, allIn = lines.length > 0 && lines.every((l) => got(l) >= l.qty);
+  const again = (c = counts, p = parcels) => packOrder(id, c, p);
+  const checklist = el('div', { class: 'list' }, lines.map((l) => el('div', { class: 'row static' + (got(l) >= l.qty ? ' done' : '') }, el('b', { text: l.products.sku }), el('span', { text: l.products.name }), el('small', { text: got(l) + ' / ' + l.qty + ' scanned' }),
+    got(l) < l.qty && el('button', { class: 'btn ghost', text: '+1 (no barcode)', onclick: () => again({ ...counts, [l.product_id]: got(l) + 1 }) }))));
+  const to = el('div', { class: 'card' }, el('small', { class: 'muted', text: 'Ship to' }), el('b', { text: o.ship_name }), el('div', { text: o.ship_line1 + ', ' + o.ship_postal + ' ' + o.ship_city + ' ' + o.ship_country }));
+  if (!allIn) {
+    const onCode = async (code) => { try { const r = await rpc('wms_lookup', { p_code: code, p_org: o.org_id }); if (r.type !== 'product') return say('No product with that code for this customer', true); const l = lines.find((x) => x.product_id === r.id); if (!l) return say(r.sku + ' is not on this order', true); if (got(l) >= l.qty) return say('You already scanned all ' + l.qty + ' of ' + r.sku, true); say(r.sku + ' ' + (got(l) + 1) + ' / ' + l.qty); again({ ...counts, [l.product_id]: got(l) + 1 }); } catch (e) { say(e.message, true); } };
+    return shell(o.ref, packList, to, el('p', { class: 'hint', text: 'Scan every item going in the parcel' }), scanInput(onCode, 'Scan an item'), checklist);
+  }
+  const fields = parcels.map((p, i) => {
+    const num = (k, ph, step) => { const inp = el('input', { type: 'number', inputmode: 'decimal', step: step || '0.1', min: '0', placeholder: ph, value: p[k], 'aria-label': ph + ' parcel ' + (i + 1), class: 'qty', style: 'width:100%' }); inp.addEventListener('input', () => { p[k] = inp.value; }); return inp; };
+    return el('div', { class: 'card' }, el('b', { text: 'Parcel ' + (i + 1) }), el('div', { class: 'row2' }, el('span', { text: 'Weight (kg)' }), num('kg', 'kg', '0.01')),
+      el('div', { class: 'row2' }, num('l', 'L cm'), num('w', 'W cm'), num('h', 'H cm')), parcels.length > 1 && el('button', { class: 'btn ghost', text: 'Remove this parcel', onclick: () => again(counts, parcels.filter((_, j) => j !== i)) }));
+  });
+  const finish = el('button', { class: 'btn big', text: 'Finish packing', onclick: async () => {
+    const list = parcels.map((p) => ({ weight_g: Math.round(Number(p.kg) * 1000), length_cm: Number(p.l), width_cm: Number(p.w), height_cm: Number(p.h) }));
+    finish.disabled = true; try { const r = await rpc('pack_order', { p_order: id, p_parcels: list }); say(o.ref + ' packed in ' + r.parcels + ' parcel' + (r.parcels === 1 ? '' : 's') + '. Ready for its label'); packList(); } catch (e) { finish.disabled = false; say(e.message, true); } } });
+  shell(o.ref, () => again({}, parcels), to, el('div', { class: 'card' }, el('b', { text: 'Everything is in' }), el('small', { class: 'muted', text: 'Weigh and measure each parcel.' })), ...fields, el('button', { class: 'btn ghost', text: 'Add another parcel', onclick: () => again(counts, parcels.concat([{ kg: '', l: '', w: '', h: '' }])) }), finish);
 }
 
 // ---------- start ----------

@@ -53,13 +53,14 @@ async function detail(ctx, root, id) {
   const orgs = await loadOrgs(ctx);
   const o = (await ctx.sb.from('orders').select('*').eq('id', id).maybeSingle()).data;
   if (!o) return clear(root).append(el('p', { class: 'err', text: 'Order not found.' }), el('button', { class: 'btn ghost', onclick: () => ctx.go('orders'), text: 'Back' }));
-  const [ln, al, cr] = await Promise.all([
+  const [ln, al, cr, pc] = await Promise.all([
     ctx.sb.from('order_lines').select('id, qty, products(sku, name)').eq('order_id', id),
     ctx.sb.from('allocations').select('order_line_id, qty, status, lot, locations(code)').eq('order_id', id),
     ctx.sb.from('change_requests').select('summary, status').eq('entity_id', id).eq('status', 'pending'),
+    ctx.sb.from('parcels').select('seq, weight_g, length_cm, width_cm, height_cm, packed_at').eq('order_id', id).order('seq'),
   ]);
   const act = canAct(ctx), reload = () => detail(ctx, root, id);
-  const where = (lineId) => (al.data || []).filter((a) => a.order_line_id === lineId && a.status !== 'released').map((a) => `${a.locations.code} × ${a.qty}`).join(', ') || '-';
+  const where = (lineId) => (al.data || []).filter((a) => a.order_line_id === lineId && a.status !== 'released').map((a) => `${a.locations.code} × ${a.qty} (${a.status === 'picked' ? 'picked' : 'to pick'})`).join(', ') || '-';
   const reserve = async () => { try { const s = await rpc(ctx, 'allocate_order', { p_order: id }); toast(s === 'allocated' ? 'Stock reserved' : s === 'held' ? 'Still not enough stock' : 'Status: ' + s, s === 'held'); reload(); } catch (e) { toast(e.message, true); } };
   const cancel = async () => { if (!(await confirmBox('Cancel ' + o.ref + '?', 'Its reservations are released. This cannot be undone.', 'Cancel order'))) return; try { await rpc(ctx, 'cancel_order', { p_id: id }); toast('Cancelled'); reload(); } catch (e) { toast(e.message, true); } };
   const cancellable = ['new', 'held', 'allocated'].includes(o.status);
@@ -67,9 +68,10 @@ async function detail(ctx, root, id) {
     el('div', { class: 'row between' }, el('div', {}, el('button', { class: 'btn ghost tiny', onclick: () => ctx.go('orders'), text: '← Orders' }), el('h1', { text: o.ref + ' ' }), pill(LABEL[o.status] || o.status, KIND[o.status])),
       act && el('div', { class: 'row' }, o.status === 'held' && el('button', { class: 'btn', onclick: reserve, text: 'Try to reserve now' }), cancellable && el('button', { class: 'btn ghost', onclick: cancel, text: 'Cancel order' }))),
     (cr.data || []).length > 0 && el('div', { class: 'note' }, el('b', { text: 'Customer request' }), el('p', {}, 'The customer asked: ' + cr.data[0].summary + '. Decide it under '), el('a', { href: '#approvals', text: 'Approvals' }), '.'),
-    o.status === 'held' && el('div', { class: 'rule' }, el('b', { text: 'On hold' }), el('p', { text: o.hold_reason || 'Not enough stock.' }), el('p', { class: 'muted', text: 'Nothing is reserved. It reserves itself when stock is put away in a bin, or use "Try to reserve now".' })),
+    o.status === 'held' && el('div', { class: 'rule' }, el('b', { text: 'On hold' }), el('p', { text: o.hold_reason || 'Not enough stock.' }), el('p', { class: 'muted', text: 'Nothing is reserved. It reserves itself when stock is put away in a bin, or use "Try to reserve now". If a picker reported a problem, return the picked items from the packing station to the shelf and count the bin first.' })),
     el('div', { class: 'cols' },
       el('section', { class: 'card' }, el('h2', { text: 'Order' }), kv([['Customer', orgName(orgs, o.org_id)], ['Their reference', o.external_ref], ['Channel', o.channel], ['Created', fmtDate(o.created_at)], ['Reserved', o.allocated_at ? fmtDate(o.allocated_at) : null], ['Notes', o.notes]])),
       el('section', { class: 'card' }, el('h2', { text: 'Ship to' }), kv([['Name', o.ship_name], ['Company', o.ship_company], ['Address', [o.ship_line1, o.ship_line2].filter(Boolean).join(', ')], ['Postal code and city', `${o.ship_postal} ${o.ship_city}`], ['Country', o.ship_country], ['Email', o.ship_email], ['Phone', o.ship_phone]]))),
-    el('section', { class: 'card' }, el('h2', { text: 'Items' }), table([{ label: 'Product', render: (l) => `${l.products.sku} - ${l.products.name}` }, { label: 'Units', render: (l) => String(l.qty) }, { label: 'Reserved at', render: (l) => where(l.id) }], ln.data || [])));
+    el('section', { class: 'card' }, el('h2', { text: 'Items' }), table([{ label: 'Product', render: (l) => `${l.products.sku} - ${l.products.name}` }, { label: 'Units', render: (l) => String(l.qty) }, { label: 'Reserved at', render: (l) => where(l.id) }], ln.data || [])),
+    (pc.data || []).length > 0 && el('section', { class: 'card' }, el('h2', { text: 'Parcels' }), table([{ label: '#', render: (p) => String(p.seq) }, { label: 'Weight', render: (p) => (p.weight_g / 1000).toLocaleString('en-GB', { minimumFractionDigits: 1, maximumFractionDigits: 3 }) + ' kg' }, { label: 'Size', render: (p) => `${Number(p.length_cm)} × ${Number(p.width_cm)} × ${Number(p.height_cm)} cm` }, { label: 'Packed', render: (p) => fmtDate(p.packed_at) }], pc.data)));
 }

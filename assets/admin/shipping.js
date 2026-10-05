@@ -1,6 +1,8 @@
 import { el, clear, kv, pill, toast } from './ui.js';
 import { guarded } from './wms.js';
 
+const balanceText = (b) => { const n = b && typeof b.balance === 'number' ? b.balance : null; return n === null ? 'Not shown by Furgonetka' : n.toLocaleString('pl-PL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' ' + (b.currency || 'PLN'); };
+
 // Shipping connection (Furgonetka). Admin only. "Test connection" logs in, reads the balance and the carrier services. It buys nothing.
 export async function render(ctx, root) {
   const out = el('div'), err = el('p', { class: 'err' });
@@ -18,7 +20,10 @@ export async function render(ctx, root) {
     const id = (s) => s.id ?? s.service_id ?? s.code ?? '';
     out.append(
       el('div', { class: 'ex' }, el('b', { text: 'Connected' }), el('p', {}, 'Logged in to Furgonetka ', pill(r.env, r.env === 'production' ? 'bad' : 'ok'), r.env === 'production' ? ' This is the LIVE account: real labels cost real money.' : ' This is the test environment: nothing is charged.')),
-      el('section', { class: 'card' }, el('h2', { text: 'Balance' }), el('pre', { style: 'margin:0;white-space:pre-wrap', text: JSON.stringify(r.balance, null, 2) })),
+      el('section', { class: 'card' }, el('h2', { text: 'Balance' }),
+        el('p', { style: 'font-size:28px;margin:0;font-weight:600' }, balanceText(r.balance)),
+        el('p', { class: 'muted', text: r.env === 'production' ? 'Labels are charged from this balance, one per parcel.' : 'Test money in the sandbox. Nothing here is real.' }),
+        el('details', {}, el('summary', { text: 'Show the raw answer' }), el('pre', { style: 'white-space:pre-wrap;max-height:320px;overflow:auto', text: JSON.stringify(r.balance, null, 2) }))),
       el('section', { class: 'card' }, el('h2', { text: svc.length ? `Carrier services (${svc.length})` : 'Carrier services' }),
         svc.length ? el('ul', {}, svc.map((s) => el('li', {}, id(s) !== '' ? el('code', { text: String(id(s)) }) : null, ' ', label(s)))) : el('p', { class: 'muted', text: 'The account returned no services in a list form. Raw answer below.' }),
         el('details', {}, el('summary', { text: 'Show the raw answer' }), el('pre', { style: 'white-space:pre-wrap;max-height:320px;overflow:auto', text: JSON.stringify(r.services, null, 2) }))));

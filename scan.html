@@ -27,6 +27,7 @@
   .list { display: grid; gap: 8px; margin: 0 0 16px; } .row { display: grid; text-align: left; gap: 2px; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 14px; font: inherit; width: 100%; cursor: pointer; } .row.static { cursor: default; } .row.done { border-color: var(--ok); background: rgba(47,125,85,.08); } .row small { color: rgba(11,12,14,.6); }
   .photo { display: grid; gap: 6px; } .photo input { font: inherit; font-size: 14px; }
   .pimg { width: 100%; max-height: 220px; object-fit: contain; border-radius: 8px; background: #F5F4F1; }
+  .row.now { border-color: var(--amber); border-width: 2px; } textarea { font: inherit; font-size: 16px; padding: 10px; border: 2px solid var(--ink); border-radius: 8px; width: 100%; background: #fff; }
   .hint { font-weight: 700; color: var(--amber); margin: 0 0 8px; }
   .cam { position: fixed; inset: 0; z-index: 20; background: #000; display: flex; flex-direction: column; } .cam video { flex: 1; width: 100%; object-fit: cover; } .cam .btn { margin: 16px; }
 </style>
@@ -35,6 +36,6 @@
 <div id="app"><main><p class="muted">Loading…</p></main></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>window.__ANON__ = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2YmNtaWxjanJhZ3JjZXp3emxvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEwNjMyODMsImV4cCI6MjEwNjYzOTI4M30.Q6TlQnDToz2oPr4FXNgKdgdrZT3ojUToCroLRVQGRsw";</script>
-<script type="module" src="/assets/admin/scan.js?v=3"></script>
+<script type="module" src="/assets/admin/scan.js?v=4"></script>
 </body>
 </html>
