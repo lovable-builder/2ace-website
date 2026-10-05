@@ -2,6 +2,7 @@ import Stripe from 'npm:stripe';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { sendEmail, layout, esc } from '../_shared/email.ts';
 import { createDomainOrder } from '../_shared/domainOrder.ts';
+import { recurringMonthlyPLN } from '../_shared/stripeTotals.ts';
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!);
 const secret = Deno.env.get('STRIPE_WEBHOOK_SECRET')!;
@@ -20,6 +21,15 @@ async function syncSub(sub: Stripe.Subscription) {
     stripe_subscription_id: sub.id, org_id: orgId, status: sub.status,
     current_period_end: end ? new Date(end * 1000).toISOString() : null, updated_at: new Date().toISOString(),
   });
+  // Keep the plan's monthly price equal to what Stripe really bills, so the dashboard can never show a different amount than the invoices.
+  if (sub.status === 'active' || sub.status === 'trialing') {
+    const billed = recurringMonthlyPLN(sub);
+    const { data: pl } = await db.from('plans').select('id, monthly_pln').eq('org_id', orgId).eq('status', 'active').order('created_at', { ascending: false }).limit(1).maybeSingle();
+    if (pl && billed > 0 && pl.monthly_pln !== billed) {
+      console.warn('plan monthly differs from Stripe, aligning', orgId, pl.monthly_pln, '->', billed);
+      await db.from('plans').update({ monthly_pln: billed }).eq('id', pl.id);
+    }
+  }
   const map: Record<string, string> = { active: 'active', trialing: 'active', past_due: 'past_due', unpaid: 'past_due', canceled: 'canceled', incomplete_expired: 'canceled' };
   if (map[sub.status]) await setOrg(orgId, map[sub.status]);
 }

@@ -1057,9 +1057,10 @@ class Component extends DCLogic {
       const out = await this.chCall(false);
       const word = out.kind === 'upgrade' ? 'upgraded' : out.kind === 'downgrade' ? 'downgraded' : 'updated';
       this.noPersist = false; this.clearPlan();
-      this.setState({ changeMode: false, chBusy: false, chPrev: null, view: 'dash', tab: 'overview', chDone: 'Your plan was ' + word + '. Your new price is ' + this.fmt(out.newMonthly) + ' per month.' });
+      // Load the saved plan BEFORE leaving the builder, so the dashboard never flashes the old price.
+      const sess0 = this.authSession(); if (sess0) { try { await this.loadOrg(sess0); } catch (e) { /* the dashboard reloads it anyway */ } }
+      this.setState({ changeMode: false, chBusy: false, chPrev: null, view: 'dash', tab: 'overview', chDone: out.kind === 'same' ? 'Your plan was updated. Your monthly price stays ' + this.fmt(out.newMonthly) + '.' : 'Your plan was ' + word + '. Your new price is ' + this.fmt(out.newMonthly) + ' per month.' });
       window.scrollTo(0, 0);
-      const sess = this.authSession(); if (sess) this.loadOrg(sess);
     } catch (e) { this.setState({ chErr: String(e.message || e), chBusy: false }); }
   }
 
@@ -1734,6 +1735,9 @@ class Component extends DCLogic {
   extraVals(s, P, customer, cc, tabSet) {
     const chLiveDelta = s.curPlan ? P.monthly - s.curPlan.monthly : 0;
     const chLiveKind = chLiveDelta > 0 ? 'upgrade' : chLiveDelta < 0 ? 'downgrade' : 'same';
+    // Market (commission per sale) and Import & customs (quoted) have no monthly price: the plan can change while the price stays.
+    const cc0 = (s.curPlan && s.curPlan.config) || {};
+    const chCfgDiff = !!s.curPlan && (s.storageType !== cc0.storageType || Number(s.qty) !== Number(cc0.qty) || !!s.pkgs.ful !== !!(cc0.pkgs && cc0.pkgs.ful) || !!s.pkgs.ret !== !!(cc0.pkgs && cc0.pkgs.ret) || !!s.pkgs.imp !== !!(cc0.pkgs && cc0.pkgs.imp) || !!s.storeOn !== !!cc0.storeOn || !!s.marketOn !== !!cc0.marketOn);
     const chKind = s.chPrev ? s.chPrev.kind : chLiveKind;
     const fld = (k) => (e) => this.setState({ [k]: e.target.value });
     const bd = (bad) => bad ? '#B4442E' : 'rgba(11,12,14,0.2)';
@@ -1812,12 +1816,12 @@ class Component extends DCLogic {
       needDomain: s.changeMode ? (s.storeOn && !(s.curPlan && s.curPlan.config && s.curPlan.config.storeOn) && !s.hasDomain) : true,
       haveDomain: s.changeMode && s.storeOn && s.hasDomain && !(s.curPlan && s.curPlan.config && s.curPlan.config.storeOn),
       chCurrent: this.fmt(s.curPlan ? s.curPlan.monthly : 0), chNewLive: this.fmt(P.monthly), chNew: this.fmt(s.chPrev ? s.chPrev.newMonthly : P.monthly),
-      chBadgeLive: chLiveKind === 'upgrade' ? 'Upgrade +' + this.fmt(Math.abs(chLiveDelta)) : chLiveKind === 'downgrade' ? 'Downgrade −' + this.fmt(Math.abs(chLiveDelta)) : 'No change',
-      chBadge: chKind === 'upgrade' ? 'Upgrade' : chKind === 'downgrade' ? 'Downgrade' : 'No change',
+      chBadgeLive: chLiveKind === 'upgrade' ? 'Upgrade +' + this.fmt(Math.abs(chLiveDelta)) : chLiveKind === 'downgrade' ? 'Downgrade −' + this.fmt(Math.abs(chLiveDelta)) : (chCfgDiff ? 'No price change' : 'No change'),
+      chBadge: chKind === 'upgrade' ? 'Upgrade' : chKind === 'downgrade' ? 'Downgrade' : (s.chPrev && s.chPrev.configChange ? 'No price change' : 'No change'),
       chBadgeBg: chLiveKind === 'upgrade' ? '#2F7D55' : chLiveKind === 'downgrade' ? '#8A5A12' : '#6B6E73', chBadgeFg: '#FFFFFF',
       chLoading: s.chBusy && !s.chPrev, chShow: !!s.chPrev, chErr: !!s.chErr, chErrText: s.chErr,
       chDelta: s.chPrev ? (s.chPrev.delta > 0 ? '+' : s.chPrev.delta < 0 ? '−' : '') + this.fmt(Math.abs(s.chPrev.delta)) : '',
-      chTodayText: !s.chPrev ? '' : s.chPrev.todayEstimate >= 0
+      chTodayText: !s.chPrev ? '' : s.chPrev.kind === 'same' ? 'Your monthly price stays ' + this.fmt(s.chPrev.newMonthly) + '. Nothing is charged today. Market is a commission on each sale and Import & customs is quoted per shipment, so they do not change the monthly price.' : s.chPrev.todayEstimate >= 0
         ? 'Charged today: about ' + this.fmt(s.chPrev.todayEstimate) + ' (the price difference for the rest of this billing period' + (s.chPrev.onceToCharge ? ', plus ' + this.fmt(s.chPrev.onceToCharge) + ' one-time setup' : '') + '). From your next invoice you pay ' + this.fmt(s.chPrev.newMonthly) + ' a month.'
         : 'You get a credit of about ' + this.fmt(Math.abs(s.chPrev.todayEstimate)) + ' on your next invoice for the unused part of this period. From then on you pay ' + this.fmt(s.chPrev.newMonthly) + ' a month.',
       chDone: !!s.chDone, chDoneText: s.chDone,
