@@ -23,3 +23,35 @@ export async function guarded(btn, err, fn) {
   btn.disabled = true; if (err) err.textContent = '';
   try { return await fn(); } catch (e) { if (err) err.textContent = e.message; else throw e; } finally { btn.disabled = false; }
 }
+
+// ---- photos of damaged goods ----
+// Phone photos are big: shrink to at most 1600px and re-encode as JPEG before upload. If the browser cannot, upload the original.
+export async function resizeImage(file, max = 1600) {
+  try {
+    const bmp = await createImageBitmap(file);
+    const k = Math.min(1, max / Math.max(bmp.width, bmp.height));
+    const c = document.createElement('canvas'); c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k);
+    c.getContext('2d').drawImage(bmp, 0, 0, c.width, c.height);
+    const blob = await new Promise((res) => c.toBlob(res, 'image/jpeg', 0.82));
+    return blob || file;
+  } catch { return file; }
+}
+const ext = (t) => (t === 'image/png' ? 'png' : t === 'image/webp' ? 'webp' : 'jpg');
+export async function uploadPhotos(ctx, orgId, bookingId, files) {
+  const paths = [];
+  for (const f of [...files].slice(0, 8)) {
+    const blob = await resizeImage(f);
+    const type = blob.type && /^image\/(jpeg|png|webp)$/.test(blob.type) ? blob.type : 'image/jpeg';
+    const path = `${orgId}/${bookingId}/${newKey()}.${ext(type)}`;
+    const { error } = await ctx.sb.storage.from('receiving').upload(path, blob, { contentType: type });
+    if (error) throw new Error(error.message);
+    paths.push(path);
+  }
+  return paths;
+}
+export async function signedUrls(ctx, paths) {
+  const out = {}; if (!paths.length) return out;
+  const { data } = await ctx.sb.storage.from('receiving').createSignedUrls(paths, 3600);
+  for (const x of data || []) if (x.signedUrl && x.path) out[x.path] = x.signedUrl;
+  return out;
+}

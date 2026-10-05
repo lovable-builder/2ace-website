@@ -25,6 +25,7 @@
   .tiles { display: grid; gap: 14px; } .tile { text-align: left; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 22px; font: inherit; cursor: pointer; display: flex; flex-direction: column; gap: 4px; } .tile b { font-family: Archivo, sans-serif; font-size: 26px; } .tile span { color: rgba(11,12,14,.6); }
   .card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin: 0 0 16px; display: grid; gap: 10px; } .card b { font-size: 22px; } .row2 { display: flex; gap: 10px; align-items: center; justify-content: space-between; }
   .list { display: grid; gap: 8px; margin: 0 0 16px; } .row { display: grid; text-align: left; gap: 2px; background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 14px; font: inherit; width: 100%; cursor: pointer; } .row.static { cursor: default; } .row.done { border-color: var(--ok); background: rgba(47,125,85,.08); } .row small { color: rgba(11,12,14,.6); }
+  .photo { display: grid; gap: 6px; } .photo input { font: inherit; font-size: 14px; }
   .hint { font-weight: 700; color: var(--amber); margin: 0 0 8px; }
   .cam { position: fixed; inset: 0; z-index: 20; background: #000; display: flex; flex-direction: column; } .cam video { flex: 1; width: 100%; object-fit: cover; } .cam .btn { margin: 16px; }
 </style>
@@ -33,6 +34,6 @@
 <div id="app"><main><p class="muted">Loading…</p></main></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>window.__ANON__ = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2YmNtaWxjanJhZ3JjZXp3emxvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEwNjMyODMsImV4cCI6MjEwNjYzOTI4M30.Q6TlQnDToz2oPr4FXNgKdgdrZT3ojUToCroLRVQGRsw";</script>
-<script type="module" src="/assets/admin/scan.js?v=1"></script>
+<script type="module" src="/assets/admin/scan.js?v=2"></script>
 </body>
 </html>

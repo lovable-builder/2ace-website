@@ -1,4 +1,5 @@
 import { el, clear } from './ui.js';
+import { uploadPhotos } from './wms.js';
 
 // Phone / handheld scanner app for the warehouse: receive deliveries and put goods away. A keyboard-wedge scanner types into the
 // big input and presses Enter; on phones the camera button uses the browser's BarcodeDetector where it exists.
@@ -40,6 +41,15 @@ async function camera(onCode) {
 
 const shell = (title, back, ...kids) => clear(app).append(el('header', { class: 'bar' }, back ? el('button', { class: 'back', text: '‹', 'aria-label': 'Back', onclick: back }) : el('span', { class: 'logo', text: '2ACE' }), el('strong', { text: title }), el('a', { class: 'out', href: '/admin', text: 'Admin' })), el('main', {}, msg, ...kids));
 
+// Tell the customer (and our inbox) about the differences, once. A failure here never undoes the receiving.
+async function notify(bookingId) {
+  try {
+    const { data } = await sb.auth.getSession();
+    const r = await fetch(SUPABASE_URL + '/functions/v1/admin-api', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: ANON, Authorization: 'Bearer ' + data.session.access_token }, body: JSON.stringify({ action: 'discrepancy.notify', booking_id: bookingId }) });
+    return r.ok ? ', customer emailed' : ', customer email failed';
+  } catch { return ', customer email failed'; }
+}
+
 // ---------- home ----------
 async function home() {
   say('');
@@ -60,7 +70,15 @@ async function receive(id, current) {
   const [ln, rc] = await Promise.all([sb.from('inbound_lines').select('product_id, expected_qty, products(sku, name)').eq('booking_id', id), sb.from('receipt_lines').select('product_id, qty, condition').eq('booking_id', id)]);
   const got = (pid, c) => (rc.data || []).filter((r) => r.product_id === pid && r.condition === c).reduce((s, r) => s + r.qty, 0);
   const qty = el('input', { class: 'qty', type: 'number', inputmode: 'numeric', min: '1', value: '1', 'aria-label': 'Quantity' });
-  const post = async (p, cond) => { try { const r = await rpc('receive_line', { p_booking: id, p_product: p.id, p_qty: Number(qty.value), p_condition: cond, p_lot: '', p_expiry: null, p_note: null, p_key: key() }); say(r.condition === 'unexpected' ? 'Received, but NOT on the booking' : cond === 'damaged' ? 'Damaged goods booked to quarantine' : 'Booked in', r.condition === 'unexpected'); receive(id); } catch (e) { say(e.message, true); } };
+  const photos = el('input', { type: 'file', accept: 'image/*', capture: 'environment', multiple: true, 'aria-label': 'Photos of the damage' });
+  const post = async (p, cond) => {
+    try {
+      const r = await rpc('receive_line', { p_booking: id, p_product: p.id, p_qty: Number(qty.value), p_condition: cond, p_lot: '', p_expiry: null, p_note: null, p_key: key() });
+      let note = '';
+      if (cond === 'damaged' && photos.files.length) { try { const paths = await uploadPhotos({ sb }, b.org_id, id, photos.files); await rpc('add_receipt_photos', { p_line: r.receipt_id, p_paths: paths }); note = ' with photos'; } catch (e) { note = ' (photos failed: ' + e.message + ')'; } }
+      say(r.condition === 'unexpected' ? 'Received, but NOT on the booking' : cond === 'damaged' ? 'Damaged goods booked to quarantine' + note : 'Booked in', r.condition === 'unexpected'); receive(id);
+    } catch (e) { say(e.message, true); }
+  };
   const onCode = async (code) => {
     try {
       const r = await rpc('wms_lookup', { p_code: code, p_org: b.org_id });
@@ -71,10 +89,11 @@ async function receive(id, current) {
   shell(b.ref, receiveList,
     el('p', { class: 'muted', text: orgName(b.org_id) + (b.tracking ? ' · ' + b.tracking : '') }),
     current ? el('div', { class: 'card' }, el('b', { text: current.sku }), el('div', { text: current.name }), el('div', { class: 'row2' }, el('span', { text: 'Quantity' }), qty),
+      el('label', { class: 'photo' }, el('small', { class: 'muted', text: 'Photos if damaged (optional)' }), photos),
       el('div', { class: 'row2' }, el('button', { class: 'btn big', text: 'Good', onclick: () => post(current, 'good') }), el('button', { class: 'btn big warn', text: 'Damaged', onclick: () => post(current, 'damaged') })),
       el('button', { class: 'btn ghost', text: 'Scan something else', onclick: () => receive(id) })) : scanInput(onCode, 'Scan a product'),
     el('div', { class: 'list' }, (ln.data || []).map((l) => { const g = got(l.product_id, 'good'); return el('div', { class: 'row static' + (g >= l.expected_qty ? ' done' : '') }, el('b', { text: l.products.sku }), el('span', { text: l.products.name }), el('small', { text: `${g} / ${l.expected_qty} good` + (got(l.product_id, 'damaged') ? ` · ${got(l.product_id, 'damaged')} damaged` : '') })); })),
-    el('button', { class: 'btn ghost', text: 'Finish delivery', onclick: async () => { if (!confirm('Finish receiving? Differences become discrepancies and this cannot be undone.')) return; try { const r = await rpc('receive_close', { p_booking: id }); say(r.discrepancies ? r.discrepancies + ' differences recorded' : 'Delivery complete', !!r.discrepancies); receiveList(); } catch (e) { say(e.message, true); } } }));
+    el('button', { class: 'btn ghost', text: 'Finish delivery', onclick: async () => { if (!confirm('Finish receiving? Differences become discrepancies and this cannot be undone.')) return; try { const r = await rpc('receive_close', { p_booking: id }); let told = ''; if (r.discrepancies) told = await notify(id); say(r.discrepancies ? r.discrepancies + ' differences recorded' + told : 'Delivery complete', !!r.discrepancies); receiveList(); } catch (e) { say(e.message, true); } } }));
 }
 
 // ---------- put away ----------

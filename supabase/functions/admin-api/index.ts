@@ -161,6 +161,39 @@ const actions: Record<string, { roles?: StaffRole[]; run: (s: StaffCtx, b: Recor
     return { outcome: reg.outcome, message: reg.message };
   } },
 
+  // ---------- receiving: announce differences once ----------
+  // Called after "close receiving". Claims the not-yet-announced discrepancies of a delivery (so a retry never emails twice), then emails the
+  // customer's owner and our team inbox, with 7-day links to any photos of damaged goods.
+  'discrepancy.notify': { roles: ['admin', 'warehouse'], run: async (s, b) => {
+    const id = b.booking_id; if (!isUuid(id)) throw new Bad('Invalid delivery');
+    const { data: bk } = await admin.from('inbound_bookings').select('id, org_id, ref').eq('id', id).maybeSingle();
+    if (!bk) throw new Bad('Delivery not found', 404);
+    const { data: claimed } = await admin.from('discrepancies').update({ notified_at: new Date().toISOString() }).eq('booking_id', id).is('notified_at', null)
+      .select('id, kind, expected_qty, received_qty, product_id, products(sku, name)');
+    if (!claimed?.length) return { notified: 0 };
+    const { data: rl } = await admin.from('receipt_lines').select('product_id, photo_paths').eq('booking_id', id);
+    const paths = (rl ?? []).flatMap((r) => (r.photo_paths as string[] | null) ?? []);
+    const urlFor = new Map<string, string>();
+    if (paths.length) { const { data: signed } = await admin.storage.from('receiving').createSignedUrls(paths, 60 * 60 * 24 * 7); for (const x of signed ?? []) if (x.signedUrl && x.path) urlFor.set(x.path, x.signedUrl); }
+    const photosOf = (pid: string) => (rl ?? []).filter((r) => r.product_id === pid).flatMap((r) => (r.photo_paths as string[] | null) ?? []).map((p) => urlFor.get(p)).filter(Boolean) as string[];
+    const WHY: Record<string, string> = { short: 'fewer arrived than booked', over: 'more arrived than booked', damaged: 'arrived damaged', unexpected: 'was not on the booking' };
+    type D = { kind: string; expected_qty: number; received_qty: number; product_id: string; products: { sku: string; name: string } | { sku: string; name: string }[] | null };
+    const item = (d: D) => {
+      const pr = Array.isArray(d.products) ? d.products[0] : d.products;
+      const counts = d.kind === 'short' || d.kind === 'over' ? ` (booked ${d.expected_qty}, received ${d.received_qty})` : d.received_qty ? ` (${d.received_qty} units)` : '';
+      const ph = d.kind === 'damaged' ? photosOf(d.product_id) : [];
+      return `<li><b>${esc(pr?.sku ?? '')}</b> ${esc(pr?.name ?? '')}: ${WHY[d.kind] ?? esc(d.kind)}${counts}${ph.length ? '<br>' + ph.map((u, i) => `<a href="${esc(u)}">Photo ${i + 1}</a>`).join(' · ') : ''}</li>`;
+    };
+    const list = `<ul>${(claimed as D[]).map(item).join('')}</ul>`;
+    const owner = await ownerOf(bk.org_id);
+    if (owner?.email) await sendEmail({ to: owner.email, subject: `Delivery ${bk.ref}: we found differences`,
+      html: layout('We found differences in your delivery', `<p>We received delivery <b>${esc(bk.ref)}</b> and found the following:</p>${list}<p>We will contact you about what to do next. You can also see this in your dashboard under Inbound.</p>`) });
+    await sendEmail({ to: TEAM_INBOX, subject: `Discrepancies on ${bk.ref} (${claimed.length})`,
+      html: layout('Discrepancies opened', `<p>Delivery <b>${esc(bk.ref)}</b> was closed with differences:</p>${list}<p><a href="${SITE}/admin#discrepancies">Open the discrepancies list</a></p>`) });
+    await audit(s, 'discrepancy.notify', 'inbound_bookings', id, bk.org_id, null, { count: claimed.length });
+    return { notified: claimed.length };
+  } },
+
   // ---------- requests inbox ----------
   'request.update': { roles: ['admin', 'support'], run: async (s, b) => {
     const id = b.request_id; if (!isUuid(id)) throw new Bad('Invalid request');

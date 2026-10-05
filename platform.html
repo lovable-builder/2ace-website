@@ -465,13 +465,16 @@
                     <span style="color: rgba(11,12,14,0.68); line-height: 1.5;">{{ t.v }}</span>
                   </div>
                 </sc-for>
-                <button onClick="{{ openTerms }}" style="align-self: flex-start; cursor: pointer; border: 0; background: transparent; padding: 14px 0 0; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #A8701A;">Read the full agreement (PDF) →</button>
+                <button onClick="{{ openTerms }}" style="align-self: flex-start; cursor: pointer; border: 0; background: transparent; padding: 14px 0 0; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #A8701A;">Read the full terms →</button>
               </div>
               <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px; display: flex; flex-direction: column; gap: 14px;">
                 <button onClick="{{ toggleAccept }}" style="cursor: pointer; display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 12px; align-items: start; text-align: left; border: 0; background: transparent; padding: 0; color: #0B0C0E; font-size: 15px; line-height: 1.5;">
                   <span style="display: grid; place-items: center; width: 22px; height: 22px; border-radius: 3px; border: 1.5px solid {{ acceptBd }}; background: {{ acceptBg }}; font-size: 14px; font-weight: 700;">{{ acceptTick }}</span>
                   <span>I accept the 2ACE service agreement and confirm I can sign for {{ companyName }}.</span>
                 </button>
+                <sc-if value="{{ signDomain }}" hint-placeholder-val="{{ false }}">
+                  <p style="margin: 0; font-size: 13px; line-height: 1.5; color: rgba(11,12,14,0.7);">Your .pl store domain is registered through Hostinger, in your company's name. By signing you also accept <a href="https://www.hostinger.com/legal/domain-name-registration-agreement" target="_blank" rel="noopener" style="color: #A8701A;">Hostinger's Domain Name Registration Agreement</a>.</p>
+                </sc-if>
                 <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.55);">Type your full name to sign
                   <input type="text" value="{{ signName }}" onChange="{{ onSignName }}" placeholder="First and last name" style="padding: 12px; border-radius: 3px; font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; letter-spacing: 0; text-transform: none; background: #F5F4F1; color: #0B0C0E; min-width: 0; border: 1px solid {{ signBd }};" />
                 </label>
@@ -673,6 +676,21 @@
               <button onClick="{{ pdToggle }}" style="cursor: pointer; min-height: 46px; padding: 13px 20px; border: 0; border-radius: 3px; background: #E39A2B; color: #0B0C0E; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;">{{ pdBtnLabel }}</button>
             </div>
             <sc-if value="{{ whNoteShow }}" hint-placeholder-val="{{ false }}"><div role="status" onClick="{{ whNoteClear }}" style="padding: 14px 18px; background: #0B0C0E; color: #F5F4F1; border-radius: 4px; font-size: 15px; cursor: pointer;">{{ whNoteText }}</div></sc-if>
+            <sc-if value="{{ pdEditForm }}" hint-placeholder-val="{{ false }}">
+              <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+                <span style="font-family: Archivo, sans-serif; font-weight: 800; font-size: 20px;">Edit {{ pdEditSku }}</span>
+                <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.6);">Product name<input type="text" value="{{ pdEditName }}" onChange="{{ onPdEditName }}" maxlength="200" style="padding: 12px; border-radius: 3px; border: 1px solid rgba(11,12,14,0.25); background: #FFFFFF; font-family: 'IBM Plex Sans', sans-serif; font-size: 16px; min-width: 0;" /></label>
+                <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.6);">Add another barcode, optional<input type="text" value="{{ pdEditEan }}" onChange="{{ onPdEditEan }}" maxlength="40" placeholder="5901234123457" style="padding: 12px; border-radius: 3px; border: 1px solid rgba(11,12,14,0.25); background: #FFFFFF; font-family: 'IBM Plex Sans', sans-serif; font-size: 16px; min-width: 0;" /></label>
+                <sc-if value="{{ pdErrShow2 }}" hint-placeholder-val="{{ false }}"><p style="margin: 0; font-size: 14px; color: #B4442E;">{{ pdErrText2 }}</p></sc-if>
+                <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                  <button onClick="{{ pdEditSaveGo }}" style="cursor: pointer; min-height: 46px; padding: 13px 20px; border: 0; border-radius: 3px; background: #E39A2B; color: #0B0C0E; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;">{{ pdBusyLabel }}</button>
+                  <button onClick="{{ pdEditCancel }}" style="cursor: pointer; min-height: 38px; padding: 8px 14px; border: 1px solid rgba(11,12,14,0.3); border-radius: 3px; background: transparent; color: #0B0C0E; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;">Cancel</button>
+                  <button onClick="{{ pdSwitchGo }}" style="cursor: pointer; min-height: 38px; padding: 8px 14px; border: 1px solid rgba(11,12,14,0.3); border-radius: 3px; background: transparent; color: #0B0C0E; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;">{{ pdSwitchLabel }}</button>
+                  <button onClick="{{ pdDeleteGo }}" style="cursor: pointer; min-height: 38px; padding: 8px 14px; border: 1px solid rgba(11,12,14,0.3); border-radius: 3px; background: transparent; color: #0B0C0E; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: #B4442E; border-color: #B4442E;">Delete</button>
+                </div>
+                <p style="margin: 0; font-size: 13px; color: rgba(11,12,14,0.6);">A product that was already on a delivery or in stock cannot be deleted. Switch it off instead and it is kept in your history.</p>
+              </div>
+            </sc-if>
             <sc-if value="{{ pdForm }}" hint-placeholder-val="{{ false }}">
               <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px; display: flex; flex-direction: column; gap: 14px;">
                 <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.6);">SKU<input type="text" value="{{ pdSku }}" onChange="{{ onPdSku }}" maxlength="60" placeholder="MUG-BLUE" style="padding: 12px; border-radius: 3px; border: 1px solid rgba(11,12,14,0.25); background: #FFFFFF; font-family: 'IBM Plex Sans', sans-serif; font-size: 16px; min-width: 0;" /></label>
@@ -695,7 +713,7 @@
                 <sc-for list="{{ pdRows }}" as="p" hint-placeholder-count="3">
                   <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 16px; padding: 12px 0; border-top: 1px solid rgba(11,12,14,0.08); font-size: 15px;">
                     <span><strong>{{ p.sku }}</strong>{{ p.off }}<br><span style="color: rgba(11,12,14,0.65); font-size: 13px;">{{ p.name }}</span></span>
-                    <span style="text-align: right; font-size: 13px; color: rgba(11,12,14,0.65);">{{ p.code }}<br><span style="font-family: 'IBM Plex Mono', monospace; color: #0B0C0E; font-size: 14px;">{{ p.onHand }} in stock</span></span>
+                    <span style="text-align: right; font-size: 13px; color: rgba(11,12,14,0.65);">{{ p.code }}<br><span style="font-family: 'IBM Plex Mono', monospace; color: #0B0C0E; font-size: 14px;">{{ p.onHand }} in stock</span><br><button onClick="{{ p.onEdit }}" style="cursor: pointer; min-height: 38px; padding: 8px 14px; border: 1px solid rgba(11,12,14,0.3); border-radius: 3px; background: transparent; color: #0B0C0E; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; margin-top: 6px;">Edit</button></span>
                   </div>
                 </sc-for>
               </div>
@@ -713,6 +731,7 @@
             <sc-if value="{{ inNotActive }}" hint-placeholder-val="{{ false }}"><p style="margin: 0; font-size: 14px; color: rgba(11,12,14,0.65);">You can book deliveries once your plan is active.</p></sc-if>
             <sc-if value="{{ inForm }}" hint-placeholder-val="{{ false }}">
               <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+                <span style="font-family: Archivo, sans-serif; font-weight: 800; font-size: 20px;">{{ inFormTitle }}</span>
                 <sc-if value="{{ inNeedProducts }}" hint-placeholder-val="{{ false }}"><p style="margin: 0; font-size: 15px; color: #B4442E;">Add your products first (Products tab), then book a delivery.</p></sc-if>
                 <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.6);">Expected arrival date<input type="date" value="{{ inDate }}" onChange="{{ onInDate }}" style="padding: 12px; border-radius: 3px; border: 1px solid rgba(11,12,14,0.25); background: #FFFFFF; font-family: 'IBM Plex Sans', sans-serif; font-size: 16px; min-width: 0;" /></label>
                 <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.6);">Carrier<input type="text" value="{{ inCarrier }}" onChange="{{ onInCarrier }}" maxlength="80" placeholder="DHL, DSV, a freight forwarder…" style="padding: 12px; border-radius: 3px; border: 1px solid rgba(11,12,14,0.25); background: #FFFFFF; font-family: 'IBM Plex Sans', sans-serif; font-size: 16px; min-width: 0;" /></label>
@@ -750,6 +769,12 @@
                     <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px;"><strong style="font-family: 'IBM Plex Mono', monospace;">{{ b.ref }}</strong><span>{{ b.status }}</span></div>
                     <span style="color: rgba(11,12,14,0.65); font-size: 14px;">{{ b.when }} · {{ b.units }} {{ b.info }}</span>
                     <span style="color: rgba(11,12,14,0.65); font-size: 13px;">{{ b.items }}</span>
+                    <span style="display: {{ b.issuesDisplay }}; font-size: 14px; color: #B4442E;">Differences found: {{ b.issues }}</span>
+                    <span style="font-size: 13px;"><a href="{{ b.ph1 }}" target="_blank" rel="noopener" style="display: {{ b.ph1d }}; margin-right: 10px;">Photo 1</a><a href="{{ b.ph2 }}" target="_blank" rel="noopener" style="display: {{ b.ph2d }}; margin-right: 10px;">Photo 2</a><a href="{{ b.ph3 }}" target="_blank" rel="noopener" style="display: {{ b.ph3d }}; margin-right: 10px;">Photo 3</a><a href="{{ b.ph4 }}" target="_blank" rel="noopener" style="display: {{ b.ph4d }}; margin-right: 10px;">Photo 4</a></span>
+                    <div style="display: flex; gap: 8px; margin-top: 6px;">
+                      <button onClick="{{ b.onEdit }}" style="cursor: pointer; min-height: 38px; padding: 8px 14px; border: 1px solid rgba(11,12,14,0.3); border-radius: 3px; background: transparent; color: #0B0C0E; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; display: {{ b.canEditDisplay }};">Edit</button>
+                      <button onClick="{{ b.onDelete }}" style="cursor: pointer; min-height: 38px; padding: 8px 14px; border: 1px solid rgba(11,12,14,0.3); border-radius: 3px; background: transparent; color: #0B0C0E; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; display: {{ b.canDeleteDisplay }}; color: #B4442E; border-color: #B4442E;">Delete</button>
+                    </div>
                   </div>
                 </sc-for>
               </div>
@@ -799,6 +824,11 @@
                     <button onClick="{{ a.onClick }}" style="cursor: pointer; min-height: 40px; padding: 8px 14px; border-radius: 20px; border: 1px solid rgba(11,12,14,0.25); background: #FFFFFF; font-size: 14px;">{{ a.label }}</button>
                   </sc-for>
                 </div>
+                <button onClick="{{ toggleDmAccept }}" style="cursor: pointer; display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 12px; align-items: start; text-align: left; border: 0; background: transparent; padding: 0; color: #0B0C0E; font-size: 14px; line-height: 1.5;">
+                  <span style="display: grid; place-items: center; width: 22px; height: 22px; border-radius: 3px; border: 1.5px solid #0B0C0E; background: {{ dmAcceptBg }}; font-size: 14px; font-weight: 700;">{{ dmAcceptTick }}</span>
+                  <span>Your domain is registered through Hostinger, in your company's name. I accept Hostinger's Domain Name Registration Agreement.</span>
+                </button>
+                <a href="https://www.hostinger.com/legal/domain-name-registration-agreement" target="_blank" rel="noopener" style="align-self: flex-start; font-size: 13px; color: #A8701A;">Read Hostinger's agreement →</a>
                 <button onClick="{{ dmGo }}" style="cursor: pointer; align-self: flex-start; min-height: 48px; padding: 14px 22px; border: 0; border-radius: 3px; background: #E39A2B; color: #0B0C0E; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; opacity: {{ dmGoOpacity }};">{{ dmGoLabel }}</button>
               </div>
             </sc-if>
@@ -850,10 +880,10 @@
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900}}">
 class Component extends DCLogic {
   state = {
-    orgId: '', whLoaded: false, whErr: '', whInv: [], whCodes: {}, whBook: [], pdOpen: false, pdSku: '', pdName: '', pdEan: '', pdBusy: false, pdErr: '', inOpen: false, inDate: '', inCarrier: '', inTracking: '', inLines: [], inPick: '', inQty: '1', inBusy: false, inErr: '', whNote: '',
+    orgId: '', whLoaded: false, whErr: '', whInv: [], whCodes: {}, whBook: [], whIssues: {}, whPhotos: {}, pdOpen: false, pdSku: '', pdName: '', pdEan: '', pdBusy: false, pdErr: '', pdEditId: '', pdEditName: '', pdEditEan: '', pdEditActive: true, inEditId: '', inNotes: '', inOpen: false, inDate: '', inCarrier: '', inTracking: '', inLines: [], inPick: '', inQty: '1', inBusy: false, inErr: '', whNote: '',
     contactOpen: false, contactSubject: 'other', contactMsg: '', contactBusy: false, contactDone: false, contactErr: '',
     logoUrl: '', orgName: '', domainName: '', curPlan: null, hasDomain: false,
-    view: 'build', step: 0, userEmail: '', menuOpen: false, userName: '', payErr: '', changeMode: false, chPrev: null, chBusy: false, chErr: '', chDone: '', domainOffer: false, dmInfo: null, dmErr: '', dmName: '', dmStatus: null, dmAlts: [], dmNote: '', dmBusy: false, domainAlts: [], mkCat: 'home', payNotice: '', payBanner: '',
+    view: 'build', step: 0, userEmail: '', menuOpen: false, userName: '', payErr: '', changeMode: false, chPrev: null, chBusy: false, chErr: '', chDone: '', domainOffer: false, dmInfo: null, dmErr: '', dmAccept: false, dmName: '', dmStatus: null, dmAlts: [], dmNote: '', dmBusy: false, domainAlts: [], mkCat: 'home', payNotice: '', payBanner: '',
     storageType: 'pallet', qty: 12, estUnits: 6000, estSize: 'medium',
     pkgs: { ful: false, ret: false, imp: false }, orders: 1500,
     storeOn: false, domain: '', domainStatus: null, theme: 'mono',
@@ -1039,13 +1069,27 @@ class Component extends DCLogic {
   async whLoad() {
     if (!this.state.orgId || !this.authSession()) return;
     try {
-      const [inv, codes, book] = await Promise.all([
+      const [inv, codes, book, dis, dmg] = await Promise.all([
         this.whGet('v_inventory_by_product?select=product_id,sku,name,active,on_hand,available,unplaced,quarantined,incoming&order=sku'),
         this.whGet('product_barcodes?select=product_id,barcode'),
-        this.whGet('inbound_bookings?select=id,ref,status,expected_date,carrier,tracking,created_at,inbound_lines(expected_qty,products(sku,name))&order=created_at.desc&limit=50')
+        this.whGet('inbound_bookings?select=id,ref,status,expected_date,carrier,tracking,notes,created_at,inbound_lines(product_id,expected_qty,products(sku,name))&order=created_at.desc&limit=50'),
+        this.whGet('discrepancies?select=booking_id,kind,expected_qty,received_qty,products(sku)&order=created_at'),
+        this.whGet('receipt_lines?select=booking_id,photo_paths&condition=eq.damaged')
       ]);
       const map = {}; codes.forEach((c) => { (map[c.product_id] = map[c.product_id] || []).push(c.barcode); });
-      this.setState({ whLoaded: true, whErr: '', whInv: inv, whCodes: map, whBook: book });
+      const WHY = { short: (d) => d.received_qty + ' of ' + d.expected_qty + ' arrived', over: (d) => d.received_qty + ' arrived, ' + d.expected_qty + ' booked', damaged: (d) => d.received_qty + ' damaged', unexpected: (d) => d.received_qty + ' not on the booking' };
+      const issues = {}; dis.forEach((d) => { (issues[d.booking_id] = issues[d.booking_id] || []).push(((d.products && d.products.sku) || '') + ': ' + (WHY[d.kind] ? WHY[d.kind](d) : d.kind)); });
+      const paths = []; const byBooking = {}; dmg.forEach((r) => (r.photo_paths || []).forEach((pth) => { paths.push(pth); (byBooking[r.booking_id] = byBooking[r.booking_id] || []).push(pth); }));
+      const urls = {};
+      if (paths.length) {
+        try {
+          const H = this.authHeaders();
+          const r = await fetch(this.API + '/storage/v1/object/sign/receiving', { method: 'POST', headers: H, body: JSON.stringify({ expiresIn: 3600, paths }) });
+          if (r.ok) (await r.json()).forEach((x) => { if (x.signedURL && x.path) urls[x.path] = this.API + '/storage/v1' + x.signedURL; });
+        } catch (e) { /* photos are optional */ }
+      }
+      const photos = {}; Object.keys(byBooking).forEach((k) => { photos[k] = byBooking[k].map((pth) => urls[pth]).filter(Boolean); });
+      this.setState({ whLoaded: true, whErr: '', whInv: inv, whCodes: map, whBook: book, whIssues: issues, whPhotos: photos });
     } catch (e) { this.setState({ whLoaded: true, whErr: String(e.message || e) }); }
   }
   async pdSubmit() {
@@ -1069,9 +1113,43 @@ class Component extends DCLogic {
     if (!s.inLines.length) return this.setState({ inErr: 'Add at least one product to the delivery.' });
     this.setState({ inBusy: true, inErr: '' });
     try {
-      await this.whRpc('book_inbound', { p_org: s.orgId, p_carrier: s.inCarrier || null, p_tracking: s.inTracking || null, p_expected: s.inDate || null, p_notes: null, p_lines: s.inLines.map((l) => ({ product_id: l.pid, qty: l.qty })) });
-      this.setState({ inBusy: false, inOpen: false, inLines: [], inDate: '', inCarrier: '', inTracking: '', whNote: 'Delivery booked. We will receive it when it arrives.' }); this.whLoad();
+      const lines = s.inLines.map((l) => ({ product_id: l.pid, qty: l.qty }));
+      if (s.inEditId) await this.whRpc('update_inbound', { p_id: s.inEditId, p_carrier: s.inCarrier || null, p_tracking: s.inTracking || null, p_expected: s.inDate || null, p_notes: s.inNotes || null, p_lines: lines });
+      else await this.whRpc('book_inbound', { p_org: s.orgId, p_carrier: s.inCarrier || null, p_tracking: s.inTracking || null, p_expected: s.inDate || null, p_notes: null, p_lines: lines });
+      this.setState({ inBusy: false, inOpen: false, inEditId: '', inLines: [], inDate: '', inCarrier: '', inTracking: '', inNotes: '', whNote: s.inEditId ? 'Delivery updated.' : 'Delivery booked. We will receive it when it arrives.' }); this.whLoad();
     } catch (e) { this.setState({ inBusy: false, inErr: String(e.message || e) }); }
+  }
+  async pdEditSave() {
+    const s = this.state; if (s.pdBusy) return;
+    if (!s.pdEditName.trim()) return this.setState({ pdErr: 'The name cannot be empty.' });
+    this.setState({ pdBusy: true, pdErr: '' });
+    try {
+      await this.whRpc('update_product', { p_id: s.pdEditId, p_patch: { name: s.pdEditName } });
+      if (s.pdEditEan.trim()) await this.whRpc('add_product_barcode', { p_product: s.pdEditId, p_barcode: s.pdEditEan.trim() });
+      this.setState({ pdBusy: false, pdEditId: '', whNote: 'Product updated.' }); this.whLoad();
+    } catch (e) { this.setState({ pdBusy: false, pdErr: String(e.message || e) }); }
+  }
+  async pdSwitch() {
+    const s = this.state; if (s.pdBusy) return;
+    this.setState({ pdBusy: true, pdErr: '' });
+    try { await this.whRpc('update_product', { p_id: s.pdEditId, p_patch: { active: !s.pdEditActive } }); this.setState({ pdBusy: false, pdEditId: '', whNote: s.pdEditActive ? 'Product switched off. It is kept in your history.' : 'Product switched on.' }); this.whLoad(); }
+    catch (e) { this.setState({ pdBusy: false, pdErr: String(e.message || e) }); }
+  }
+  async pdDelete() {
+    const s = this.state; if (s.pdBusy) return;
+    if (!window.confirm('Delete this product? This cannot be undone.')) return;
+    this.setState({ pdBusy: true, pdErr: '' });
+    try { await this.whRpc('delete_product', { p_id: s.pdEditId }); this.setState({ pdBusy: false, pdEditId: '', whNote: 'Product deleted.' }); this.whLoad(); }
+    catch (e) { this.setState({ pdBusy: false, pdErr: String(e.message || e) }); }
+  }
+  inEdit(b) {
+    this.setState({ inOpen: true, inEditId: b.id, inDate: b.expected_date || '', inCarrier: b.carrier || '', inTracking: b.tracking || '', inNotes: b.notes || '', inLines: (b.inbound_lines || []).map((l) => ({ pid: l.product_id, qty: l.expected_qty })), inPick: '', inQty: '1', inErr: '', whNote: '' });
+    window.scrollTo(0, 0);
+  }
+  async inDelete(b) {
+    if (!window.confirm('Delete delivery ' + b.ref + '? This cannot be undone.')) return;
+    try { await this.whRpc('delete_inbound', { p_id: b.id }); this.setState({ whNote: 'Delivery deleted.', inOpen: false, inEditId: '' }); this.whLoad(); }
+    catch (e) { this.setState({ whNote: '', whErr: String(e.message || e) }); }
   }
   async dmLoad() {
     this.setState({ dmInfo: null, dmErr: '' });
@@ -1097,9 +1175,10 @@ class Component extends DCLogic {
     const s = this.state;
     if (s.dmBusy) return;
     if (s.dmStatus !== 'free') { this.setState({ dmStatus: s.dmName.length < 2 ? 'empty' : 'unchecked' }); return; }
+    if (!s.dmAccept) { this.setState({ dmStatus: 'accept' }); return; }
     this.setState({ dmBusy: true });
     try {
-      const out = await this.dmCall({ name: s.dmName });
+      const out = await this.dmCall({ name: s.dmName, accept: true });
       if (out.url) { window.location.href = out.url; return; }
       this.setState({ dmBusy: false, dmName: '', dmStatus: null, dmNote: 'Request sent. We register ' + s.dmName + '.pl for you and email you within one working day.', domainOffer: false });
       this.dmLoad();
@@ -1421,18 +1500,20 @@ class Component extends DCLogic {
       invGo: () => (s.whInv.length ? tabSet('inbound')() : tabSet('products')()), invGoLabel: s.whInv.length ? 'Book a delivery' : 'Add products',
       invRows: s.whInv.filter((p) => p.on_hand > 0 || p.incoming > 0).map((p) => ({ sku: p.sku, name: p.name, onHand: String(p.on_hand), available: String(p.available), awaiting: String(p.unplaced + p.quarantined), incoming: String(p.incoming) })),
       pdHas: s.whInv.length > 0, pdEmpty: s.whLoaded && !s.whErr && s.whInv.length === 0,
-      pdRows: s.whInv.map((p) => ({ sku: p.sku, name: p.name, code: (s.whCodes[p.product_id] || []).join(', ') || 'No barcode', onHand: String(p.on_hand), off: p.active ? '' : ' (switched off)' })),
+      pdRows: s.whInv.map((p) => ({ sku: p.sku, name: p.name, code: (s.whCodes[p.product_id] || []).join(', ') || 'No barcode', onHand: String(p.on_hand), off: p.active ? '' : ' (switched off)', onEdit: () => { this.setState({ pdEditId: p.product_id, pdEditName: p.name, pdEditEan: '', pdEditActive: p.active, pdOpen: false, pdErr: '', whNote: '' }); window.scrollTo(0, 0); } })),
+      pdEditForm: !!s.pdEditId, pdEditSku: (s.whInv.find((p) => p.product_id === s.pdEditId) || {}).sku || '', pdEditName: s.pdEditName, onPdEditName: (e) => this.setState({ pdEditName: e.target.value, pdErr: '' }), pdEditEan: s.pdEditEan, onPdEditEan: (e) => this.setState({ pdEditEan: e.target.value, pdErr: '' }),
+      pdEditSaveGo: () => this.pdEditSave(), pdEditCancel: () => this.setState({ pdEditId: '', pdErr: '' }), pdSwitchGo: () => this.pdSwitch(), pdSwitchLabel: s.pdEditActive ? 'Switch off' : 'Switch on', pdDeleteGo: () => this.pdDelete(), pdBusyLabel: s.pdBusy ? 'Working…' : 'Save changes', pdErrShow2: !!s.pdErr && !!s.pdEditId, pdErrText2: s.pdErr,
       pdToggle: () => this.setState({ pdOpen: !s.pdOpen, pdErr: '' }), pdForm: s.pdOpen, pdBtnLabel: s.pdOpen ? 'Cancel' : 'Add a product',
       pdSku: s.pdSku, onPdSku: (e) => this.setState({ pdSku: e.target.value, pdErr: '' }), pdName: s.pdName, onPdName: (e) => this.setState({ pdName: e.target.value, pdErr: '' }),
-      pdEan: s.pdEan, onPdEan: (e) => this.setState({ pdEan: e.target.value, pdErr: '' }), pdErrShow: !!s.pdErr, pdErrText: s.pdErr, pdSave: () => this.pdSubmit(), pdSaveLabel: s.pdBusy ? 'Saving…' : 'Save product',
-      inToggle: () => this.setState({ inOpen: !s.inOpen, inErr: '' }), inForm: s.inOpen, inBtnLabel: s.inOpen ? 'Cancel' : 'Book a delivery',
+      pdEan: s.pdEan, onPdEan: (e) => this.setState({ pdEan: e.target.value, pdErr: '' }), pdErrText: s.pdErr, pdErrShow: !!s.pdErr && !s.pdEditId, pdSave: () => this.pdSubmit(), pdSaveLabel: s.pdBusy ? 'Saving…' : 'Save product',
+      inToggle: () => this.setState(s.inOpen ? { inOpen: false, inEditId: '', inLines: [], inErr: '', inDate: '', inCarrier: '', inTracking: '', inNotes: '' } : { inOpen: true, inErr: '' }), inForm: s.inOpen, inBtnLabel: s.inOpen ? 'Cancel' : 'Book a delivery', inFormTitle: s.inEditId ? 'Edit delivery' : 'New delivery',
       inNeedProducts: s.inOpen && s.whInv.filter((p) => p.active).length === 0, inNotActive: !!s.userEmail && !s.activated,
       inDate: s.inDate, onInDate: (e) => this.setState({ inDate: e.target.value }), inCarrier: s.inCarrier, onInCarrier: (e) => this.setState({ inCarrier: e.target.value }), inTracking: s.inTracking, onInTracking: (e) => this.setState({ inTracking: e.target.value }),
       inPickOpts: [{ v: '', label: 'Choose a product' }].concat(s.whInv.filter((p) => p.active).map((p) => ({ v: p.product_id, label: p.sku + ' - ' + p.name }))), inPick: s.inPick, onInPick: (e) => this.setState({ inPick: e.target.value, inErr: '' }),
       inQty: s.inQty, onInQty: (e) => this.setState({ inQty: e.target.value, inErr: '' }), inAdd: () => this.inAddLine(),
       inLineRows: s.inLines.map((l, i) => { const p = s.whInv.find((x) => x.product_id === l.pid) || {}; return { label: (p.sku || '') + ' - ' + (p.name || ''), qty: String(l.qty), remove: () => this.setState({ inLines: s.inLines.filter((_, j) => j !== i) }) }; }),
-      inHasLines: s.inLines.length > 0, inErrShow: !!s.inErr, inErrText: s.inErr, inSave: () => this.inSubmit(), inSaveLabel: s.inBusy ? 'Booking…' : 'Book delivery',
-      inRows: s.whBook.map((b) => ({ ref: b.ref, status: { booked: 'Booked', receiving: 'Being received', received: 'Received', cancelled: 'Cancelled' }[b.status] || b.status, when: b.expected_date ? new Date(b.expected_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'No date', info: [b.carrier, b.tracking].filter(Boolean).join(' · '), units: String((b.inbound_lines || []).reduce((t, l) => t + l.expected_qty, 0)) + ' units', items: (b.inbound_lines || []).map((l) => l.products.sku + ' × ' + l.expected_qty).join(', ') })),
+      inHasLines: s.inLines.length > 0, inErrShow: !!s.inErr, inErrText: s.inErr, inSave: () => this.inSubmit(), inSaveLabel: s.inBusy ? 'Saving…' : s.inEditId ? 'Save changes' : 'Book delivery',
+      inRows: s.whBook.map((b) => ({ issues: (s.whIssues[b.id] || []).join(' · '), issuesDisplay: (s.whIssues[b.id] || []).length ? 'block' : 'none', ph1: (s.whPhotos[b.id] || [])[0] || '', ph1d: (s.whPhotos[b.id] || [])[0] ? 'inline' : 'none', ph2: (s.whPhotos[b.id] || [])[1] || '', ph2d: (s.whPhotos[b.id] || [])[1] ? 'inline' : 'none', ph3: (s.whPhotos[b.id] || [])[2] || '', ph3d: (s.whPhotos[b.id] || [])[2] ? 'inline' : 'none', ph4: (s.whPhotos[b.id] || [])[3] || '', ph4d: (s.whPhotos[b.id] || [])[3] ? 'inline' : 'none', canEditDisplay: b.status === 'booked' ? 'inline-block' : 'none', canDeleteDisplay: b.status === 'booked' || b.status === 'cancelled' ? 'inline-block' : 'none', onEdit: () => this.inEdit(b), onDelete: () => this.inDelete(b), ref: b.ref, status: { booked: 'Booked', receiving: 'Being received', received: 'Received', cancelled: 'Cancelled' }[b.status] || b.status, when: b.expected_date ? new Date(b.expected_date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'No date', info: [b.carrier, b.tracking].filter(Boolean).join(' · '), units: String((b.inbound_lines || []).reduce((t, l) => t + l.expected_qty, 0)) + ' units', items: (b.inbound_lines || []).map((l) => l.products.sku + ' × ' + l.expected_qty).join(', ') })),
       inHas: s.whBook.length > 0, inEmpty: s.whLoaded && !s.whErr && s.whBook.length === 0,
       domainOffer: s.domainOffer,
       goDomain: () => { this.setState({ tab: 'domain', menuOpen: false }); window.scrollTo(0, 0); this.dmLoad(); },
@@ -1443,11 +1524,11 @@ class Component extends DCLogic {
       dmIntro: !s.dmInfo ? '' : s.dmInfo.eligible ? (s.dmInfo.free ? 'Your plan includes a .pl domain. Pick a name and we register it in your company name.' : 'Get a .pl domain for ' + s.dmInfo.fee + ' zł one-time (excl. VAT), first year included. We register it in your company name.') : s.dmInfo.reason === 'has_domain' ? 'Your domain and its status.' : 'Domains can be added once your plan is active.',
       dmName: s.dmName, onDmName: (e) => this.setState({ dmName: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ''), dmStatus: null, dmAlts: [] }),
       dmCheck: () => this.dmCheck(s.dmName),
-      dmMsg: { null: 'Pick a name, then click Check. We check it against the .pl registry.', checking: 'Checking ' + s.dmName + '.pl…', free: s.dmName + '.pl looks available.', taken: s.dmName + '.pl is already registered.' + (s.dmAlts.length ? ' Try:' : ' Try another name.'), invalid: 'Use 2 to 63 letters, numbers or hyphens, with no hyphen at the start or end.', empty: 'Enter a name first.', unchecked: 'Click Check first to make sure ' + s.dmName + '.pl is available.', unknown: 'We could not reach the registry. Please try again.', limited: 'Too many checks. Please wait a minute.', busy: 'Working on it…', error: s.dmErr || 'Something went wrong.' }[String(s.dmStatus)],
-      dmMsgColor: s.dmStatus === 'free' ? '#2F7D55' : ['taken', 'invalid', 'empty', 'unchecked', 'error'].includes(s.dmStatus) ? '#B4442E' : 'rgba(11,12,14,0.6)',
+      dmMsg: { null: 'Pick a name, then click Check. We check it against the .pl registry.', checking: 'Checking ' + s.dmName + '.pl…', free: s.dmName + '.pl looks available.', taken: s.dmName + '.pl is already registered.' + (s.dmAlts.length ? ' Try:' : ' Try another name.'), invalid: 'Use 2 to 63 letters, numbers or hyphens, with no hyphen at the start or end.', empty: 'Enter a name first.', unchecked: 'Click Check first to make sure ' + s.dmName + '.pl is available.', accept: 'Please tick the box to accept Hostinger\'s agreement.', unknown: 'We could not reach the registry. Please try again.', limited: 'Too many checks. Please wait a minute.', busy: 'Working on it…', error: s.dmErr || 'Something went wrong.' }[String(s.dmStatus)],
+      dmMsgColor: s.dmStatus === 'free' ? '#2F7D55' : ['taken', 'invalid', 'empty', 'unchecked', 'accept', 'error'].includes(s.dmStatus) ? '#B4442E' : 'rgba(11,12,14,0.6)',
       dmAlts: s.dmAlts.map((n) => ({ label: n + '.pl', onClick: () => { this.setState({ dmName: n }); this.dmCheck(n); } })),
-      dmGo: () => this.dmSubmit(),
-      dmGoOpacity: s.dmStatus === 'free' && !s.dmBusy ? '1' : '0.5',
+      dmGo: () => this.dmSubmit(), dmAcceptTick: s.dmAccept ? '✓' : '', dmAcceptBg: s.dmAccept ? '#E39A2B' : 'transparent', toggleDmAccept: () => this.setState({ dmAccept: !s.dmAccept, dmStatus: s.dmStatus === 'accept' ? 'free' : s.dmStatus }),
+      dmGoOpacity: s.dmStatus === 'free' && s.dmAccept && !s.dmBusy ? '1' : '0.5',
       dmGoLabel: s.dmBusy ? 'Please wait…' : s.dmInfo && s.dmInfo.free ? 'Request my included domain' : 'Pay ' + ((s.dmInfo && s.dmInfo.fee) || 99) + ' zł and request',
       navCls: s.menuOpen ? 'dashnav open' : 'dashnav', scrimCls: s.menuOpen ? 'dashscrim open' : 'dashscrim',
       toggleMenu: () => this.setState({ menuOpen: !s.menuOpen }), closeMenu: () => this.setState({ menuOpen: false }),
@@ -1621,8 +1702,9 @@ class Component extends DCLogic {
         { k: 'Insurance', v: 'Goods on our floor insured at declared purchase value.' },
         { k: 'Customs', v: 'We act as your indirect customs representative for imports into Poland.' },
         { k: 'Law', v: 'Polish law. Disputes settled in Warsaw.' }
-      ],
-      openTerms: () => this.showToast('The full agreement PDF opens here.'),
+      ].concat(s.storeOn ? [{ k: 'Domain', v: 'Registered through Hostinger in your company name. You accept its registration agreement.' }] : []),
+      signDomain: !!s.storeOn,
+      openTerms: () => window.open('/terms', '_blank', 'noopener'),
       toggleAccept: () => this.setState({ accept: !s.accept }),
       acceptTick: s.accept ? '✓' : '', acceptBg: s.accept ? '#E39A2B' : 'transparent', acceptBd: t && !s.accept ? '#B4442E' : '#0B0C0E',
       signName: s.signName, onSignName: fld('signName'), signBd: bd(t && s.checkout === 1 && s.signName.trim().length <= 2),

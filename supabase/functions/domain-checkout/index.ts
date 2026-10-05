@@ -10,6 +10,8 @@ const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!);
 const SITE = Deno.env.get('SITE_URL') ?? 'https://2ace.pl';
 const FEE_PLN = 99; // net, excl. VAT; one-time, first year
 const AUTO_TAX = Deno.env.get('STRIPE_AUTOMATIC_TAX') === 'true';
+// See create-checkout: Hostinger needs each customer's acceptance of its Domain Name Registration Agreement, kept 3+ years.
+const DOMAIN_AGREEMENT_VERSION = 'hostinger-domain-registration-2026-10';
 
 async function eligibility(orgId: string) {
   const { data: org } = await admin.from('organizations').select('status').eq('id', orgId).single();
@@ -28,12 +30,13 @@ Deno.serve(async (req) => {
   if (!me) return json(req, { error: 'unauthorized' }, 401);
   if (!me.orgId || !['owner', 'finance'].includes(me.role ?? '')) return json(req, { error: 'Only the account owner or finance role can request a domain' }, 403);
 
-  let b: { action?: string; name?: string };
+  let b: { action?: string; name?: string; accept?: boolean };
   try { b = await req.json(); } catch { return json(req, { error: 'bad json' }, 400); }
   const el = await eligibility(me.orgId);
   if (b.action === 'info') return json(req, el);
   if (!el.eligible) return json(req, { error: el.reason === 'has_domain' ? 'You already have a domain' : 'Your plan is not active yet' }, 409);
 
+  if (b.accept !== true) return json(req, { error: 'Please accept the Hostinger Domain Name Registration Agreement to continue.' }, 400);
   const name = cleanName(b.name);
   if (!validName(name)) return json(req, { error: 'Enter a valid .pl name: letters, numbers and hyphens' }, 400);
   const status = await rdapStatus(name);
@@ -41,6 +44,11 @@ Deno.serve(async (req) => {
   if (status === 'unknown') return json(req, { error: 'We could not reach the registry just now. Please try again in a moment.' }, 503);
 
   const email = me.user.email ?? '';
+  const { data: prof } = await admin.from('profiles').select('full_name').eq('user_id', me.user.id).maybeSingle();
+  await admin.from('agreements').insert({
+    org_id: me.orgId, user_id: me.user.id, signer_name: (prof?.full_name as string | null) || me.orgName || email, version: DOMAIN_AGREEMENT_VERSION,
+    ip: req.headers.get('x-forwarded-for')?.split(',')[0] ?? null,
+  });
   if (el.free) {
     await createDomainOrder({ orgId: me.orgId, planId: el.planId, name, email, sessionId: null });
     return json(req, { ok: true, free: true });

@@ -7,6 +7,9 @@ import { validName, cleanName } from '../_shared/domain.ts';
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!);
 const SITE = Deno.env.get('SITE_URL') ?? 'https://2ace.pl';
 const AGREEMENT_VERSION = '2026-10-v1';
+// Hostinger's Domain Name Registration Agreement: we register the .pl name through Hostinger for the customer, and Hostinger requires
+// each such customer's acceptance, with evidence kept for at least 3 years. One row in `agreements` per acceptance.
+const DOMAIN_AGREEMENT_VERSION = 'hostinger-domain-registration-2026-10';
 // Only enable once the VAT registration exists in Stripe (otherwise no tax is collected).
 const AUTO_TAX = Deno.env.get('STRIPE_AUTOMATIC_TAX') === 'true';
 
@@ -69,6 +72,12 @@ Deno.serve(async (req) => {
     org_id: orgId, user_id: user.id, signer_name: signName, version: AGREEMENT_VERSION,
     ip: req.headers.get('x-forwarded-for')?.split(',')[0] ?? null,
   });
+  if (domain) {   // the signing step tells the customer the domain goes through Hostinger and that signing accepts its agreement
+    await admin.from('agreements').insert({
+      org_id: orgId, user_id: user.id, signer_name: signName, version: DOMAIN_AGREEMENT_VERSION,
+      ip: req.headers.get('x-forwarded-for')?.split(',')[0] ?? null,
+    });
+  }
 
   const line_items: Stripe.Checkout.SessionCreateParams.LineItem[] = [];
   for (const l of priced.lines) {
