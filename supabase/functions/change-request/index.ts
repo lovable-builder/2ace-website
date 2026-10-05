@@ -6,7 +6,7 @@ import { sendEmail, layout, esc } from '../_shared/email.ts';
 // nothing changes until a warehouse or admin user approves it. The database function does the checking, this one carries the
 // customer's own identity to it and tells the team.
 const SITE = Deno.env.get('SITE_URL') ?? 'https://2ace.pl';
-const TEAM_INBOX = Deno.env.get('LEAD_NOTIFY_TO') ?? 'warsaw@2ace.eu';
+const TEAM_INBOX = Deno.env.get('LEAD_NOTIFY_TO') ?? 'hello@2ace.pl';
 const isUuid = (v: unknown): v is string => typeof v === 'string' && /^[0-9a-f-]{36}$/i.test(v);
 
 Deno.serve(async (req) => {

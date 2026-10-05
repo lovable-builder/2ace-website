@@ -377,7 +377,7 @@
         <textarea id="f3" rows="4" placeholder="What you sell, where it comes from and where it sells" style="font-family: 'IBM Plex Sans', sans-serif; font-size: 15px; padding: 15px 16px; background: rgba(245,244,241,0.06); border: 1px solid rgba(245,244,241,0.2); color: #F5F4F1; border-radius: 2px; resize: vertical;"></textarea>
         <input id="fhp" type="text" tabindex="-1" autocomplete="off" aria-hidden="true" style="position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0;" />
         <button id="fbtn" type="submit" style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: #0B0C0E; background: #E39A2B; border: 0; padding: 16px 22px; border-radius: 2px; cursor: pointer; justify-self: start;" style-hover="background: #F0AE47;">Talk to sales</button>
-        <p id="fmsg" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.1em; margin: 0; color: #E39A2B; opacity: 0; transition: opacity 400ms ease;">Sent. We reply from warsaw@2ace.eu within one working day.</p>
+        <p id="fmsg" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.1em; margin: 0; color: #E39A2B; opacity: 0; transition: opacity 400ms ease;">Sent. We reply from hello@2ace.pl within one working day.</p>
       </form>
     </div>
   </section>
@@ -405,7 +405,7 @@
       <p style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; margin: 0; color: rgba(11,12,14,0.55);">Poland · European Union</p>
     </div>
     <div style="max-width: 1240px; margin: 22px auto 0; display: flex; flex-wrap: wrap; gap: 8px 22px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;">
-      <a href="mailto:warsaw@2ace.eu" style="color: rgba(11,12,14,0.7);">warsaw@2ace.eu</a>
+      <a href="mailto:hello@2ace.pl" style="color: rgba(11,12,14,0.7);">hello@2ace.pl</a>
       <a href="/#talk" style="color: rgba(11,12,14,0.7);">Contact</a>
       <a href="/terms" style="color: rgba(11,12,14,0.7);">Terms</a>
       <a href="/privacy" style="color: rgba(11,12,14,0.7);">Privacy</a>
@@ -795,11 +795,11 @@ class Component extends DCLogic {
         });
         if (!res.ok) throw new Error('status ' + res.status);
         if (btn) { btn.textContent = 'Sent'; btn.style.background = 'rgba(245,244,241,0.14)'; btn.style.color = '#F5F4F1'; }
-        show('Sent. We reply from warsaw@2ace.eu within one working day.', true);
+        show('Sent. We reply from hello@2ace.pl within one working day.', true);
       } catch (err) {
         if (btn) btn.textContent = label;
         this.sending = false;
-        show('Could not send. Please try again or email warsaw@2ace.eu.', false);
+        show('Could not send. Please try again or email hello@2ace.pl.', false);
       }
     });
     ['#f1', '#f2', '#f3'].forEach((s) => {

@@ -3,7 +3,7 @@ import { admin, caller } from '../_shared/auth.ts';
 import { sendEmail, layout, esc } from '../_shared/email.ts';
 
 // A logged-in customer sends a request from the dashboard. The topic comes from a fixed list.
-const NOTIFY = Deno.env.get('LEAD_NOTIFY_TO') ?? 'warsaw@2ace.eu';
+const NOTIFY = Deno.env.get('LEAD_NOTIFY_TO') ?? 'hello@2ace.pl';
 const SUBJECTS: Record<string, string> = {
   inbound: 'Book an inbound delivery', products: 'Add my products', imports: 'Import and customs quote',
   team: 'Add team members', domain: 'Domain question', plan: 'Change my plan', billing: 'Billing and invoices', other: 'Something else',

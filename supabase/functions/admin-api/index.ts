@@ -9,7 +9,7 @@ const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!);
 // One endpoint for every staff action. Reads happen in the browser under RLS; everything that CHANGES data goes through here:
 // role-checked, validated, and written to the audit log before we answer.
 const SITE = Deno.env.get('SITE_URL') ?? 'https://2ace.pl';
-const TEAM_INBOX = Deno.env.get('LEAD_NOTIFY_TO') ?? 'warsaw@2ace.eu';
+const TEAM_INBOX = Deno.env.get('LEAD_NOTIFY_TO') ?? 'hello@2ace.pl';
 const ORG_STATUS = ['pending', 'active', 'past_due', 'canceled'];
 const DOMAIN_STATUS = ['pending', 'registered', 'failed', 'cancelled'];
 const REQ_STATUS = ['new', 'open', 'waiting', 'resolved'];

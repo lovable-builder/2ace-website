@@ -857,6 +857,10 @@
     </div>
   </sc-if>
 
+  <div style="padding: 22px clamp(18px, 4vw, 48px) 30px; display: flex; flex-wrap: wrap; gap: 6px 22px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(11,12,14,0.55);">
+    <span>2ACE · Poland</span><a href="/terms" target="_blank" rel="noopener" style="color: rgba(11,12,14,0.7);">Terms</a><a href="/privacy" target="_blank" rel="noopener" style="color: rgba(11,12,14,0.7);">Privacy</a><a href="mailto:hello@2ace.pl" style="color: rgba(11,12,14,0.7);">hello@2ace.pl</a>
+  </div>
+
   <sc-if value="{{ contactOpen }}" hint-placeholder-val="{{ false }}">
     <div style="position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; padding: 16px; background: rgba(11,12,14,0.55);" onClick="{{ contactClose }}">
       <div role="dialog" aria-modal="true" aria-label="Contact us" style="width: 100%; max-width: 560px; max-height: calc(100vh - 32px); overflow-y: auto; background: #F5F4F1; border-radius: 6px; padding: clamp(20px, 3vw, 32px); display: flex; flex-direction: column; gap: 14px; box-shadow: 0 24px 60px rgba(0,0,0,0.35);" onClick="{{ stopClick }}">

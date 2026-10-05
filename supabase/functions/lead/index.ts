@@ -2,7 +2,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 import { corsHeaders, json } from '../_shared/cors.ts';
 import { sendEmail, layout, esc } from '../_shared/email.ts';
 
-const NOTIFY = Deno.env.get('LEAD_NOTIFY_TO') ?? 'warsaw@2ace.eu';
+const NOTIFY = Deno.env.get('LEAD_NOTIFY_TO') ?? 'hello@2ace.pl';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders(req) });

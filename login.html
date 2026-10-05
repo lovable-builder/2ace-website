@@ -38,6 +38,7 @@
   .hidden { display: none; }
   @media (max-width: 480px) { h1 { font-size: 30px; } }
   [hidden] { display: none !important; }
+  .legal { margin: 28px 0 0; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: rgba(11,12,14,.55); display: flex; flex-wrap: wrap; gap: 6px 18px; } .legal a { color: rgba(11,12,14,.7); } .fine { margin: 0; font-size: 13px; line-height: 1.5; color: rgba(11,12,14,.65); } .fine a { color: #A8701A; }
 </style>
 </head>
 <body>
@@ -77,6 +78,7 @@
           <label>City<input id="up-city" type="text" autocomplete="address-level2"></label>
         </div>
       </fieldset>
+      <p class="fine">By creating an account you agree to our <a href="/terms" target="_blank" rel="noopener">terms</a> and acknowledge our <a href="/privacy" target="_blank" rel="noopener">privacy policy</a>.</p>
       <button class="go" type="submit">Create account</button>
     </form>
 
@@ -92,6 +94,7 @@
     </form>
     <p class="msg" id="msg2" role="status" aria-live="polite"></p>
   </section>
+  <p class="legal"><a href="/terms">Terms</a><a href="/privacy">Privacy</a><a href="mailto:hello@2ace.pl">hello@2ace.pl</a></p>
 </main>
 
 <script src="countries.js?v=3"></script>

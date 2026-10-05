@@ -3,7 +3,7 @@ import { validName, rdapStatus } from './domain.ts';
 import { autoRegisterPl, type Reg, type OrgData } from './hostinger.ts';
 import { admin as db } from './auth.ts';
 
-const NOTIFY = Deno.env.get('LEAD_NOTIFY_TO') ?? 'warsaw@2ace.eu';
+const NOTIFY = Deno.env.get('LEAD_NOTIFY_TO') ?? 'hello@2ace.pl';
 
 // One attempt to buy the domain through Hostinger and record the outcome on the order row. Never throws.
 async function attemptAuto(orderId: string, name: string, orgId: string, email: string, org: OrgData): Promise<Reg> {
