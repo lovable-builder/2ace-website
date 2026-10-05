@@ -20,6 +20,10 @@ AddType application/manifest+json .webmanifest
 
 # Our pages and scripts change often: always revalidate so visitors never run a stale copy next to new HTML.
 <IfModule mod_headers.c>
+  # Pictures rarely change: keep them in the browser for 30 days so repeat visits do not download the scroll frames again.
+  <FilesMatch "\.(jpe?g|png|webp|ico|svg)$">
+    Header set Cache-Control "public, max-age=2592000"
+  </FilesMatch>
   <FilesMatch "\.(html|js)$">
     Header set Cache-Control "no-cache"
   </FilesMatch>
