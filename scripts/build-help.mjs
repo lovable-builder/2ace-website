@@ -32,6 +32,7 @@ const pub = head('Help and user guide | 2ACE', 'Step-by-step guide to your 2ACE 
 <div class="wrap">
 <div class="hero"><h1>How to use your 2ACE account, with an example for every step.</h1>
 <p>From creating your account to booking a delivery and reading your stock. The examples follow one made-up company, Acme Home Sp. z o.o., so you can see each step with real numbers. Stuck on something? Write to <a href="mailto:hello@2ace.pl">hello@2ace.pl</a> or call <a href="tel:+48608180946">+48 608 180 946</a>.</p>
+<p style="margin-top:14px"><a href="/assets/2ACE-Customer-Guide.pdf" download style="display:inline-block;background:var(--ink);color:var(--on-ink);padding:11px 18px;border-radius:3px;text-decoration:none;font:500 12px var(--mono);letter-spacing:.1em;text-transform:uppercase">Download as PDF</a></p>
 <div class="cast"><div><b>The customer</b>Acme Home Sp. z o.o., a Warsaw company selling ceramic mugs. Owner: Anna Kowalska.</div><div><b>Their products</b>MUG-BLUE "Blue ceramic mug" and MUG-RED "Red ceramic mug".</div></div></div>
 ${cols('On this page', customer)}
 <div class="legalline"><a href="/terms">Terms</a><a href="/privacy">Privacy</a><a href="/">Home</a><br>${LEGAL}</div>
