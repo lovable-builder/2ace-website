@@ -1478,8 +1478,8 @@ class Component extends DCLogic {
   // Keep progress saved and make the browser Back button walk the wizard instead of leaving the site.
   componentDidUpdate() {
     const s = this.state;
-    if (this.noPersist) return;
-    if (s.view === 'build' || s.view === 'checkout') {
+    // Changing an existing plan must not overwrite the saved new-customer plan, so saving is skipped then. The price preview below must still run.
+    if (!this.noPersist && (s.view === 'build' || s.view === 'checkout')) {
       const snap = JSON.stringify(this.planSnap());
       if (snap !== this.lastSnap) { this.lastSnap = snap; clearTimeout(this.saveT); this.saveT = setTimeout(() => this.savePlan(), 400); }
     }
@@ -1488,6 +1488,7 @@ class Component extends DCLogic {
       if (snap !== this.chSnap) { this.chSnap = snap; if (s.chPrev || s.chErr) { this.setState({ chPrev: null, chErr: '' }); return; } }
       if (s.step === 3 && !s.chPrev && !s.chBusy && !s.chErr) this.chPreview();
     }
+    if (this.noPersist) return;
     const nav = s.view + ':' + s.step + ':' + s.checkout;
     if (nav !== this.lastNav) {
       const first = this.lastNav === undefined;

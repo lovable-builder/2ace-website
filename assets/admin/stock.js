@@ -43,9 +43,13 @@ export async function render(ctx, root, params) {
     const { data: shared } = await ctx.sb.from('locations').select('id, code, kind').in('kind', ['pack', 'returns', 'quarantine']).eq('active', true);
     const dests = [...(asg || []).map((a) => ({ id: a.location_id, code: a.locations.code, kind: a.locations.kind })), ...(shared || [])].filter((d) => d.id !== r.location_id).sort((a, c) => a.code.localeCompare(c.code));
     return modal(`Move ${r.products.sku} from ${r.locations.code}`, (body, done) => {
-      if (!dests.length) { body.append(el('p', { class: 'err', text: 'This customer has no bins assigned yet. Assign one under Locations first.' }), el('button', { class: 'btn ghost', onclick: () => done(null), text: 'Close' })); return; }
-      const to = el('select', {}, dests.map((d) => el('option', { value: d.id, text: d.code + ' (' + d.kind + ')' }))), q = el('input', { type: 'number', min: '1', max: String(r.on_hand - r.reserved), value: String(r.on_hand - r.reserved) }), err = el('p', { class: 'err' });
-      const go = el('button', { class: 'btn', text: 'Move', onclick: () => guarded(go, err, async () => { await rpc(ctx, 'putaway', { p_org: r.org_id, p_product: r.product_id, p_from: r.location_id, p_to: to.value, p_qty: Number(q.value), p_lot: r.lot, p_key: newKey() }); done(true); }) });
+      // The first choice needs no setup: the customer's own bin, created automatically if they have none.
+      const to = el('select', {}, el('option', { value: 'auto', text: "The customer's own bin (automatic)" }), dests.map((d) => el('option', { value: d.id, text: d.code + ' (' + d.kind + ')' }))), q = el('input', { type: 'number', min: '1', max: String(r.on_hand - r.reserved), value: String(r.on_hand - r.reserved) }), err = el('p', { class: 'err' });
+      const go = el('button', { class: 'btn', text: 'Move', onclick: () => guarded(go, err, async () => {
+        const base = { p_org: r.org_id, p_product: r.product_id, p_from: r.location_id, p_qty: Number(q.value), p_lot: r.lot, p_key: newKey() };
+        await (to.value === 'auto' ? rpc(ctx, 'putaway_to_default', base) : rpc(ctx, 'putaway', { ...base, p_to: to.value }));
+        done(true);
+      }) });
       body.append(field('Destination', to), field('Quantity', q), err, el('div', { class: 'row end' }, el('button', { class: 'btn ghost', onclick: () => done(null), text: 'Cancel' }), go));
     }).then((ok) => { if (ok) { toast('Moved'); reload(); } });
   };
@@ -62,7 +66,7 @@ export async function render(ctx, root, params) {
     clear(rows).append(table([
       { label: '', render: (r) => thumb(purls[(r.products.photo_paths || [])[0]]) }, { label: 'Customer', render: (r) => orgName(orgs, r.org_id) }, { label: 'Product', render: (r) => el('a', { href: '#products/' + r.product_id, text: r.products.sku + ' - ' + r.products.name }) },
       { label: 'Location', render: (r) => el('span', {}, el('strong', { text: r.locations.code }), ' ', pill(r.locations.kind)) }, { label: 'On hand', render: (r) => String(r.on_hand) }, { label: 'Reserved', render: (r) => String(r.reserved) },
-      act && { label: '', render: (r) => el('div', { class: 'row' }, el('button', { class: 'btn tiny', text: 'Move', onclick: () => putaway(r) }), el('button', { class: 'btn ghost tiny', text: 'Adjust', onclick: () => adjust(r) })) },
+      act && { label: '', render: (r) => el('div', { class: 'row' }, r.locations.kind === 'receiving' && r.on_hand - r.reserved > 0 && el('button', { class: 'btn tiny', text: 'Store in bin', title: "Moves all of it into the customer's own bin", onclick: async (e) => { const b = e.currentTarget; b.disabled = true; try { const x = await rpc(ctx, 'putaway_to_default', { p_org: r.org_id, p_product: r.product_id, p_from: r.location_id, p_qty: null, p_lot: r.lot, p_key: newKey() }); toast(`Stored ${x.qty} in ${x.location}`); reload(); } catch (err) { toast(err.message, true); b.disabled = false; } } }), el('button', { class: r.locations.kind === 'receiving' ? 'btn ghost tiny' : 'btn tiny', text: 'Move', onclick: () => putaway(r) }), el('button', { class: 'btn ghost tiny', text: 'Adjust', onclick: () => adjust(r) })) },
     ].filter(Boolean), list));
   };
   q.addEventListener('input', draw); cust.addEventListener('change', draw); draw();
