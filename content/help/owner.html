@@ -1,0 +1,32 @@
+<section id="s-ops">
+  <h2>1. Setup and maintenance</h2>
+  <p class="lead">What keeps the platform running. Never paste secret values into chat or code. They live in Supabase and in a private <code>.env</code> file.</p>
+  <h3>Publishing changes</h3>
+  <ul>
+    <li><b>Website and admin pages</b>: pushing to GitHub <code>main</code> deploys to 2ace.pl by itself within about a minute. Hard-refresh (Cmd+Shift+R) to see changes.</li>
+    <li><b>Database</b>: <code>supabase db push --yes</code> applies new migrations. Do this before testing a new feature.</li>
+    <li><b>Server functions</b>: <code>supabase functions deploy &lt;names&gt; --use-api --project-ref &lt;project&gt;</code> publishes changed functions.</li>
+  </ul>
+  <h3>Settings that must exist</h3>
+  <div class="tw"><table>
+    <tr><th>Setting</th><th>What it does</th></tr>
+    <tr><td><code>STRIPE_SECRET_KEY</code>, <code>STRIPE_WEBHOOK_SECRET</code></td><td>Payments, plan changes and the webhook that activates plans.</td></tr>
+    <tr><td><code>RESEND_API_KEY</code>, <code>EMAIL_FROM</code></td><td>Sending emails. The sending domain must be verified in Resend. Suggested sender: <code>2ACE &lt;hello@2ace.pl&gt;</code>.</td></tr>
+    <tr><td><code>LEAD_NOTIFY_TO</code></td><td>The team inbox for contact forms, requests, discrepancies and change requests: <code>hello@2ace.pl</code>.</td></tr>
+    <tr><td><code>SITE_URL</code></td><td>Links inside emails. <code>https://2ace.pl</code>.</td></tr>
+    <tr><td><code>HOSTINGER_API_TOKEN</code>, <code>HOSTINGER_AUTO_REGISTER</code>, <code>HOSTINGER_MAX_FIRST_YEAR_PLN</code>, <code>HOSTINGER_MONTHLY_CAP</code></td><td>Optional automatic domain registration with a price ceiling and monthly limit. Keep it off until you trust the manual queue.</td></tr>
+    <tr><td><code>STRIPE_AUTOMATIC_TAX</code></td><td>Turn on only after your VAT registration exists in Stripe.</td></tr>
+    <tr><td>Supabase Auth: Site URL <code>https://2ace.pl</code>, redirect URLs <code>https://2ace.pl/**</code>, <code>https://www.2ace.pl/**</code></td><td>Where confirmation and password links send people. A wrong value sends them to localhost.</td></tr>
+  </table></div>
+  <h3>When something looks wrong</h3>
+  <div class="tw"><table>
+    <tr><th>Symptom</th><th>Likely cause and fix</th></tr>
+    <tr><td>Confirmation email links open localhost.</td><td>Supabase Auth Site URL is not set to https://2ace.pl.</td></tr>
+    <tr><td>Emails do not arrive.</td><td>Resend key missing, or the sending domain is not verified.</td></tr>
+    <tr><td>Customer paid but plan is not active.</td><td>The Stripe webhook is not reaching the server. Check the webhook endpoint and secret.</td></tr>
+    <tr><td>A plan change shows an "ACTION NEEDED" email.</td><td>Stripe and our plan record disagree. Compare the customer's Plan card with the Stripe subscription, and fix the one that is wrong.</td></tr>
+    <tr><td>Receiving photos or the customer change buttons fail.</td><td>The latest database migration or function deploy has not been run.</td></tr>
+    <tr><td>A staff member cannot see a screen.</td><td>Check their role. Admin and Support also need the two-step code.</td></tr>
+  </table></div>
+  <div class="ex"><b>Example</b><p>You add a new feature with Claude and it asks you to run the database step. You run <code>supabase db push --yes</code>, then deploy the functions it names, then tell it to "commit and push". After about a minute you hard-refresh the admin panel and the new screen is there.</p></div>
+</section>

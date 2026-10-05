@@ -3,6 +3,7 @@ import { admin, staffCaller, audit, userClient, type StaffCtx, type StaffRole } 
 import { sendEmail, layout, esc } from '../_shared/email.ts';
 import { retryAutoRegister } from '../_shared/domainOrder.ts';
 import Stripe from 'npm:stripe';
+import { STAFF_GUIDE, OWNER_GUIDE } from '../_shared/helpContent.ts';
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!);
 
@@ -29,6 +30,15 @@ async function ownerOf(orgId: string) {
 
 const actions: Record<string, { roles?: StaffRole[]; run: (s: StaffCtx, b: Record<string, unknown>) => Promise<unknown> }> = {
   me: { run: async (s) => ({ id: s.user.id, role: s.role, email: s.user.email }) },
+
+  // ---------- help: the staff manual lives here, not in a public file, so only signed-in staff can read it ----------
+  'help.get': { run: async (s, b) => {
+    if (text(b.guide, 10) === 'owner') {
+      if (s.role !== 'admin') throw new Bad('Only admins can read the setup guide', 403);
+      return { html: OWNER_GUIDE };
+    }
+    return { html: STAFF_GUIDE };
+  } },
 
   // ---------- staff management (admin) ----------
   'staff.list': { roles: ['admin'], run: async () => {

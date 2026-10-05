@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>Help and user guide | 2ACE</title><meta name="description" content="Step-by-step guide to your 2ACE account: build a plan, add products, book a delivery, read inventory, change your plan, get a .pl domain and handle invoices. With an example for every step."><link rel="canonical" href="https://2ace.pl/help"><meta property="og:site_name" content="2ACE"><meta property="og:type" content="website"><meta property="og:title" content="Help and user guide | 2ACE"><meta property="og:url" content="https://2ace.pl/help"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100,800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet"><style>/* Layout: a two-guide manual. Header with the audience switch, a sticky contents column, and long-form sections with worked examples. */
+  :root {
+    --bg: #F5F4F1; --surface: #FFFFFF; --fg: #14161A; --muted: #5C6068; --line: rgba(20,22,26,.13);
+    --accent: #B97A12; --accent-soft: rgba(227,154,43,.16); --ink: #0B0C0E; --on-ink: #F5F4F1;
+    --ok: #2F7D55; --ok-soft: rgba(47,125,85,.12); --warn: #8A5A10; --bad: #B3392C; --bad-soft: rgba(179,57,44,.1);
+    --ex-bg: #FBF3E3; --ex-line: #E39A2B;
+    --display: 'Archivo', 'Arial Narrow', Arial, sans-serif; --body: 'IBM Plex Sans', system-ui, sans-serif; --mono: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 84px; }
+  body { margin: 0; padding-inline: 16px; background: var(--bg); color: var(--fg); font: 16px/1.65 var(--body); -webkit-font-smoothing: antialiased; }
+  a { color: var(--accent); }
+  .wrap { max-width: 1180px; margin-inline: auto; }
+
+  header.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; margin-inline: -16px; padding: 12px 16px; background: var(--ink); color: var(--on-ink); display: flex; flex-wrap: wrap; align-items: center; gap: 10px 20px; }
+  .brand { font-family: var(--display); font-variation-settings: 'wdth' 118; font-weight: 800; font-size: 22px; letter-spacing: .02em; }
+  .brand small { font: 500 11px var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--accent); margin-left: 10px; }
+  .switch { display: flex; gap: 4px; margin-left: auto; padding: 3px; border: 1px solid rgba(245,244,241,.25); border-radius: 4px; }
+  .switch a { padding: 8px 14px; border-radius: 3px; color: rgba(245,244,241,.75); text-decoration: none; font: 500 12px var(--mono); letter-spacing: .1em; text-transform: uppercase; }
+  .switch a[aria-current="true"] { background: var(--on-ink); color: var(--ink); }
+
+  .hero { padding-block: 40px 20px; }
+  .hero h1 { font-family: var(--display); font-variation-settings: 'wdth' 108; font-weight: 800; font-size: clamp(34px, 6vw, 60px); line-height: 1; letter-spacing: -.025em; margin: 0 0 14px; text-wrap: balance; }
+  .hero p { max-width: 64ch; color: var(--muted); margin: 0; font-size: 17px; }
+  .cast { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 12px; margin-top: 26px; }
+  .cast div { background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 14px 16px; font-size: 14px; }
+  .cast b { display: block; font: 500 11px var(--mono); letter-spacing: .14em; text-transform: uppercase; color: var(--accent); margin-bottom: 4px; }
+
+  .cols { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 40px; padding-block: 24px 80px; align-items: start; }
+  nav.toc { position: sticky; top: calc(76px + env(safe-area-inset-top, 0px)); max-height: calc(100vh - 100px); overflow-y: auto; font-size: 14px; }
+  nav.toc h2 { font: 500 11px var(--mono); letter-spacing: .16em; text-transform: uppercase; color: var(--muted); margin: 0 0 10px; }
+  nav.toc a { display: block; padding: 6px 10px; border-left: 2px solid var(--line); color: var(--muted); text-decoration: none; }
+  nav.toc a:hover, nav.toc a.on { color: var(--fg); border-left-color: var(--accent); }
+  @media (max-width: 900px) { .cols { grid-template-columns: minmax(0, 1fr); gap: 8px; } nav.toc { position: static; max-height: none; } nav.toc .list { display: none; } nav.toc[data-open="true"] .list { display: block; } .tocbtn { display: inline-block !important; } }
+  .tocbtn { display: none; font: 500 12px var(--mono); letter-spacing: .1em; text-transform: uppercase; background: var(--surface); color: var(--fg); border: 1px solid var(--line); border-radius: 4px; padding: 10px 14px; cursor: pointer; margin-bottom: 8px; }
+
+  article { min-width: 0; }
+  section { padding-block: 8px 28px; border-top: 1px solid var(--line); margin-top: 28px; }
+  section:first-of-type { border-top: 0; margin-top: 0; }
+  h2 { font-family: var(--display); font-variation-settings: 'wdth' 106; font-weight: 800; font-size: clamp(26px, 3.4vw, 36px); line-height: 1.08; letter-spacing: -.02em; margin: 18px 0 10px; text-wrap: balance; }
+  h3 { font-family: var(--display); font-weight: 800; font-size: 19px; letter-spacing: -.01em; margin: 26px 0 6px; }
+  p, li { max-width: 72ch; }
+  ol, ul { padding-left: 22px; } li { margin: 5px 0; }
+  .lead { color: var(--muted); font-size: 17px; }
+  code, .kbd { font-family: var(--mono); font-size: .88em; background: var(--accent-soft); padding: 1px 6px; border-radius: 3px; word-break: break-word; }
+
+  .ex { background: var(--ex-bg); border: 1px solid var(--line); border-left: 4px solid var(--ex-line); border-radius: 4px; padding: 14px 18px; margin: 16px 0; }
+  .ex > b:first-child, .note > b:first-child, .rule > b:first-child { display: block; font: 500 11px var(--mono); letter-spacing: .16em; text-transform: uppercase; margin-bottom: 6px; color: var(--accent); }
+  .note { background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 12px 18px; margin: 16px 0; font-size: 15px; }
+  .note > b:first-child { color: var(--muted); }
+  .rule { background: var(--bad-soft); border: 1px solid var(--line); border-radius: 4px; padding: 12px 18px; margin: 16px 0; font-size: 15px; }
+  .rule > b:first-child { color: var(--bad); }
+  .ex p, .note p, .rule p { margin: 6px 0; }
+  .steps { counter-reset: s; list-style: none; padding: 0; }
+  .steps > li { counter-increment: s; position: relative; padding: 4px 0 4px 44px; margin: 10px 0; }
+  .steps > li::before { content: counter(s); position: absolute; left: 0; top: 2px; width: 28px; height: 28px; border-radius: 50%; background: var(--ink); color: var(--on-ink); font: 500 13px/28px var(--mono); text-align: center; }
+  .tw { overflow-x: auto; margin: 14px 0; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; min-width: 480px; }
+  th { text-align: left; font: 500 11px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--muted); padding: 10px 12px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+  td { padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; } tr:last-child td { border-bottom: 0; }
+  td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .y { color: var(--ok); font-weight: 600; } .no { color: var(--muted); } .ro { color: var(--warn); }
+  .pill { display: inline-block; font: 500 11px var(--mono); letter-spacing: .06em; padding: 2px 8px; border-radius: 10px; background: var(--accent-soft); color: var(--fg); white-space: nowrap; }
+  .pill.ok { background: var(--ok-soft); color: var(--ok); } .pill.bad { background: var(--bad-soft); color: var(--bad); }
+  .ui { font-weight: 600; }
+  footer.end { border-top: 1px solid var(--line); padding-block: 24px 48px; color: var(--muted); font-size: 14px; }
+  [hidden] { display: none !important; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+  body { padding-inline: 0; }
+  .wrap { padding-inline: 16px; }
+  header.top { margin-inline: 0; padding-inline: max(16px, calc((100vw - 1180px) / 2 + 16px)); }
+  .sitenav { margin-left: auto; display: flex; flex-wrap: wrap; gap: 6px 18px; }
+  .sitenav a { color: rgba(245,244,241,.8); text-decoration: none; font: 500 12px var(--mono); letter-spacing: .1em; text-transform: uppercase; }
+  .sitenav a:hover { color: var(--on-ink); }
+  a.brand { color: var(--on-ink); text-decoration: none; }
+  .legalline { border-top: 1px solid var(--line); padding-block: 22px 44px; color: var(--muted); font-size: 13px; }
+  .legalline a { margin-right: 16px; }
+</style></head>
+<body>
+<header class="top"><a class="brand" href="/">2ACE<small>Help</small></a><nav class="sitenav"><a href="/news">News</a><a href="/platform">Build your plan</a><a href="/login">Log in</a></nav></header>
+<div class="wrap">
+<div class="hero"><h1>How to use your 2ACE account, with an example for every step.</h1>
+<p>From creating your account to booking a delivery and reading your stock. The examples follow one made-up company, Acme Home Sp. z o.o., so you can see each step with real numbers. Stuck on something? Write to <a href="mailto:hello@2ace.pl">hello@2ace.pl</a> or call <a href="tel:+48608180946">+48 608 180 946</a>.</p>
+<div class="cast"><div><b>The customer</b>Acme Home Sp. z o.o., a Warsaw company selling ceramic mugs. Owner: Anna Kowalska.</div><div><b>Their products</b>MUG-BLUE "Blue ceramic mug" and MUG-RED "Red ceramic mug".</div></div></div>
+<div class="cols"><nav class="toc" id="toc" data-open="false" aria-label="Contents"><button class="tocbtn" id="tocbtn" type="button">Contents</button><div class="list"><h2 id="tochead">On this page</h2><div id="toclinks"></div></div></nav><article><section id="c-start">
+  <h2>1. Create your account</h2>
+  <p class="lead">Everything starts at <code>2ace.pl/login</code>. You create one login for your company, then build a plan and pay.</p>
+  <ol class="steps">
+    <li>Open <span class="ui">Log in</span> and choose the <span class="ui">Create account</span> tab.</li>
+    <li>Fill in your details: full name, email, phone, company name, country, tax or VAT ID, address, postal code and city. If your country is Poland, you also pick your voivodeship.</li>
+    <li>Choose a password of at least 8 characters and click <span class="ui">Create account</span>.</li>
+    <li>Open the email we send and click the confirmation link. It brings you back to the login page.</li>
+    <li>Log in with your email and password.</li>
+  </ol>
+  <div class="ex"><b>Example</b>
+    <p>Anna fills in: Anna Kowalska, anna@acmehome.pl, +48 600 100 200, company <code>Acme Home Sp. z o.o.</code>, country Poland, NIP <code>5252000000</code>, voivodeship Mazowieckie, ul. Prosta 1, 00-001 Warszawa. After clicking the link in her email she logs in and lands in her dashboard.</p>
+  </div>
+  <h3>If you forget your password</h3>
+  <p>On the login page type your email, then click <span class="ui">Forgot password?</span>. We email you a link to choose a new one. You can also change your password any time under <span class="ui">Account</span>.</p>
+  <h3>Your account page</h3>
+  <p>Open <code>2ace.pl/account</code> from the menu. You can edit your personal details, your company details, upload a company logo (it appears as your avatar), see invoices, open billing, and change your password.</p>
+  <div class="ex"><b>Example</b><p>Anna uploads <code>acme-logo.png</code> under <span class="ui">Company logo</span>. From then on, her dashboard header shows the logo and "Welcome, Acme Home Sp. z o.o.".</p></div>
+</section>
+
+<section id="c-plan">
+  <h2>2. Build your plan</h2>
+  <p class="lead">You choose what you need in four steps and see the monthly price update as you go. Nothing is charged until you sign and pay.</p>
+  <h3>Step 1: Space</h3>
+  <p>Space is what you store goods in. You pick shelf bins or pallets, and how many.</p>
+  <div class="tw"><table>
+    <tr><th>Space type</th><th class="n">Price per month</th><th class="n">Area</th><th class="n">Range</th></tr>
+    <tr><td>Shelf bin</td><td class="n">90 zł</td><td class="n">0.3 m²</td><td class="n">1 to 2,000 bins</td></tr>
+    <tr><td>Pallet</td><td class="n">360 zł</td><td class="n">1.2 m²</td><td class="n">1 to 1,000 pallets</td></tr>
+  </table></div>
+  <p>Both work out to 300 zł per m² a month. You type the number or drag the slider.</p>
+  <h3>Step 2: Services</h3>
+  <ul>
+    <li><b>E-commerce fulfillment</b>: we pick, pack and ship your orders. 350 zł per m² of your space, per month.</li>
+    <li><b>Returns handling</b>: we receive, grade and restock returned items. 150 zł per m² of your space, per month.</li>
+    <li><b>Import and customs</b>: sea, air and road freight with customs cleared into Poland. It is quoted for each shipment, so it adds nothing to the monthly price.</li>
+  </ul>
+  <h3>Step 3: Sell</h3>
+  <ul>
+    <li><b>.pl storefront</b>: we build and host your online shop. 199 zł per month plus a 2,950 zł one-time setup. The setup includes your .pl domain, so you choose a name here and we check it is free.</li>
+    <li><b>2ACE Market</b>: sell on our marketplace with no setup and no monthly fee. You pay a commission only when something sells: 3.6% to 9.2% depending on category.</li>
+  </ul>
+  <div class="tw"><table>
+    <tr><th>Market category</th><th class="n">Commission per sale</th></tr>
+    <tr><td>Home and kitchen</td><td class="n">7.1%</td></tr><tr><td>Beauty and health</td><td class="n">6.4%</td></tr>
+    <tr><td>Fashion</td><td class="n">9.2%</td></tr><tr><td>Kids</td><td class="n">7.1%</td></tr><tr><td>Tech accessories</td><td class="n">3.6%</td></tr>
+  </table></div>
+  <h3>Step 4: Review, sign and pay</h3>
+  <ol class="steps">
+    <li>Check the lines and the totals. All prices are net, without VAT.</li>
+    <li>Sign in or create your account if you have not yet. Your plan is saved while you do.</li>
+    <li>Read the service agreement summary, tick the box and type your full name to sign. If your plan has a storefront, signing also accepts Hostinger's domain registration agreement, because your .pl domain is registered through Hostinger in your company's name.</li>
+    <li>Click <span class="ui">Continue to secure payment</span>. You pay on Stripe's page with a card, Apple Pay, Przelewy24 or SEPA.</li>
+    <li>When the payment clears, your plan goes live. This usually takes a few seconds.</li>
+  </ol>
+  <div class="ex"><b>Example: Acme's plan</b>
+    <p>Acme chooses 12 pallets, fulfillment, returns, and a storefront.</p>
+    <div class="tw"><table>
+      <tr><th>Line</th><th>How it is worked out</th><th class="n">Per month</th></tr>
+      <tr><td>12 pallets</td><td>12 × 360 zł</td><td class="n">4,320 zł</td></tr>
+      <tr><td>Fulfillment</td><td>12 × 1.2 m² = 14.4 m² × 350 zł</td><td class="n">5,040 zł</td></tr>
+      <tr><td>Returns handling</td><td>14.4 m² × 150 zł</td><td class="n">2,160 zł</td></tr>
+      <tr><td>Storefront hosting</td><td>fixed</td><td class="n">199 zł</td></tr>
+      <tr><td><b>Monthly total (net)</b></td><td></td><td class="n"><b>11,719 zł</b></td></tr>
+      <tr><td>One-time setup</td><td>storefront and domain</td><td class="n">2,950 zł</td></tr>
+    </table></div>
+    <p>Acme is a Polish company, so 23% VAT is added on the invoice. An EU company with a VAT number pays 0% (reverse charge). A company outside the EU is invoiced without Polish VAT.</p>
+  </div>
+  <div class="note"><b>Good to know</b><p>The plan is billed monthly with no minimum term. You can change or cancel with 30 days notice. Your draft plan is remembered in your browser, so you can leave and come back.</p></div>
+</section>
+
+<section id="c-dash">
+  <h2>3. Your dashboard</h2>
+  <p class="lead">After you pay, <code>2ace.pl/platform</code> opens your dashboard. The menu on the left (or the burger button on a phone) has these tabs.</p>
+  <div class="tw"><table>
+    <tr><th>Tab</th><th>What you do there</th><th>Status</th></tr>
+    <tr><td>Overview</td><td>Greeting, a getting-started checklist, and your plan with its monthly price.</td><td><span class="pill ok">Live</span></td></tr>
+    <tr><td>Products</td><td>Your catalogue: SKUs, names, barcodes, photos.</td><td><span class="pill ok">Live</span></td></tr>
+    <tr><td>Inbound</td><td>Tell us what is arriving and when. Follow each delivery.</td><td><span class="pill ok">Live</span></td></tr>
+    <tr><td>Inventory</td><td>See how many units of each product we hold.</td><td><span class="pill ok">Live</span></td></tr>
+    <tr><td>Domain</td><td>Request your .pl domain.</td><td><span class="pill ok">Live</span></td></tr>
+    <tr><td>Orders, Returns, Imports, Shipment tracking</td><td>Fill with real data as order handling and import tracking open.</td><td><span class="pill">Coming</span></td></tr>
+    <tr><td>Storefront, 2ACE Market</td><td>Status of your shop and marketplace listings.</td><td><span class="pill">Coming</span></td></tr>
+    <tr><td>Team</td><td>Give colleagues their own access. For now ask us from the Contact button.</td><td><span class="pill">Coming</span></td></tr>
+  </table></div>
+  <p>Tabs that are not live yet say so in plain words. They never show invented numbers.</p>
+  <h3>The getting-started checklist</h3>
+  <p>The Overview lists the next steps: plan active, domain, add products, book your first delivery, invite your team. A step turns green when it is done.</p>
+  <div class="ex"><b>Example</b><p>Anna has paid, so step 1 is green. She adds MUG-BLUE and MUG-RED, and the "Add your products" step turns green. She books a delivery, and the next step turns green too.</p></div>
+</section>
+
+<section id="c-products">
+  <h2>4. Add and manage products</h2>
+  <p class="lead">Every product you want us to store needs an entry before you can book a delivery of it.</p>
+  <h3>Add a product</h3>
+  <ol class="steps">
+    <li>Open <span class="ui">Products</span> and click <span class="ui">Add a product</span>.</li>
+    <li>Enter a SKU (your own code, up to 60 characters) and a name. The barcode (EAN) is optional but speeds up scanning at our warehouse.</li>
+    <li>Add up to 4 photos. The first one becomes the thumbnail in your lists.</li>
+    <li>Click <span class="ui">Save product</span>. It shows at once, with 0 in stock.</li>
+  </ol>
+  <div class="ex"><b>Example</b><p>SKU <code>MUG-BLUE</code>, name <code>Blue ceramic mug</code>, barcode <code>5901234123457</code>, two photos. Then the same for <code>MUG-RED</code>. Each SKU can be used once in your account. Another company can use the same SKU for its own product.</p></div>
+  <h3>Change or remove a product</h3>
+  <p>New products appear immediately. Changes to products that already exist are <b>requests</b> that our team approves, so your catalogue stays reliable for the warehouse.</p>
+  <ol class="steps">
+    <li>On the product's row click <span class="ui">Request edit</span>.</li>
+    <li>Change the name, add another barcode, or choose <span class="ui">Request switch off</span> or <span class="ui">Request delete</span>.</li>
+    <li>Click <span class="ui">Send for approval</span>. The row now says "Waiting for approval". You can click <span class="ui">Cancel request</span> any time before we decide.</li>
+    <li>We approve or decline. You get an email either way. If declined, the reason shows on the row.</li>
+  </ol>
+  <div class="ex"><b>Example</b><p>Anna renames MUG-BLUE to "Blue ceramic mug 350 ml". The row shows "Waiting for approval: Edit product MUG-BLUE". An hour later Piotr's colleague approves it and Anna gets an email "Approved: Edit product MUG-BLUE". The new name shows in her list.</p></div>
+  <div class="rule"><b>Rules</b>
+    <p>A product that was ever on a delivery or in stock cannot be deleted. Ask us to switch it off instead. It stays in your history and no longer appears when you book deliveries.</p>
+    <p>Photos are the exception: you add or remove product photos yourself, with no approval, because they only describe the product. In the edit panel use <span class="ui">Add photos</span> or <span class="ui">Remove</span>. A product holds at most 4 photos.</p>
+  </div>
+</section>
+
+<section id="c-inbound">
+  <h2>5. Book and follow a delivery</h2>
+  <p class="lead">An inbound delivery is goods on their way to our warehouse. Book it before it arrives so the team knows what to expect.</p>
+  <h3>Book a delivery</h3>
+  <ol class="steps">
+    <li>Open <span class="ui">Inbound</span> and click <span class="ui">Book a delivery</span>. Your plan must be active and you need at least one product.</li>
+    <li>Set the expected arrival date, the carrier and a tracking number if you have one.</li>
+    <li>Under "What is arriving" choose a product, enter the units and click <span class="ui">Add</span>. Repeat for each product. Each product can appear once per delivery.</li>
+    <li>Click <span class="ui">Book delivery</span>.</li>
+  </ol>
+  <div class="ex"><b>Example</b>
+    <p>Expected <code>10 Nov 2026</code>, carrier DSV, tracking <code>DSV-4821937</code>. Lines: MUG-BLUE × 600 and MUG-RED × 400. The delivery appears as <code>IN-000012</code>, status <span class="pill">Booked</span>, 1,000 units.</p>
+  </div>
+  <h3>What the statuses mean</h3>
+  <div class="tw"><table>
+    <tr><th>Status</th><th>Meaning</th></tr>
+    <tr><td><span class="pill">Booked</span></td><td>We know it is coming. Nothing has arrived yet. You can still request changes.</td></tr>
+    <tr><td><span class="pill">Being received</span></td><td>The goods are at our dock and being counted.</td></tr>
+    <tr><td><span class="pill ok">Received</span></td><td>Counting is finished and the delivery is closed.</td></tr>
+    <tr><td><span class="pill">Cancelled</span></td><td>The delivery was cancelled.</td></tr>
+  </table></div>
+  <h3>Change or delete a booked delivery</h3>
+  <p>While a delivery is still <span class="pill">Booked</span>, click <span class="ui">Request edit</span> to change the date, carrier, tracking, products or units, or <span class="ui">Request delete</span> to remove it. Like product changes, these are sent for approval and the delivery stays as booked until we approve. Once goods have arrived, a delivery can no longer be changed.</p>
+  <div class="ex"><b>Example</b><p>The supplier can only send 500 MUG-RED. Anna clicks <span class="ui">Request edit</span> on IN-000012, changes MUG-RED from 400 to 500, and clicks <span class="ui">Send for approval</span>. She sees "Waiting for approval: Edit delivery IN-000012".</p></div>
+  <h3>When something is different on arrival</h3>
+  <p>If fewer or more units arrive than you booked, goods arrive damaged, or an item was not on the booking, we record a difference. You see a red line on the delivery, and we email you.</p>
+  <div class="ex"><b>Example</b>
+    <p>Marta counts 590 good MUG-BLUE and 10 cracked. Anna's delivery now shows: <i>Differences found: MUG-BLUE: 590 of 600 arrived · MUG-BLUE: 10 damaged</i>, with links <span class="ui">Photo 1</span> and <span class="ui">Photo 2</span> showing the damage. The photo links stay valid for an hour each time you open the page.</p>
+  </div>
+</section>
+
+<section id="c-inventory">
+  <h2>6. Read your inventory</h2>
+  <p class="lead">Inventory lists every product that has stock or units on the way, with a thumbnail.</p>
+  <div class="tw"><table>
+    <tr><th>Column</th><th>Meaning</th></tr>
+    <tr><td>On hand</td><td>Units physically in our warehouse for you, anywhere.</td></tr>
+    <tr><td>Available</td><td>On hand minus anything already reserved for orders.</td></tr>
+    <tr><td>Awaiting put-away</td><td>Received, but not yet moved to your bin (still in the receiving area), or held in quarantine because they were damaged.</td></tr>
+    <tr><td>Incoming</td><td>Units on deliveries that are booked or being received.</td></tr>
+  </table></div>
+  <div class="ex"><b>Example</b>
+    <p>Right after Marta receives IN-000012 and before she puts goods on the shelf, Anna sees MUG-BLUE: on hand 600, available 600, awaiting put-away 600, incoming 0. After put-away, awaiting put-away drops to 10 (the damaged units in quarantine) and the rest sits on her shelf.</p>
+  </div>
+  <div class="note"><b>Good to know</b><p>You only ever see your own stock. The numbers come straight from our stock ledger, where every unit that moves is recorded.</p></div>
+</section>
+
+<section id="c-change">
+  <h2>7. Change your plan</h2>
+  <p class="lead">You can upgrade or downgrade yourself. We show the difference first and you confirm once.</p>
+  <ol class="steps">
+    <li>Click <span class="ui">Build plan</span> in the top bar. A banner says "You already have an active plan". Click <span class="ui">Change plan</span>. The same button is on the Storefront and 2ACE Market tabs. The builder opens with your current plan.</li>
+    <li>Change what you need and go to the Review step. A badge shows Upgrade, Downgrade or No price change.</li>
+    <li>Read the sentence about what is charged today and your new monthly price. Click <span class="ui">Confirm</span>.</li>
+  </ol>
+  <h3>Three examples</h3>
+  <div class="ex"><b>Upgrade</b>
+    <p>Acme has 12 pallets at 4,320 zł and adds fulfillment: the monthly price becomes 9,360 zł, a difference of 5,040 zł. With half of the billing month left, the review says: <i>Charged today: about 2,520 zł. From your next invoice you pay 9,360 zł a month.</i> The card on file is charged straight away, and the invoice is emailed.</p>
+  </div>
+  <div class="ex"><b>Downgrade</b>
+    <p>Acme goes from 12 to 6 pallets: 4,320 zł becomes 2,160 zł. With half the month left, the review says: <i>You get a credit of about 1,080 zł on your next invoice.</i> Nothing is charged today.</p>
+  </div>
+  <div class="ex"><b>No price change</b>
+    <p>Acme adds 2ACE Market or Import and customs. They have no monthly price (a commission per sale, a quote per shipment), so the badge says "No price change" and the review says "Nothing is charged today". Your plan is updated and your monthly price stays the same.</p>
+  </div>
+  <div class="note"><b>Good to know</b><p>Adding a storefront needs a .pl domain name and adds the one-time 2,950 zł setup. If the card payment fails, the plan is not changed and you are not charged.</p></div>
+</section>
+
+<section id="c-domain">
+  <h2>8. Get a .pl domain</h2>
+  <p class="lead">If your active plan has no domain yet, a <span class="pill">New</span> badge appears on the Domain tab.</p>
+  <ol class="steps">
+    <li>Open <span class="ui">Domain</span>. Type the name you want, without <code>.pl</code>, and click <span class="ui">Check</span>. We check it against the Polish registry.</li>
+    <li>If it is taken, suggested alternatives appear. Click one to check it.</li>
+    <li>Tick the box to accept Hostinger's Domain Name Registration Agreement. We register your domain through Hostinger, in your company's name.</li>
+    <li>If your plan has a storefront the domain is included: click <span class="ui">Request my included domain</span>. Otherwise click <span class="ui">Pay 99 zł and request</span>. The 99 zł is one time, net, and covers the first year.</li>
+    <li>We register the domain and email you within one working day. The tab then shows the domain and its status.</li>
+  </ol>
+  <div class="ex"><b>Example</b><p>Anna types <code>acmehome</code>. The answer: <i>acmehome.pl is already registered. Try:</i> and two suggestions. She clicks <code>acmehome-sklep.pl</code>, which looks available, ticks the box, pays 99 zł on Stripe, and sees "Payment received. We are registering your domain".</p></div>
+</section>
+
+<section id="c-billing">
+  <h2>9. Invoices and payments</h2>
+  <ul>
+    <li><b>Every payment</b> sends you an email with a link to the invoice and a PDF.</li>
+    <li><b>Your invoices</b> are listed under <span class="ui">Account</span> → <span class="ui">Billing and invoices</span>, each with a link to view or download it.</li>
+    <li><b>Manage payment method and subscription</b> opens Stripe's secure portal, where you update your card or see your subscription.</li>
+    <li><b>If a payment fails</b> we email you. Update your card in the portal to keep your plan active.</li>
+  </ul>
+  <div class="ex"><b>Example</b><p>Anna's card expires. The renewal fails and she gets "Payment failed: action needed". She opens Account, clicks <span class="ui">Manage payment method and subscription</span>, adds a new card, and the next attempt succeeds.</p></div>
+  <div class="note"><b>Good to know</b><p>Invoices come from our payment provider and carry our company details. All plan prices are quoted without VAT.</p></div>
+</section>
+
+<section id="c-contact">
+  <h2>10. Contact us</h2>
+  <p>Use the <span class="ui">Contact us</span> button in your dashboard. A form opens with a topic list that pre-fills a helpful template. You can also write to <code>hello@2ace.pl</code> or call <code>+48 608 180 946</code>.</p>
+  <div class="tw"><table>
+    <tr><th>Topic</th><th>Use it for</th></tr>
+    <tr><td>Book an inbound delivery</td><td>Template asks what is arriving, pallets or cartons, supplier, carrier and preferred date.</td></tr>
+    <tr><td>Add my products</td><td>Send a list of SKUs for us to set up.</td></tr>
+    <tr><td>Import and customs quote</td><td>Goods, HS codes, value, origin and transport type.</td></tr>
+    <tr><td>Add team members</td><td>Name, email and role (operations, finance or marketing).</td></tr>
+    <tr><td>Domain question, Change my plan, Billing and invoices, Something else</td><td>Anything else. Write your question in the box.</td></tr>
+  </table></div>
+  <div class="ex"><b>Example</b><p>Anna needs a customs quote. She opens Contact us, chooses "Import and customs quote", fills in <i>HS code 6912, value 18,000 EUR, Ningbo to Gdansk by sea</i>, and sends. We reply to her account email within one working day, and a copy of her message is emailed to her.</p></div>
+</section>
+
+<section id="c-faq">
+  <h2>11. Questions and fixes</h2>
+  <div class="tw"><table>
+    <tr><th>Problem</th><th>What to do</th></tr>
+    <tr><td>I did not get the confirmation email.</td><td>Check spam. If it is not there, try Create account again with the same email, or contact us.</td></tr>
+    <tr><td>The confirmation link opened the wrong page.</td><td>Open <code>2ace.pl/login</code> and log in with your email and password. The account is already confirmed.</td></tr>
+    <tr><td>I cannot book a delivery.</td><td>You need an active plan and at least one active product. Check the Overview checklist and your Products tab.</td></tr>
+    <tr><td>My edit does not show.</td><td>Edits to products and deliveries wait for our approval. Look for "Waiting for approval" on the row.</td></tr>
+    <tr><td>I cannot delete a product.</td><td>It has been used. Request a switch off instead.</td></tr>
+    <tr><td>The price after a plan change looks the same.</td><td>Market and Import and customs have no monthly price. See the "No price change" example.</td></tr>
+    <tr><td>Stock shows "awaiting put-away".</td><td>Goods are received but not yet on your shelf, or are in quarantine. This clears when the team puts them away.</td></tr>
+    <tr><td>Payment failed.</td><td>Update your card under Account → Manage payment method and subscription.</td></tr>
+  </table></div>
+</section>
+</article></div>
+<div class="legalline"><a href="/terms">Terms</a><a href="/privacy">Privacy</a><a href="/">Home</a><br>2ACE sp. z o.o. · ul. Ostrobramska 101A lok. 301, 04-041 Warszawa · NIP 1133212948 · REGON 545746743 · KRS 0001267111 · hello@2ace.pl · +48 608 180 946</div>
+</div>
+<script>(function(){var toc=document.getElementById('toc'),links=document.getElementById('toclinks'),btn=document.getElementById('tocbtn');var secs=[].slice.call(document.querySelectorAll('article section'));secs.forEach(function(s){var h=s.querySelector('h2');if(!h)return;var a=document.createElement('a');a.href='#'+s.id;a.textContent=h.textContent;a.dataset.id=s.id;a.addEventListener('click',function(){toc.dataset.open='false'});links.appendChild(a)});btn.addEventListener('click',function(){toc.dataset.open=toc.dataset.open==='true'?'false':'true'});function spy(){var best=null;secs.forEach(function(s){if(s.getBoundingClientRect().top<140)best=s.id});[].forEach.call(links.querySelectorAll('a'),function(a){a.classList.toggle('on',a.dataset.id===best)})}window.addEventListener('scroll',spy,{passive:true});spy()})();</script>
+</body></html>
