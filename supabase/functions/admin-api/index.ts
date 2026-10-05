@@ -4,6 +4,7 @@ import { sendEmail, layout, esc } from '../_shared/email.ts';
 import { retryAutoRegister } from '../_shared/domainOrder.ts';
 import Stripe from 'npm:stripe';
 import { STAFF_GUIDE, OWNER_GUIDE } from '../_shared/helpContent.ts';
+import { notifyHeld } from '../_shared/orderNotice.ts';
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!);
 
@@ -30,6 +31,14 @@ async function ownerOf(orgId: string) {
 
 const actions: Record<string, { roles?: StaffRole[]; run: (s: StaffCtx, b: Record<string, unknown>) => Promise<unknown> }> = {
   me: { run: async (s) => ({ id: s.user.id, role: s.role, email: s.user.email }) },
+
+  // ---------- orders ----------
+  // After staff create an order that came out on hold, tell the customer once (the claim flag prevents duplicates).
+  'order.notify': { roles: ['admin', 'warehouse'], run: async (_s, b) => {
+    const ids = Array.isArray(b.order_ids) ? (b.order_ids as unknown[]).filter(isUuid) : [];
+    if (!ids.length) throw new Bad('No orders given');
+    return { notified: await notifyHeld(ids) };
+  } },
 
   // ---------- help: the staff manual lives here, not in a public file, so only signed-in staff can read it ----------
   'help.get': { run: async (s, b) => {

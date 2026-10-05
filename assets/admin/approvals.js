@@ -22,7 +22,11 @@ export async function render(ctx, root) {
   const open = async (c) => {
     // current state next to what was asked for
     const rows = [];
-    if (c.entity === 'inbound') {
+    if (c.entity === 'order') {
+      const [o, ln] = await Promise.all([ctx.sb.from('orders').select('*').eq('id', c.entity_id).maybeSingle(), ctx.sb.from('order_lines').select('qty, products(sku, name)').eq('order_id', c.entity_id)]);
+      if (!o.data) rows.push(['Order', 'This order no longer exists']);
+      else rows.push(['Order', `${o.data.ref}, ${o.data.status}`], ['Ship to', `${o.data.ship_name}, ${o.data.ship_city} ${o.data.ship_country}`], ['Items', (ln.data || []).map((l) => `${l.products.sku} × ${l.qty}`).join(', ')], ['Effect', 'Cancelling releases the reserved stock. Not possible once picking has started.']);
+    } else if (c.entity === 'inbound') {
       const [b, ln, pr] = await Promise.all([ctx.sb.from('inbound_bookings').select('*').eq('id', c.entity_id).maybeSingle(), ctx.sb.from('inbound_lines').select('product_id, expected_qty').eq('booking_id', c.entity_id), ctx.sb.from('products').select('id, sku, name').eq('org_id', c.org_id)]);
       const name = (id) => { const p = (pr.data || []).find((x) => x.id === id); return p ? p.sku + ' - ' + p.name : id; };
       if (!b.data) rows.push(['Delivery', 'This delivery no longer exists']);

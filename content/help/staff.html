@@ -12,6 +12,7 @@
     <tr><td>Domain queue</td><td class="y">Yes</td><td class="y">Yes</td><td class="no">No</td></tr>
     <tr><td>Staff management</td><td class="y">Yes</td><td class="no">No</td><td class="no">No</td></tr>
     <tr><td>Audit log</td><td class="y">Yes</td><td class="y">Yes</td><td class="no">No</td></tr>
+    <tr><td>Orders (create, reserve, cancel)</td><td class="y">Yes</td><td class="ro">Read only</td><td class="y">Yes</td></tr>
     <tr><td>Approvals (decide)</td><td class="y">Yes</td><td class="ro">Read only</td><td class="y">Yes</td></tr>
     <tr><td>Inbound, receiving, discrepancies</td><td class="y">Yes</td><td class="ro">Read only</td><td class="y">Yes</td></tr>
     <tr><td>Stock: move, adjust</td><td class="y">Yes, any size</td><td class="ro">Read only</td><td class="y">Yes, up to 20 units</td></tr>
@@ -226,6 +227,24 @@
   <div class="ex"><b>Example: approve</b><p>Request "Edit delivery IN-000012" from Acme. The detail shows <i>Carrier: DSV → GLS</i> and <i>MUG-RED: 400 → 500</i>. Marta checks the dock plan, clicks <span class="ui">Approve and apply</span>, and the delivery now shows 500. Anna gets an email.</p></div>
   <div class="ex"><b>Example: decline</b><p>Request "Delete delivery IN-000009". Marta sees the pallets are already on the dock, writes "Goods arrived this morning, cannot be deleted", and declines. Anna sees that reason on her delivery.</p></div>
   <div class="rule"><b>Rules</b><p>If a change can no longer be applied (for example the goods arrived after the request), approving it is refused and the request stays open. Decline it with a reason. A newer request for the same item replaces the older pending one. Staff themselves edit directly and never use this queue.</p></div>
+</section>
+
+<section id="s-orders">
+  <h2>Orders and reserved stock</h2>
+  <p class="lead">Customers place orders (by hand or from a CSV file). Each order is reserved as a whole, or held with a reason. You see them under <span class="ui">Orders</span>.</p>
+  <h3>How reserving works</h3>
+  <ul>
+    <li>An order reserves stock only if <b>every line</b> can be filled. Otherwise nothing is reserved and the order is <span class="pill bad">on hold</span>, with text such as <i>MUG-BLUE: need 7, available 6</i>. The customer is emailed once.</li>
+    <li>Only stock in <b>bins and pallets</b> counts. Goods in the receiving area or in quarantine are not for sale until you put them away.</li>
+    <li>Stock is taken earliest expiry first, then by location code. Reserved units cannot be moved away or removed by a count.</li>
+    <li>Held orders are retried automatically, oldest first, whenever stock is put away, a count adds stock, or an order is cancelled.</li>
+  </ul>
+  <div class="ex"><b>Example</b><p>Acme has 10 MUG-BLUE in bin A-01-01. Order ORD-000001 takes 4. ORD-000002 asks for 7 and goes on hold (6 free). Marta puts 5 more mugs away into A-01-01. ORD-000002 is reserved automatically and Acme sees <i>Reserved, waiting to be picked</i>.</p></div>
+  <h3>The Orders screen</h3>
+  <p>Filter by status or customer. Open an order to see the recipient, the lines and exactly which bin each line is reserved in. On a held order, <span class="ui">Try to reserve now</span> retries it at once (for example after you found stock). <span class="ui">New order</span> places an order for a customer, such as one received by phone.</p>
+  <h3>Cancelling</h3>
+  <p>Staff cancel directly with <span class="ui">Cancel order</span>: the reservations are released and held orders get another go. A customer's cancellation arrives under <span class="ui">Approvals</span> and is applied when you approve it. An order that is already being picked cannot be cancelled here.</p>
+  <div class="rule"><b>Rules</b><p>Support can see orders but not change them. A customer's own order number is unique per customer, so importing the same file twice never duplicates orders.</p></div>
 </section>
 
 <section id="s-scan">

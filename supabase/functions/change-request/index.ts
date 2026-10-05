@@ -1,6 +1,7 @@
 import { corsHeaders, json } from '../_shared/cors.ts';
 import { admin, caller, userClient } from '../_shared/auth.ts';
 import { sendEmail, layout, esc } from '../_shared/email.ts';
+import { notifyHeld } from '../_shared/orderNotice.ts';
 
 // A customer asks to edit or delete one of their deliveries or products. The request goes into the approval queue;
 // nothing changes until a warehouse or admin user approves it. The database function does the checking, this one carries the
@@ -15,10 +16,17 @@ Deno.serve(async (req) => {
   const me = await caller(req);
   if (!me || !me.orgId) return json(req, { error: 'unauthorized' }, 401);
   const token = (req.headers.get('authorization') ?? '').replace(/^Bearer /i, '');
-  let b: { action?: string; entity?: string; id?: string; kind?: string; payload?: Record<string, unknown> };
+  let b: { action?: string; entity?: string; id?: string; kind?: string; payload?: Record<string, unknown>; order_ids?: string[] };
   try { b = await req.json(); } catch { return json(req, { error: 'bad json' }, 400); }
-  if (!isUuid(b.id)) return json(req, { error: 'Invalid item' }, 400);
   const db = userClient(token);
+
+  // The customer just created or imported orders: tell them (once) about any that are on hold. Only orders they can see are considered.
+  if (b.action === 'order_notify') {
+    const ids = (Array.isArray(b.order_ids) ? b.order_ids : []).filter(isUuid).slice(0, 200);
+    const { data: mine } = ids.length ? await db.from('orders').select('id').in('id', ids) : { data: [] };
+    return json(req, { notified: await notifyHeld((mine ?? []).map((r) => r.id as string)) });
+  }
+  if (!isUuid(b.id)) return json(req, { error: 'Invalid item' }, 400);
 
   if (b.action === 'cancel') {
     const { error } = await db.rpc('cancel_change', { p_id: b.id });

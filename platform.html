@@ -805,6 +805,96 @@
         </sc-if>
 
 
+        <sc-if value="{{ tabOrders }}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; flex-direction: column; gap: 20px; max-width: 860px;">
+            <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; align-items: center;">
+              <h1 style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 108; font-weight: 800; font-size: clamp(26px, 3vw, 36px); letter-spacing: -0.02em; margin: 0;">Orders</h1>
+              <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button onClick="{{ csvToggle }}" style="cursor: pointer; min-height: 46px; padding: 13px 20px; border: 1px solid rgba(11,12,14,0.3); border-radius: 3px; background: transparent; color: #0B0C0E; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;">{{ csvBtnLabel }}</button>
+                <button onClick="{{ oToggle }}" style="cursor: pointer; min-height: 46px; padding: 13px 20px; border: 0; border-radius: 3px; background: #E39A2B; color: #0B0C0E; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;">{{ oBtnLabel }}</button>
+              </div>
+            </div>
+            <p style="margin: 0; font-size: 14px; color: rgba(11,12,14,0.65); max-width: 64ch;">We reserve stock for an order only when all of it is on our shelves. If anything is short, the whole order waits on hold, nothing is reserved, and it is reserved automatically when the stock arrives.</p>
+            <sc-if value="{{ whNoteShow }}" hint-placeholder-val="{{ false }}"><div role="status" onClick="{{ whNoteClear }}" style="padding: 14px 18px; background: #0B0C0E; color: #F5F4F1; border-radius: 4px; font-size: 15px; cursor: pointer;">{{ whNoteText }}</div></sc-if>
+            <sc-if value="{{ oNotActive }}" hint-placeholder-val="{{ false }}"><p style="margin: 0; font-size: 14px; color: rgba(11,12,14,0.65);">You can place orders once your plan is active.</p></sc-if>
+            <sc-if value="{{ oForm }}" hint-placeholder-val="{{ false }}">
+              <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+                <span style="font-family: Archivo, sans-serif; font-weight: 800; font-size: 20px;">New order</span>
+                <sc-if value="{{ oNeedProducts }}" hint-placeholder-val="{{ false }}"><p style="margin: 0; font-size: 15px; color: #B4442E;">Add your products first (Products tab), then place an order.</p></sc-if>
+                <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.6);">Your order number, optional<input type="text" value="{{ oRefV }}" onChange="{{ onORef }}" maxlength="60" placeholder="SHOP-1001" style="padding: 12px; border-radius: 3px; border: 1px solid rgba(11,12,14,0.25); background: #FFFFFF; font-family: 'IBM Plex Sans', sans-serif; font-size: 16px; min-width: 0;" /></label>
+                <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.6);">Recipient name<input type="text" value="{{ oNameV }}" onChange="{{ onOName }}" maxlength="120" style="padding: 12px; border-radius: 3px; border: 1px solid rgba(11,12,14,0.25); background: #FFFFFF; font-family: 'IBM Plex Sans', sans-serif; font-size: 16px; min-width: 0;" /></label>
+                <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.6);">Recipient email, optional<input type="email" value="{{ oEmailV }}" onChange="{{ onOEmail }}" maxlength="120" style="padding: 12px; border-radius: 3px; border: 1px solid rgba(11,12,14,0.25); background: #FFFFFF; font-family: 'IBM Plex Sans', sans-serif; font-size: 16px; min-width: 0;" /></label>
+                <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.6);">Recipient phone, optional<input type="text" value="{{ oPhoneV }}" onChange="{{ onOPhone }}" maxlength="40" style="padding: 12px; border-radius: 3px; border: 1px solid rgba(11,12,14,0.25); background: #FFFFFF; font-family: 'IBM Plex Sans', sans-serif; font-size: 16px; min-width: 0;" /></label>
+                <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.6);">Street and number<input type="text" value="{{ oLine1V }}" onChange="{{ onOLine1 }}" maxlength="160" style="padding: 12px; border-radius: 3px; border: 1px solid rgba(11,12,14,0.25); background: #FFFFFF; font-family: 'IBM Plex Sans', sans-serif; font-size: 16px; min-width: 0;" /></label>
+                <div style="display: grid; grid-template-columns: 1fr 1.4fr 90px; gap: 12px;">
+                  <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.6);">Postal code<input type="text" value="{{ oPostalV }}" onChange="{{ onOPostal }}" maxlength="20" style="padding: 12px; border-radius: 3px; border: 1px solid rgba(11,12,14,0.25); background: #FFFFFF; font-family: 'IBM Plex Sans', sans-serif; font-size: 16px; min-width: 0;" /></label>
+                  <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.6);">City<input type="text" value="{{ oCityV }}" onChange="{{ onOCity }}" maxlength="100" style="padding: 12px; border-radius: 3px; border: 1px solid rgba(11,12,14,0.25); background: #FFFFFF; font-family: 'IBM Plex Sans', sans-serif; font-size: 16px; min-width: 0;" /></label>
+                  <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.6);">Country<input type="text" value="{{ oCountryV }}" onChange="{{ onOCountry }}" maxlength="2" placeholder="PL" style="padding: 12px; border-radius: 3px; border: 1px solid rgba(11,12,14,0.25); background: #FFFFFF; font-family: 'IBM Plex Sans', sans-serif; font-size: 16px; min-width: 0;" /></label>
+                </div>
+                <span style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.6);">What to send</span>
+                <sc-for list="{{ oLineRows }}" as="l" hint-placeholder-count="2">
+                  <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 12px; background: #F5F4F1; border-radius: 3px; font-size: 15px;">
+                    <span>{{ l.label }} <strong>× {{ l.qty }}</strong></span>
+                    <button onClick="{{ l.remove }}" aria-label="Remove" style="cursor: pointer; border: 0; background: none; font-size: 22px; line-height: 1; color: rgba(11,12,14,0.6);">×</button>
+                  </div>
+                </sc-for>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch;">
+                  <select value="{{ oPickV }}" onChange="{{ onOPick }}" style="padding: 12px; border-radius: 3px; border: 1px solid rgba(11,12,14,0.25); background: #FFFFFF; font-family: 'IBM Plex Sans', sans-serif; font-size: 16px; min-width: 0; flex: 1; min-width: 180px;">
+                    <sc-for list="{{ oPickOpts }}" as="o" hint-placeholder-count="3"><option value="{{ o.v }}">{{ o.label }}</option></sc-for>
+                  </select>
+                  <input type="number" min="1" value="{{ oQtyV }}" onChange="{{ onOQty }}" aria-label="Quantity" style="padding: 12px; border-radius: 3px; border: 1px solid rgba(11,12,14,0.25); background: #FFFFFF; font-family: 'IBM Plex Sans', sans-serif; font-size: 16px; min-width: 0; width: 100px;" />
+                  <button onClick="{{ oAdd }}" style="cursor: pointer; min-height: 46px; padding: 13px 20px; border: 1px solid rgba(11,12,14,0.3); border-radius: 3px; background: transparent; color: #0B0C0E; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;">Add</button>
+                </div>
+                <sc-if value="{{ oErrShow }}" hint-placeholder-val="{{ false }}"><p style="margin: 0; font-size: 14px; color: #B4442E;">{{ oErrText }}</p></sc-if>
+                <button onClick="{{ oSave }}" style="cursor: pointer; min-height: 46px; padding: 13px 20px; border: 0; border-radius: 3px; background: #E39A2B; color: #0B0C0E; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; align-self: flex-start;">{{ oSaveLabel }}</button>
+              </div>
+            </sc-if>
+            <sc-if value="{{ csvForm }}" hint-placeholder-val="{{ false }}">
+              <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+                <span style="font-family: Archivo, sans-serif; font-weight: 800; font-size: 20px;">Import orders from a CSV file</span>
+                <p style="margin: 0; font-size: 14px; color: rgba(11,12,14,0.7); line-height: 1.55;">One row per product on an order. Rows with the same <b>order_ref</b> become one order. Products are matched by <b>sku</b>. Importing the same file again never creates duplicates, because each order_ref is only used once. Up to 200 orders per file.</p>
+                <a href="{{ csvTemplate }}" download="2ace-orders-template.csv" style="align-self: flex-start; font-size: 14px; color: #A8701A;">Download the template</a>
+                <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.6);">Choose your CSV file<input type="file" accept=".csv,text/csv" onChange="{{ csvPickFile }}" style="font-size: 14px;" /></label>
+                <sc-if value="{{ csvInfoShow }}" hint-placeholder-val="{{ false }}"><p style="margin: 0; font-size: 14px; color: #2F7D55;">{{ csvInfoText }}</p></sc-if>
+                <sc-if value="{{ csvErrShow }}" hint-placeholder-val="{{ false }}"><p style="margin: 0; font-size: 14px; color: #B4442E;">{{ csvErrText }}</p></sc-if>
+                <button onClick="{{ csvGo }}" style="cursor: pointer; min-height: 46px; padding: 13px 20px; border: 0; border-radius: 3px; background: #E39A2B; color: #0B0C0E; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; align-self: flex-start; opacity: {{ csvOpacity }};">{{ csvGoLabel }}</button>
+                <sc-if value="{{ csvResultShow }}" hint-placeholder-val="{{ false }}">
+                  <div style="display: flex; flex-direction: column; border-top: 1px solid rgba(11,12,14,0.1); padding-top: 10px;">
+                    <span style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.6); margin-bottom: 6px;">Result for every order</span>
+                    <sc-for list="{{ csvRows }}" as="r" hint-placeholder-count="3">
+                      <div style="display: flex; flex-wrap: wrap; gap: 4px 14px; padding: 6px 0; font-size: 14px;"><strong>{{ r.ref }}</strong><span style="color: {{ r.color }};">{{ r.text }}</span></div>
+                    </sc-for>
+                  </div>
+                </sc-if>
+              </div>
+            </sc-if>
+            <sc-if value="{{ whLoading }}" hint-placeholder-val="{{ false }}"><p style="margin: 0; font-size: 14px; color: rgba(11,12,14,0.6);">Loading…</p></sc-if>
+            <sc-if value="{{ whErrShow }}" hint-placeholder-val="{{ false }}"><p style="margin: 0; font-size: 14px; color: #B4442E;">{{ whErrText }}</p></sc-if>
+            <sc-if value="{{ oEmpty }}" hint-placeholder-val="{{ false }}">
+              <div style="background: #FFFFFF; border: 1px dashed rgba(11,12,14,0.3); border-radius: 4px; padding: clamp(24px, 4vw, 40px); display: flex; flex-direction: column; gap: 12px;">
+                <span style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 106; font-weight: 700; font-size: 22px; line-height: 1.2;">No orders yet</span>
+                <p style="margin: 0; font-size: 15px; line-height: 1.6; color: rgba(11,12,14,0.68); max-width: 56ch;">Place an order by hand, or import many at once from a CSV file. You need stock on our shelves first: add products, book a delivery, and wait until it is put away.</p>
+              </div>
+            </sc-if>
+            <sc-if value="{{ oHas }}" hint-placeholder-val="{{ false }}">
+              <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px; display: flex; flex-direction: column;">
+                <sc-for list="{{ orderRows }}" as="o" hint-placeholder-count="2">
+                  <div style="display: flex; flex-direction: column; gap: 4px; padding: 14px 0; border-top: 1px solid rgba(11,12,14,0.08); font-size: 15px;">
+                    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px;"><strong style="font-family: 'IBM Plex Mono', monospace;">{{ o.ref }}</strong><span style="color: {{ o.color }}; font-weight: 600;">{{ o.status }}</span></div>
+                    <span style="color: rgba(11,12,14,0.65); font-size: 14px;">{{ o.who }} · {{ o.when }} {{ o.their }}</span>
+                    <span style="color: rgba(11,12,14,0.65); font-size: 13px;">{{ o.items }}</span>
+                    <span style="display: {{ o.reasonDisplay }}; font-size: 14px; color: #8A5A10;">{{ o.reason }}</span>
+                    <span style="display: {{ o.pendDisplay }}; font-size: 14px; color: #8A5A10;">Waiting for approval: {{ o.pendText }} <button onClick="{{ o.onCancelReq }}" style="border: 0; background: none; cursor: pointer; text-decoration: underline; color: #0B0C0E; font-size: 14px;">Cancel request</button></span>
+                    <span style="display: {{ o.rejDisplay }}; font-size: 14px; color: #B4442E;">Last request declined: {{ o.rejText }}</span>
+                    <div style="margin-top: 6px;"><button onClick="{{ o.onCancel }}" style="cursor: pointer; min-height: 38px; padding: 8px 14px; border: 1px solid rgba(11,12,14,0.3); border-radius: 3px; background: transparent; color: #0B0C0E; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; display: {{ o.cancelDisplay }}; color: #B4442E; border-color: #B4442E;">Request cancellation</button></div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+          </div>
+        </sc-if>
+
+
 <sc-if value="{{ tabDomain }}" hint-placeholder-val="{{ false }}">
           <div style="display: flex; flex-direction: column; gap: 20px; max-width: 680px;">
             <div>
@@ -907,7 +997,7 @@
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900}}">
 class Component extends DCLogic {
   state = {
-    orgId: '', whLoaded: false, whErr: '', whInv: [], whCodes: {}, whBook: [], whIssues: {}, whPhotos: {}, whChanges: {}, whPhotoUrls: {}, pdPhotoBusy: false, pdOpen: false, pdSku: '', pdName: '', pdEan: '', pdBusy: false, pdErr: '', pdEditId: '', pdEditName: '', pdEditEan: '', pdEditActive: true, inEditId: '', inNotes: '', inOpen: false, inDate: '', inCarrier: '', inTracking: '', inLines: [], inPick: '', inQty: '1', inBusy: false, inErr: '', whNote: '',
+    orgId: '', whLoaded: false, whErr: '', whInv: [], whCodes: {}, whBook: [], whIssues: {}, whPhotos: {}, whChanges: {}, whPhotoUrls: {}, pdPhotoBusy: false, whOrders: [], oOpen: false, oRef: '', oName: '', oEmail: '', oPhone: '', oLine1: '', oPostal: '', oCity: '', oCountry: 'PL', oLines: [], oPick: '', oQty: '1', oBusy: false, oErr: '', csvOpen: false, csvOrders: null, csvInfo: '', csvBusy: false, csvErr: '', csvResult: null, pdOpen: false, pdSku: '', pdName: '', pdEan: '', pdBusy: false, pdErr: '', pdEditId: '', pdEditName: '', pdEditEan: '', pdEditActive: true, inEditId: '', inNotes: '', inOpen: false, inDate: '', inCarrier: '', inTracking: '', inLines: [], inPick: '', inQty: '1', inBusy: false, inErr: '', whNote: '',
     contactOpen: false, contactSubject: 'other', contactMsg: '', contactBusy: false, contactDone: false, contactErr: '',
     logoUrl: '', orgName: '', domainName: '', curPlan: null, hasDomain: false,
     view: 'build', step: 0, userEmail: '', menuOpen: false, userName: '', payErr: '', changeMode: false, chPrev: null, chBusy: false, chErr: '', chDone: '', domainOffer: false, dmInfo: null, dmErr: '', dmAccept: false, dmName: '', dmStatus: null, dmAlts: [], dmNote: '', dmBusy: false, domainAlts: [], mkCat: 'home', payNotice: '', payBanner: '',
@@ -1097,13 +1187,14 @@ class Component extends DCLogic {
   async whLoad() {
     if (!this.state.orgId || !this.authSession()) return;
     try {
-      const [inv, codes, book, dis, dmg, chg] = await Promise.all([
+      const [inv, codes, book, dis, dmg, chg, ords] = await Promise.all([
         this.whGet('v_inventory_by_product?select=product_id,sku,name,active,on_hand,available,unplaced,quarantined,incoming,photo_paths&order=sku'),
         this.whGet('product_barcodes?select=product_id,barcode'),
         this.whGet('inbound_bookings?select=id,ref,status,expected_date,carrier,tracking,notes,created_at,inbound_lines(product_id,expected_qty,products(sku,name))&order=created_at.desc&limit=50'),
         this.whGet('discrepancies?select=booking_id,kind,expected_qty,received_qty,products(sku)&order=created_at'),
         this.whGet('receipt_lines?select=booking_id,photo_paths&condition=eq.damaged'),
-        this.whGet('change_requests?select=id,entity_id,summary,status,decision_note&order=requested_at.desc&limit=200')
+        this.whGet('change_requests?select=id,entity_id,summary,status,decision_note&order=requested_at.desc&limit=200'),
+        this.whGet('orders?select=id,ref,external_ref,status,hold_reason,ship_name,ship_city,ship_country,created_at,order_lines(qty,products(sku,name))&order=created_at.desc&limit=100')
       ]);
       const changes = {}; chg.forEach((c) => { if (!changes[c.entity_id] && (c.status === 'pending' || c.status === 'rejected')) changes[c.entity_id] = c; else if (!changes[c.entity_id]) changes[c.entity_id] = { status: 'done' }; });
       const map = {}; codes.forEach((c) => { (map[c.product_id] = map[c.product_id] || []).push(c.barcode); });
@@ -1127,7 +1218,7 @@ class Component extends DCLogic {
         } catch (e) { /* photos are optional */ }
       }
       const photos = {}; Object.keys(byBooking).forEach((k) => { photos[k] = byBooking[k].map((pth) => urls[pth]).filter(Boolean); });
-      this.setState({ whLoaded: true, whErr: '', whInv: inv, whCodes: map, whBook: book, whIssues: issues, whPhotos: photos, whChanges: changes, whPhotoUrls: purls });
+      this.setState({ whLoaded: true, whErr: '', whInv: inv, whCodes: map, whBook: book, whIssues: issues, whPhotos: photos, whChanges: changes, whPhotoUrls: purls, whOrders: ords });
     } catch (e) { this.setState({ whLoaded: true, whErr: String(e.message || e) }); }
   }
   async pdSubmit() {
@@ -1242,6 +1333,84 @@ class Component extends DCLogic {
     if (!window.confirm('Ask us to delete delivery ' + b.ref + '? We review the request and email you the result.')) return;
     try { await this.whChange({ action: 'request', entity: 'inbound', id: b.id, kind: 'delete' }); this.setState({ whNote: 'Deletion requested. The delivery stays booked until we approve it.', whErr: '', inOpen: false, inEditId: '' }); this.whLoad(); }
     catch (e) { this.setState({ whNote: '', whErr: String(e.message || e) }); }
+  }
+  // ---- orders: one by one or from a CSV. An order is reserved only if ALL of it fits; otherwise it waits on hold and we tell the customer. ----
+  oAddLine() {
+    const s = this.state, q = parseInt(s.oQty, 10);
+    if (!s.oPick) return this.setState({ oErr: 'Choose a product first.' });
+    if (!(q >= 1)) return this.setState({ oErr: 'Enter a quantity of at least 1.' });
+    if (s.oLines.some((l) => l.pid === s.oPick)) return this.setState({ oErr: 'That product is already on this order.' });
+    this.setState({ oLines: s.oLines.concat([{ pid: s.oPick, qty: q }]), oPick: '', oQty: '1', oErr: '' });
+  }
+  async oNotify(ids) { if (ids.length) { try { await this.whChange({ action: 'order_notify', order_ids: ids }); } catch (e) { /* the order exists either way */ } } }
+  async oSubmit() {
+    const s = this.state; if (s.oBusy) return;
+    if (!s.oLines.length) return this.setState({ oErr: 'Add at least one product to the order.' });
+    this.setState({ oBusy: true, oErr: '' });
+    try {
+      const r = await this.whRpc('create_order', { p_org: s.orgId, p_external_ref: s.oRef || null, p_ship: { name: s.oName, email: s.oEmail, phone: s.oPhone, line1: s.oLine1, postal: s.oPostal, city: s.oCity, country: s.oCountry }, p_notes: null, p_lines: s.oLines.map((l) => ({ product_id: l.pid, qty: l.qty })), p_channel: 'manual' });
+      if (r.status === 'held') await this.oNotify([r.id]);
+      this.setState({ oBusy: false, oOpen: false, oLines: [], oRef: '', oName: '', oEmail: '', oPhone: '', oLine1: '', oPostal: '', oCity: '', whNote: r.duplicate ? 'You already have an order with that reference: ' + r.ref + '.' : r.status === 'held' ? 'Order ' + r.ref + ' is on hold: not enough stock. Nothing was reserved, and we emailed you the details. It reserves itself when stock arrives.' : 'Order ' + r.ref + ' received and stock reserved.' }); this.whLoad();
+    } catch (e) { this.setState({ oBusy: false, oErr: String(e.message || e) }); }
+  }
+  async oCancel(o) {
+    if (!window.confirm('Ask us to cancel order ' + o.ref + '? We review the request and email you the result.')) return;
+    try { await this.whChange({ action: 'request', entity: 'order', id: o.id, kind: 'delete' }); this.setState({ whNote: 'Cancellation requested. The order stays as it is until we approve it.', whErr: '' }); this.whLoad(); }
+    catch (e) { this.setState({ whNote: '', whErr: String(e.message || e) }); }
+  }
+  // Minimal CSV reader: quoted fields, commas or semicolons (Excel in Poland saves with semicolons).
+  parseCsv(text) {
+    const first = (text.split(/\r?\n/)[0] || ''); const d = first.split(';').length > first.split(',').length ? ';' : ',';
+    const rows = []; let row = [], cur = '', q = false;
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      if (q) { if (ch === '"') { if (text[i + 1] === '"') { cur += '"'; i++; } else q = false; } else cur += ch; }
+      else if (ch === '"') q = true;
+      else if (ch === d) { row.push(cur); cur = ''; }
+      else if (ch === '\n') { row.push(cur); rows.push(row); row = []; cur = ''; }
+      else if (ch !== '\r') cur += ch;
+    }
+    if (cur !== '' || row.length) { row.push(cur); rows.push(row); }
+    return rows.filter((r) => r.some((c) => c.trim() !== ''));
+  }
+  csvToOrders(text) {
+    const rows = this.parseCsv(text.replace(/^﻿/, '')); if (rows.length < 2) throw new Error('The file has no rows. The first row must be the column names.');
+    const norm = (h) => h.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_');
+    const alias = { order_ref: ['order_ref', 'order', 'reference', 'order_number', 'order_no'], name: ['name', 'recipient', 'recipient_name', 'ship_name'], company: ['company'], email: ['email', 'e_mail'], phone: ['phone', 'telephone', 'tel'],
+      line1: ['address', 'street', 'line1', 'address1', 'address_line_1'], line2: ['address2', 'line2', 'address_line_2'], postal: ['postal', 'postal_code', 'postcode', 'zip', 'zip_code'], city: ['city', 'town'], country: ['country', 'country_code'], sku: ['sku', 'product', 'product_sku'], qty: ['qty', 'quantity', 'units'], notes: ['notes', 'note', 'comment'] };
+    const head = rows[0].map(norm), at = {};
+    Object.keys(alias).forEach((k) => { at[k] = head.findIndex((h) => alias[k].includes(h)); });
+    const need = ['order_ref', 'name', 'line1', 'postal', 'city', 'country', 'sku', 'qty'].filter((k) => at[k] < 0);
+    if (need.length) throw new Error('Missing columns: ' + need.map((k) => (k === 'line1' ? 'address' : k)).join(', ') + '. Download the template to see the expected columns.');
+    const by = new Map();
+    rows.slice(1).forEach((r, i) => {
+      const g = (k) => (at[k] >= 0 ? (r[at[k]] || '').trim() : '');
+      const ref = g('order_ref'); if (!ref) throw new Error('Row ' + (i + 2) + ' has no order_ref. Every row needs your order number, so a re-import never creates duplicates.');
+      if (!by.has(ref)) by.set(ref, { external_ref: ref, notes: g('notes') || null, ship: { name: g('name'), company: g('company'), email: g('email'), phone: g('phone'), line1: g('line1'), line2: g('line2'), postal: g('postal'), city: g('city'), country: g('country') }, lines: [] });
+      const o = by.get(ref); const sku = g('sku'), qty = parseInt(g('qty'), 10);
+      const ex = o.lines.find((l) => l.sku === sku); if (ex) ex.qty += qty || 0; else o.lines.push({ sku, qty });
+    });
+    return Array.from(by.values());
+  }
+  async csvPick(file) {
+    if (!file) return this.setState({ csvOrders: null, csvInfo: '', csvErr: '', csvResult: null });
+    if (file.size > 2000000) return this.setState({ csvOrders: null, csvInfo: '', csvErr: 'That file is too big. Keep it under 2 MB (about 200 orders).' });
+    try {
+      const orders = this.csvToOrders(await file.text());
+      if (orders.length > 200) throw new Error('Import at most 200 orders at a time. This file has ' + orders.length + '.');
+      this.setState({ csvOrders: orders, csvInfo: orders.length + ' order' + (orders.length === 1 ? '' : 's') + ' with ' + orders.reduce((t, o) => t + o.lines.length, 0) + ' lines ready to import.', csvErr: '', csvResult: null });
+    } catch (e) { this.setState({ csvOrders: null, csvInfo: '', csvErr: String(e.message || e), csvResult: null }); }
+  }
+  async csvImport() {
+    const s = this.state; if (s.csvBusy || !s.csvOrders) return;
+    this.setState({ csvBusy: true, csvErr: '' });
+    try {
+      const res = await this.whRpc('import_orders', { p_org: s.orgId, p_orders: s.csvOrders });
+      const held = []; (res || []).forEach((r, i) => { if (r.ok && r.status === 'held') held.push(r.ref); });
+      const ids = await this.whGet('orders?select=id&status=eq.held&held_notified_at=is.null&limit=200').catch(() => []);
+      await this.oNotify(ids.map((x) => x.id));
+      this.setState({ csvBusy: false, csvResult: res || [], csvOrders: null, csvInfo: '' }); this.whLoad();
+    } catch (e) { this.setState({ csvBusy: false, csvErr: String(e.message || e) }); }
   }
   async dmLoad() {
     this.setState({ dmInfo: null, dmErr: '' });
@@ -1554,7 +1723,6 @@ class Component extends DCLogic {
     const EMPTY = {
       imports: { tab: 'Imports', title: 'No imports yet', text: 'Your shipments appear here after you book an inbound delivery: milestones, customs documents and landed cost, live.', cta: 'Book your first inbound', go: goTab('inbound') },
       tracking: { tab: 'Shipment tracking', title: 'No shipments to track', text: 'Live tracking starts as soon as a shipment is booked with us.', cta: 'Book inbound', go: goTab('inbound') },
-      orders: { tab: 'Orders', title: 'No orders yet', text: 'Orders appear here once your stock has arrived and your store or sales channel is connected.', cta: 'Back to overview', go: goTab('overview') },
       returns: { tab: 'Returns', title: 'No returns yet', text: 'Returns appear here, graded and with their outcome, once you have orders and returns handling in your plan.', cta: 'Back to overview', go: goTab('overview') },
       growth: pc && pc.storeOn
         ? { tab: 'Storefront', title: s.domainName ? 'Your store at ' + s.domainName : 'Your .pl storefront', text: 'We are preparing your store. We email you when the first draft is ready to review.', cta: 'Back to overview', go: goTab('overview') }
@@ -1584,6 +1752,28 @@ class Component extends DCLogic {
         }
       })),
       // ---- products / inbound / inventory ----
+      // ---- orders ----
+      tabOrders: s.tab === 'orders', oForm: s.oOpen, oBtnLabel: s.oOpen ? 'Cancel' : 'New order', oToggle: () => this.setState(s.oOpen ? { oOpen: false, oLines: [], oErr: '' } : { oOpen: true, csvOpen: false, oErr: '' }),
+      csvBtnLabel: s.csvOpen ? 'Close import' : 'Import CSV', csvForm: s.csvOpen, csvToggle: () => { this.csvFile = null; this.setState(s.csvOpen ? { csvOpen: false, csvOrders: null, csvInfo: '', csvErr: '', csvResult: null } : { csvOpen: true, oOpen: false, csvOrders: null, csvInfo: '', csvErr: '', csvResult: null }); },
+      oNotActive: !!s.userEmail && !s.activated, oNeedProducts: s.oOpen && s.whInv.filter((p) => p.active).length === 0,
+      oRefV: s.oRef, onORef: (e) => this.setState({ oRef: e.target.value }), oNameV: s.oName, onOName: (e) => this.setState({ oName: e.target.value, oErr: '' }), oEmailV: s.oEmail, onOEmail: (e) => this.setState({ oEmail: e.target.value, oErr: '' }),
+      oPhoneV: s.oPhone, onOPhone: (e) => this.setState({ oPhone: e.target.value }), oLine1V: s.oLine1, onOLine1: (e) => this.setState({ oLine1: e.target.value, oErr: '' }), oPostalV: s.oPostal, onOPostal: (e) => this.setState({ oPostal: e.target.value, oErr: '' }),
+      oCityV: s.oCity, onOCity: (e) => this.setState({ oCity: e.target.value, oErr: '' }), oCountryV: s.oCountry, onOCountry: (e) => this.setState({ oCountry: e.target.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 2), oErr: '' }),
+      oPickOpts: [{ v: '', label: 'Choose a product' }].concat(s.whInv.filter((p) => p.active).map((p) => ({ v: p.product_id, label: p.sku + ' - ' + p.name + ' (' + p.available + ' available)' }))), oPickV: s.oPick, onOPick: (e) => this.setState({ oPick: e.target.value, oErr: '' }),
+      oQtyV: s.oQty, onOQty: (e) => this.setState({ oQty: e.target.value, oErr: '' }), oAdd: () => this.oAddLine(),
+      oLineRows: s.oLines.map((l, i) => { const p = s.whInv.find((x) => x.product_id === l.pid) || {}; return { label: (p.sku || '') + ' - ' + (p.name || ''), qty: String(l.qty), remove: () => this.setState({ oLines: s.oLines.filter((_, j) => j !== i) }) }; }),
+      oErrShow: !!s.oErr, oErrText: s.oErr, oSave: () => this.oSubmit(), oSaveLabel: s.oBusy ? 'Sending…' : 'Place order',
+      csvPickFile: (e) => this.csvPick(e.target.files && e.target.files[0]), csvInfoShow: !!s.csvInfo, csvInfoText: s.csvInfo, csvErrShow: !!s.csvErr, csvErrText: s.csvErr, csvCan: !!s.csvOrders && !s.csvBusy, csvOpacity: s.csvOrders && !s.csvBusy ? '1' : '0.5', csvGo: () => this.csvImport(), csvGoLabel: s.csvBusy ? 'Importing…' : 'Import orders',
+      csvTemplate: 'data:text/csv;charset=utf-8,' + encodeURIComponent('order_ref,name,company,email,phone,address,address2,postal,city,country,sku,qty,notes\nSHOP-1001,Jan Nowak,,jan@example.pl,+48600100200,Prosta 1,,00-001,Warszawa,PL,MUG-BLUE,2,\nSHOP-1001,Jan Nowak,,jan@example.pl,+48600100200,Prosta 1,,00-001,Warszawa,PL,MUG-RED,1,\nSHOP-1002,Anna Schmidt,,,,Hauptstr. 5,,10115,Berlin,DE,MUG-BLUE,4,Gift\n'),
+      csvResultShow: !!s.csvResult, csvRows: (s.csvResult || []).map((r) => ({ ref: r.external_ref || '-', text: r.ok ? (r.duplicate ? 'Already imported as ' + r.ref : r.ref + ': ' + ({ allocated: 'reserved', held: 'on hold, not enough stock', new: 'received' }[r.status] || r.status)) : r.error, color: r.ok ? (r.status === 'held' ? '#8A5A10' : '#2F7D55') : '#B4442E' })),
+      oHas: s.whOrders.length > 0, oEmpty: s.whLoaded && !s.whErr && s.whOrders.length === 0,
+      orderRows: s.whOrders.map((o) => { const ch = s.whChanges[o.id] || {}; const cancellable = ['new', 'held', 'allocated'].includes(o.status) && ch.status !== 'pending'; return { ref: o.ref, their: o.external_ref ? 'Your reference ' + o.external_ref : '', who: o.ship_name + ', ' + o.ship_city + ' ' + o.ship_country, items: (o.order_lines || []).map((l) => l.products.sku + ' × ' + l.qty).join(', '),
+        when: new Date(o.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
+        status: { new: 'Received', held: 'On hold, not enough stock', allocated: 'Reserved, waiting to be picked', picking: 'Being picked', packed: 'Packed', shipped: 'Shipped', cancelled: 'Cancelled' }[o.status] || o.status,
+        color: o.status === 'held' ? '#8A5A10' : o.status === 'cancelled' ? 'rgba(11,12,14,0.5)' : '#2F7D55', reason: o.status === 'held' ? (o.hold_reason || '') : '', reasonDisplay: o.status === 'held' ? 'block' : 'none',
+        cancelDisplay: cancellable ? 'inline-block' : 'none', onCancel: () => this.oCancel(o),
+        pendDisplay: ch.status === 'pending' ? 'block' : 'none', pendText: ch.summary || '', onCancelReq: () => this.whCancelRequest(ch.id), rejDisplay: ch.status === 'rejected' ? 'block' : 'none', rejText: ch.decision_note || 'Declined' }; }),
+
       tabProducts: s.tab === 'products', tabInbound: s.tab === 'inbound', tabInventory: s.tab === 'inventory',
       whLoading: !s.whLoaded && !!s.orgId, whErrShow: !!s.whErr, whErrText: s.whErr, whNoteShow: !!s.whNote, whNoteText: s.whNote, whNoteClear: () => this.setState({ whNote: '' }),
       whNoOrg: !s.orgId && !!s.userEmail,

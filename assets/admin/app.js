@@ -20,7 +20,7 @@ async function api(action, payload) {
   return out;
 }
 
-const WH_READ = [['approvals', 'Approvals'], ['inbound', 'Inbound'], ['stock', 'Stock'], ['products', 'Products'], ['discrepancies', 'Discrepancies']];
+const WH_READ = [['approvals', 'Approvals'], ['orders', 'Orders'], ['inbound', 'Inbound'], ['stock', 'Stock'], ['products', 'Products'], ['discrepancies', 'Discrepancies']];
 const NAV = {
   admin: [['', 'Overview'], ['customers', 'Customers'], ['requests', 'Requests'], ['domains', 'Domains'], ...WH_READ, ['locations', 'Locations'], ['staff', 'Staff'], ['audit', 'Audit log'], ['help', 'Help'], ['/scan', 'Scan app ↗']],
   support: [['', 'Overview'], ['customers', 'Customers'], ['requests', 'Requests'], ['domains', 'Domains'], ...WH_READ, ['audit', 'Audit log'], ['help', 'Help']],

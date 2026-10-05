@@ -5,13 +5,15 @@ export async function render(ctx, root) {
   clear(root).append(el('h1', { text: 'Overview' }), el('p', { class: 'muted', text: 'Loading…' }));
   const sum = async () => { const { data } = await ctx.sb.from('v_inventory_by_product').select('unplaced'); return (data || []).reduce((s, r) => s + r.unplaced, 0); };
   const warehouseCards = async () => {
-    const [apr, exp, rcv, unplaced, disc] = await Promise.all([
+    const [hold, toPick, apr, exp, rcv, unplaced, disc] = await Promise.all([
+      ctx.sb.from('orders').select('id', { count: 'exact', head: true }).eq('status', 'held').then((r) => r.count ?? 0),
+      ctx.sb.from('orders').select('id', { count: 'exact', head: true }).eq('status', 'allocated').then((r) => r.count ?? 0),
       ctx.sb.from('change_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending').then((r) => r.count ?? 0),
       ctx.sb.from('inbound_bookings').select('id', { count: 'exact', head: true }).eq('status', 'booked').then((r) => r.count ?? 0),
       ctx.sb.from('inbound_bookings').select('id', { count: 'exact', head: true }).eq('status', 'receiving').then((r) => r.count ?? 0),
       sum(), ctx.sb.from('discrepancies').select('id', { count: 'exact', head: true }).eq('status', 'open').then((r) => r.count ?? 0)]);
     const card = (n, label, route, hot) => el('a', { class: 'stat' + (hot && n ? ' hot' : ''), href: '#' + route }, el('b', { text: String(n) }), el('span', { text: label }));
-    return [card(apr, 'Changes to approve', 'approvals', true), card(exp, 'Deliveries expected', 'inbound'), card(rcv, 'Being received', 'inbound', true), card(unplaced, 'Units to put away', 'stock/putaway', true), card(disc, 'Open discrepancies', 'discrepancies', true)];
+    return [card(hold, 'Orders on hold', 'orders', true), card(toPick, 'Orders to pick', 'orders'), card(apr, 'Changes to approve', 'approvals', true), card(exp, 'Deliveries expected', 'inbound'), card(rcv, 'Being received', 'inbound', true), card(unplaced, 'Units to put away', 'stock/putaway', true), card(disc, 'Open discrepancies', 'discrepancies', true)];
   };
   if (ctx.me.role === 'warehouse') {
     try { return clear(root).append(el('h1', { text: 'Overview' }), el('div', { class: 'stats' }, await warehouseCards())); }
