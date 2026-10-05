@@ -69,3 +69,56 @@ Deno.test('settings: missing names are listed, values never are; default environ
   eq(configFromEnv((k) => ({ ...full, FURGONETKA_ENV: 'production' } as Record<string, string>)[k]).env, 'production', 'production');
   try { configFromEnv((k) => ({ ...full, FURGONETKA_ENV: 'live' } as Record<string, string>)[k]); throw new Error('should fail'); } catch (e) { ok(/sandbox or production/.test((e as Error).message), 'bad env refused'); }
 });
+
+// ---- shipments: prices, validation, create, order, label ----
+import { OrderPending, fieldErrors } from './furgonetka.ts';
+const api2 = (handler: (c: Call, n: number) => Response) => { const f = fake((c, n) => (c.url.endsWith('/oauth/token') ? tokenReply() : handler(c, n))); return { api: new Furgonetka(cfg, mem(), f.f, () => 1000), calls: () => f.calls.filter((c) => !c.url.endsWith('/oauth/token')) }; };
+Deno.test('quote sends the carriers and the package to calculate-price', async () => {
+  const { api, calls } = api2(() => json({ services_prices: [] }));
+  await api.quote({ parcels: [] }, { carriers: ['dpd', 'inpost'] });
+  const c = calls()[0]; eq(c.url, 'https://api.sandbox.furgonetka.pl/packages/calculate-price', 'url'); eq(c.init.method, 'POST', 'method');
+  eq(JSON.parse(String(c.init.body)), { services: { service: ['dpd', 'inpost'] }, package: { parcels: [] } }, 'body');
+  await api.quote({}, { serviceIds: [7] }); eq(JSON.parse(String(calls()[1].init.body)).services, { service_id: [7] }, 'by service id');
+});
+Deno.test('validate: ok when no errors, and a 400 with field errors is returned, not thrown', async () => {
+  eq(await api2(() => json({ errors: [] })).api.validate({}), { ok: true, errors: [] }, 'valid');
+  eq(await api2(() => json({})).api.validate({}), { ok: true, errors: [] }, 'valid, empty answer');
+  const bad = await api2(() => json({ errors: [{ path: '/receiver/phone', message: 'Phone is required' }, 'Other'] }, 400)).api.validate({});
+  eq(bad, { ok: false, errors: ['/receiver/phone: Phone is required', 'Other'] }, 'field errors');
+  try { await api2(() => json({ message: 'down' }, 500)).api.validate({}); throw new Error('should fail'); } catch (e) { ok(e instanceof FurgonetkaError && e.status === 500, 'a server error is thrown'); }
+});
+Deno.test('createPackage posts the shipment and does not order it', async () => {
+  const { api, calls } = api2(() => json({ package_id: 123, state: 'waiting' }));
+  eq((await api.createPackage({ a: 1 })).package_id, 123, 'id'); eq(calls().length, 1, 'one call only'); ok(calls()[0].url.endsWith('/packages'), 'POST /packages');
+});
+Deno.test('ordering: PUT the order with the uuid, then poll until the verdict', async () => {
+  const states = ['queueing', 'running', 'successful'];
+  const { api, calls } = api2((c) => (c.init.method === 'PUT' ? new Response(null, { status: 204 }) : json({ status: states.shift(), successfully_ordered_packages: ['123'] })));
+  const v = await api.orderAndWait(['123'], 'u-1', { sleep: async () => {} });
+  eq(v, { status: 'successful', orderedIds: ['123'], errors: [] }, 'verdict');
+  const put = calls()[0]; eq([put.init.method, put.url], ['PUT', 'https://api.sandbox.furgonetka.pl/order-commands/u-1'], 'put'); eq(JSON.parse(String(put.init.body)), { packages: [{ id: '123' }] }, 'body');
+  eq(calls().filter((c) => c.init.method === 'GET').length, 3, 'polled three times');
+});
+Deno.test('ordering again with the same uuid (commandExists) does not fail and does not place it twice', async () => {
+  const { api } = api2((c) => (c.init.method === 'PUT' ? json({ errors: [{ code: 'commandExists', path: '/uuid' }] }, 400) : json({ status: 'successful', successfully_ordered_packages: ['5'] })));
+  eq((await api.orderAndWait(['5'], 'u-2', { sleep: async () => {} })).status, 'successful', 'verdict read');
+});
+Deno.test('a carrier refusal is a verdict with its errors; a missing verdict is OrderPending', async () => {
+  const refused = await api2((c) => (c.init.method === 'PUT' ? json({}) : json({ status: 'error', errors: [{ path: '/packages/id/9', message: 'Not enough funds' }] }))).api.orderAndWait(['9'], 'u-3', { sleep: async () => {} });
+  eq([refused.status, refused.orderedIds, refused.errors], ['error', [], ['/packages/id/9: Not enough funds']], 'refused');
+  try { await api2((c) => (c.init.method === 'PUT' ? json({}) : json({ status: 'running' }))).api.orderAndWait(['9'], 'u-4', { tries: 3, sleep: async () => {} }); throw new Error('should fail'); }
+  catch (e) { ok(e instanceof OrderPending && e.uuid === 'u-4' && e.lastStatus === 'running', 'pending, with the uuid so it can be re-read'); }
+});
+Deno.test('an insufficient balance on ordering is a thrown 400, nothing ordered', async () => {
+  try { await api2((c) => (c.init.method === 'PUT' ? json({ errors: [{ message: 'balance' }] }, 400) : json({}))).api.orderAndWait(['9'], 'u-5'); throw new Error('should fail'); }
+  catch (e) { ok(e instanceof FurgonetkaError && e.status === 400, 'thrown'); }
+});
+Deno.test('label: the file bytes, or null while Furgonetka has none (204)', async () => {
+  const pdf = new Uint8Array([37, 80, 68, 70]);
+  const got = await api2(() => new Response(pdf, { status: 200, headers: { 'Content-Type': 'application/pdf' } })).api.label('1');
+  eq([Array.from(got!.bytes), got!.contentType], [[37, 80, 68, 70], 'application/pdf'], 'bytes');
+  eq(await api2(() => new Response(null, { status: 204 })).api.label('1'), null, 'not ready');
+});
+Deno.test('fieldErrors reads strings and objects and ignores everything else', () => {
+  eq(fieldErrors({ errors: ['a', { path: '/x', message: 'bad' }, { code: 'c' }] }), ['a', '/x: bad', 'c'], 'mixed'); eq(fieldErrors(null), [], 'null'); eq(fieldErrors({ errors: 'x' }), [], 'not a list');
+});

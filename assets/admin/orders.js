@@ -53,11 +53,12 @@ async function detail(ctx, root, id) {
   const orgs = await loadOrgs(ctx);
   const o = (await ctx.sb.from('orders').select('*').eq('id', id).maybeSingle()).data;
   if (!o) return clear(root).append(el('p', { class: 'err', text: 'Order not found.' }), el('button', { class: 'btn ghost', onclick: () => ctx.go('orders'), text: 'Back' }));
-  const [ln, al, cr, pc] = await Promise.all([
+  const [ln, al, cr, pc, sh] = await Promise.all([
     ctx.sb.from('order_lines').select('id, qty, products(sku, name)').eq('order_id', id),
     ctx.sb.from('allocations').select('order_line_id, qty, status, lot, locations(code)').eq('order_id', id),
     ctx.sb.from('change_requests').select('summary, status').eq('entity_id', id).eq('status', 'pending'),
     ctx.sb.from('parcels').select('seq, weight_g, length_cm, width_cm, height_cm, packed_at').eq('order_id', id).order('seq'),
+    ctx.sb.from('shipments').select('*').eq('order_id', id).order('created_at', { ascending: false }),
   ]);
   const act = canAct(ctx), reload = () => detail(ctx, root, id);
   const where = (lineId) => (al.data || []).filter((a) => a.order_line_id === lineId && a.status !== 'released').map((a) => `${a.locations.code} × ${a.qty} (${a.status === 'picked' ? 'picked' : 'to pick'})`).join(', ') || '-';
@@ -73,5 +74,59 @@ async function detail(ctx, root, id) {
       el('section', { class: 'card' }, el('h2', { text: 'Order' }), kv([['Customer', orgName(orgs, o.org_id)], ['Their reference', o.external_ref], ['Channel', o.channel], ['Created', fmtDate(o.created_at)], ['Reserved', o.allocated_at ? fmtDate(o.allocated_at) : null], ['Notes', o.notes]])),
       el('section', { class: 'card' }, el('h2', { text: 'Ship to' }), kv([['Name', o.ship_name], ['Company', o.ship_company], ['Address', [o.ship_line1, o.ship_line2].filter(Boolean).join(', ')], ['Postal code and city', `${o.ship_postal} ${o.ship_city}`], ['Country', o.ship_country], ['Email', o.ship_email], ['Phone', o.ship_phone]]))),
     el('section', { class: 'card' }, el('h2', { text: 'Items' }), table([{ label: 'Product', render: (l) => `${l.products.sku} - ${l.products.name}` }, { label: 'Units', render: (l) => String(l.qty) }, { label: 'Reserved at', render: (l) => where(l.id) }], ln.data || [])),
-    (pc.data || []).length > 0 && el('section', { class: 'card' }, el('h2', { text: 'Parcels' }), table([{ label: '#', render: (p) => String(p.seq) }, { label: 'Weight', render: (p) => (p.weight_g / 1000).toLocaleString('en-GB', { minimumFractionDigits: 1, maximumFractionDigits: 3 }) + ' kg' }, { label: 'Size', render: (p) => `${Number(p.length_cm)} × ${Number(p.width_cm)} × ${Number(p.height_cm)} cm` }, { label: 'Packed', render: (p) => fmtDate(p.packed_at) }], pc.data)));
+    (pc.data || []).length > 0 && el('section', { class: 'card' }, el('h2', { text: 'Parcels' }), table([{ label: '#', render: (p) => String(p.seq) }, { label: 'Weight', render: (p) => (p.weight_g / 1000).toLocaleString('en-GB', { minimumFractionDigits: 1, maximumFractionDigits: 3 }) + ' kg' }, { label: 'Size', render: (p) => `${Number(p.length_cm)} × ${Number(p.width_cm)} × ${Number(p.height_cm)} cm` }, { label: 'Packed', render: (p) => fmtDate(p.packed_at) }], pc.data)),
+    shippingCard(ctx, o, sh.data || [], act, reload));
+}
+
+const pln = (n) => Number(n).toFixed(2).replace('.', ',') + ' zł';
+
+// Shipping label: prices from the carriers, buying one, the label file, and the way out of an unconfirmed order.
+function shippingCard(ctx, o, shipments, act, reload) {
+  const live = shipments.find((s) => s.status === 'purchased' || s.status === 'buying'), last = shipments[0];
+  const card = el('section', { class: 'card' }, el('h2', { text: 'Shipping label' }));
+  if (live && live.status === 'purchased') {
+    card.append(kv([['Carrier', live.service_name || live.carrier], ['Tracking', (live.tracking_numbers || []).join(', ') || 'Not available yet'], ['We paid', `${pln(live.cost_net)} + VAT (${pln(live.cost_gross)})`], ['Charged to customer', `${pln(live.bill_net)} + VAT (${pln(live.bill_gross)}), ${Number(live.markup_percent)}% markup`], ['Billing', live.billing_status === 'pending' ? 'Waiting to be invoiced' : live.billing_status], ['Environment', live.env === 'sandbox' ? 'Test (sandbox): nothing real was charged' : 'Live'], ['Bought', fmtDate(live.purchased_at)]]));
+    if (act) card.append(el('div', { class: 'row' }, el('button', { class: 'btn', text: 'Download label', onclick: async (e) => {
+      const b = e.currentTarget; b.disabled = true;
+      try { const r = await ctx.api('shipping.label', { order_id: o.id }); const bytes = Uint8Array.from(atob(r.pdf_base64), (c) => c.charCodeAt(0)); window.open(URL.createObjectURL(new Blob([bytes], { type: r.content_type || 'application/pdf' })), '_blank'); }
+      catch (err) { toast(err.message, true); } finally { b.disabled = false; }
+    } })));
+    return card;
+  }
+  if (live && live.status === 'buying') {
+    card.append(el('div', { class: 'rule' }, el('b', { text: 'A label order is waiting to be checked' }), el('p', { text: 'Furgonetka did not confirm this order, or recording it failed. It may already have been charged, so do not buy again. Check what happened:' })));
+    if (act) card.append(el('div', { class: 'row' }, el('button', { class: 'btn', text: 'Check the label order', onclick: async (e) => {
+      const b = e.currentTarget; b.disabled = true;
+      try { const r = await ctx.api('shipping.recheck', { order_id: o.id }); toast(r.message, r.result === 'pending'); reload(); } catch (err) { toast(err.message, true); b.disabled = false; }
+    } })));
+    return card;
+  }
+  if (o.status !== 'packed') { card.append(el('p', { class: 'muted', text: 'A label can be bought once the order is packed.' })); return card; }
+  if (last && last.status === 'failed') card.append(el('div', { class: 'note' }, el('b', { text: 'The last attempt failed, nothing was charged' }), el('p', { text: last.error || '' })));
+  const out = el('div'), err = el('p', { class: 'err' });
+  card.append(el('p', { class: 'muted', text: 'Prices come from the carriers for these parcels. Getting prices is free; nothing is bought until you press Buy.' }));
+  if (!act) return card.append(el('p', { class: 'muted', text: 'Only warehouse staff and admins can buy labels.' })), card;
+  const quoteBtn = el('button', { class: 'btn', text: 'Get shipping prices' });
+  const buy = async (q, r, btn) => {
+    const over = q.cost_gross > r.max_label;
+    const msg = `${q.name}. We pay ${pln(q.cost_net)} + VAT (${pln(q.cost_gross)}). The customer is charged ${pln(q.bill_net)} + VAT (${r.markup_percent}% markup).` + (r.env === 'sandbox' ? ' This is the test environment: nothing real is charged.' : ' This spends real money from the Furgonetka balance.') + (over ? ` This is above the usual limit of ${pln(r.max_label)} per label.` : '');
+    if (!(await confirmBox('Buy this label?', msg, 'Buy label'))) return;
+    btn.disabled = true;
+    try { await ctx.api('shipping.buy', { order_id: o.id, service_id: q.service_id, confirm_over_limit: over && ctx.me.role === 'admin' }); toast('Label bought'); reload(); }
+    catch (e) { toast(e.message, true); err.textContent = e.message; btn.disabled = false; }
+  };
+  quoteBtn.onclick = () => guarded(quoteBtn, err, async () => {
+    clear(out).append(el('p', { class: 'muted', text: 'Asking the carriers…' }));
+    const r = await ctx.api('shipping.quote', { order_id: o.id });
+    clear(out);
+    if (!r.quotes.length) { out.append(el('p', { class: 'muted', text: 'No carrier answered for this parcel.' })); return; }
+    if (!r.enabled) out.append(el('div', { class: 'rule' }, el('b', { text: 'Buying is switched off' }), el('p', { text: 'An admin turns it on with the server setting SHIPPING_ENABLED=true. You can still compare prices.' })));
+    out.append(el('p', { class: 'muted' }, 'Environment: ', pill(r.env === 'sandbox' ? 'test' : 'live', r.env === 'sandbox' ? 'ok' : 'bad'), ` · customer markup ${r.markup_percent}%`),
+      table([{ label: 'Carrier', render: (q) => el('span', { class: q.available ? '' : 'muted' }, q.name || q.carrier, q.available ? '' : ' (not available: ' + q.reason + ')') },
+        { label: 'We pay (net)', render: (q) => (q.available ? pln(q.cost_net) : '-') },
+        { label: 'Customer pays (net)', render: (q) => (q.available ? pln(q.bill_net) : '-') },
+        { label: '', render: (q) => (q.available ? el('button', { class: 'btn tiny', text: 'Buy label', onclick: (e) => buy(q, r, e.currentTarget) }) : '') }], r.quotes));
+  });
+  card.append(el('div', { class: 'row' }, quoteBtn), err, out);
+  return card;
 }

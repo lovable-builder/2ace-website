@@ -5,7 +5,9 @@ import { retryAutoRegister } from '../_shared/domainOrder.ts';
 import Stripe from 'npm:stripe';
 import { STAFF_GUIDE, OWNER_GUIDE } from '../_shared/helpContent.ts';
 import { notifyHeld } from '../_shared/orderNotice.ts';
-import { Furgonetka, FurgonetkaError, configFromEnv, type TokenStore } from '../_shared/furgonetka.ts';
+import { Furgonetka, FurgonetkaError, OrderPending, configFromEnv, fieldErrors, type TokenStore } from '../_shared/furgonetka.ts';
+import { buyLabel, ShipError } from '../_shared/shipBuy.ts';
+import { buildPackage, parseQuotes, customerNet, customerGross, spendCheck, settingNum, carriersFrom, warsawDayStart, extractTracking, DEFAULT_MARKUP_PERCENT, DEFAULT_MAX_LABEL_PLN, DEFAULT_DAILY_CAP_PLN, type OrderShip, type ParcelRow } from '../_shared/shipping.ts';
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!);
 
@@ -35,6 +37,51 @@ async function ownerOf(orgId: string) {
   return p ? { name: p.full_name as string | null, email: p.email as string | null } : null;
 }
 
+// ---------- shipping helpers ----------
+const env = (k: string) => Deno.env.get(k);
+function shippingApi(): Furgonetka {
+  try { return new Furgonetka(configFromEnv(env), tokenStore); } catch (e) { throw new Bad((e as Error).message); }
+}
+// Turns a Furgonetka failure into a message staff can act on (field errors included, never secrets).
+function shippingFail(e: unknown): never {
+  if (e instanceof Bad) throw e;
+  if (e instanceof FurgonetkaError) {
+    const detail = fieldErrors(e.payload);
+    throw new Bad(`${e.message}${detail.length ? ' (' + detail.slice(0, 4).join('; ') + ')' : ''}`, 502);
+  }
+  throw new Bad((e as Error).message || 'Shipping failed', 502);
+}
+const ORDER_COLS = 'id, org_id, ref, status, ship_name, ship_company, ship_line1, ship_line2, ship_postal, ship_city, ship_country, ship_email, ship_phone';
+async function packedOrder(id: unknown) {
+  if (!isUuid(id)) throw new Bad('Invalid order');
+  const [{ data: o }, { data: pc }] = await Promise.all([admin.from('orders').select(ORDER_COLS).eq('id', id).maybeSingle(), admin.from('parcels').select('weight_g, length_cm, width_cm, height_cm').eq('order_id', id).order('seq')]);
+  if (!o) throw new Bad('Order not found', 404);
+  if (o.status === 'shipped') throw new Bad('This order has already shipped');
+  if (o.status !== 'packed') throw new Bad(`Only a packed order can be shipped (this one is ${o.status})`);
+  if (!pc?.length) throw new Bad('This order has no parcels recorded');
+  return { order: o as OrderShip & { id: string; org_id: string; status: string }, parcels: pc as ParcelRow[] };
+}
+const markupPct = () => settingNum(env, 'SHIPPING_MARKUP_PERCENT', DEFAULT_MARKUP_PERCENT, 0, 500);
+async function spentToday(e: string): Promise<number> {
+  const { data } = await admin.from('shipments').select('cost_gross').eq('env', e).in('status', ['buying', 'purchased']).gte('created_at', warsawDayStart(new Date()).toISOString());
+  return (data ?? []).reduce((t, r) => t + Number(r.cost_gross), 0);
+}
+async function shippingAlert(subject: string, lines: string) {
+  try { await sendEmail({ to: TEAM_INBOX, subject, html: layout(subject, lines) }); } catch (e) { console.error('shipping alert email failed', (e as Error).message); }
+}
+const b64 = (bytes: Uint8Array) => { let s = ''; for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode(...bytes.subarray(i, i + 0x8000)); return btoa(s); };
+// Records a paid label: retried once, because after the money is spent a transient database error must not lose the record.
+async function finishShipment(s: StaffCtx, shipmentId: string, packageId: string, tracking: string[]) {
+  const db = userClient(s.token);
+  let last = '';
+  for (let i = 0; i < 2; i++) {
+    const { data, error } = await db.rpc('finish_shipment', { p_id: shipmentId, p_package_id: packageId, p_tracking: tracking });
+    if (!error) return data as { carrier: string; tracking_numbers: string[]; cost_gross: number; bill_net: number; bill_gross: number; order_id: string; org_id: string };
+    last = error.message;
+  }
+  throw new Bad(last);
+}
+
 const actions: Record<string, { roles?: StaffRole[]; run: (s: StaffCtx, b: Record<string, unknown>) => Promise<unknown> }> = {
   me: { run: async (s) => ({ id: s.user.id, role: s.role, email: s.user.email }) },
 
@@ -54,6 +101,84 @@ const actions: Record<string, { roles?: StaffRole[]; run: (s: StaffCtx, b: Recor
       await audit(s, 'shipping.test', 'shipping', null, null, null, { ok: false, env: api.env });
       return { ok: false, env: api.env, step: 'api', status: e instanceof FurgonetkaError ? e.status : null, error: (e as Error).message };
     }
+  } },
+
+  // ---------- shipping labels ----------
+  // Prices for a packed order from the main carriers. Free: nothing is created or charged. The customer price includes our markup.
+  'shipping.quote': { roles: ['admin', 'warehouse'], run: async (_s, b) => {
+    const { order, parcels } = await packedOrder(b.order_id);
+    const api = shippingApi(), pct = markupPct();
+    try {
+      const raw = await api.quote(buildPackage(order, parcels), { carriers: carriersFrom(env) });
+      const quotes = parseQuotes(raw).map((q) => (q.available ? { ...q, bill_net: customerNet(q.cost_net, pct), bill_gross: customerGross(q.cost_net, pct, q.tax) } : q));
+      return { env: api.env, enabled: env('SHIPPING_ENABLED') === 'true', markup_percent: pct, max_label: settingNum(env, 'SHIPPING_MAX_LABEL_PLN', DEFAULT_MAX_LABEL_PLN, 0), quotes };
+    } catch (e) { return shippingFail(e); }
+  } },
+
+  // Buys one label. The only step that spends money, and every guard runs here on the server:
+  //   kill switch -> fresh price for exactly this service -> balance -> per-label limit (admin confirmation) -> daily cap -> a 'buying' row is written FIRST.
+  // Furgonetka's own dry run comes before anything is created. Ordering is the charge; it is repeat-safe through the shipment's order_uuid.
+  'shipping.buy': { roles: ['admin', 'warehouse'], run: async (s, b) => {
+    const serviceId = Number(b.service_id);
+    if (!Number.isInteger(serviceId) || serviceId <= 0) throw new Bad('Choose a carrier service');
+    const { order, parcels } = await packedOrder(b.order_id);
+    const api = shippingApi(), db = userClient(s.token), pct = markupPct();
+    try {
+      return await buyLabel({
+        env: api.env, api,
+        settings: { enabled: env('SHIPPING_ENABLED') === 'true', maxLabel: settingNum(env, 'SHIPPING_MAX_LABEL_PLN', DEFAULT_MAX_LABEL_PLN, 0), dailyCap: settingNum(env, 'SHIPPING_DAILY_CAP_PLN', DEFAULT_DAILY_CAP_PLN, 0), markupPct: pct },
+        spentToday: () => spentToday(api.env),
+        begin: async (a) => {
+          const { data, error } = await db.rpc('begin_shipment', { p_order: order.id, p_env: api.env, p_service_id: a.serviceId, p_carrier: a.quote.carrier, p_service_name: a.quote.name, p_cost_net: a.quote.cost_net, p_cost_gross: a.quote.cost_gross, p_tax: a.quote.tax, p_markup: a.markupPct });
+          if (error) throw new Error(error.message);
+          return data as { id: string; order_uuid: string };
+        },
+        fail: async (id, m) => { const { error } = await db.rpc('fail_shipment', { p_id: id, p_error: m }); if (error) throw new Error(error.message); },
+        savePackageId: async (id, pkg) => { await admin.from('shipments').update({ provider_package_id: pkg }).eq('id', id); },
+        finish: (id, pkg, tr) => finishShipment(s, id, pkg, tr),
+        alert: shippingAlert,
+        audit: (action, id, payload) => audit(s, action, 'shipments', id, order.org_id, null, payload),
+      }, { order, parcels, serviceId, role: s.role, confirmOverLimit: b.confirm_over_limit === true });
+    } catch (e) { if (e instanceof ShipError) throw new Bad(e.message, e.status); throw e; }
+  } },
+
+  // Asks Furgonetka what happened to an order whose answer never arrived (or whose record failed), and finishes or closes it.
+  'shipping.recheck': { roles: ['admin', 'warehouse'], run: async (s, b) => {
+    if (!isUuid(b.order_id)) throw new Bad('Invalid order');
+    const { data: sh } = await admin.from('shipments').select('id, status, order_uuid, provider_package_id').eq('order_id', b.order_id).eq('status', 'buying').maybeSingle();
+    if (!sh) throw new Bad('There is no label order waiting to be checked for this order');
+    if (!sh.provider_package_id) { await userClient(s.token).rpc('fail_shipment', { p_id: sh.id, p_error: 'Closed after a failure before the shipment was created' }); return { ok: true, result: 'closed', message: 'Nothing had been created at Furgonetka, so the attempt was closed. You can buy again.' }; }
+    const api = shippingApi();
+    try {
+      const v = await api.waitForOrder(sh.order_uuid, { tries: 4, delayMs: 1500 });
+      if (v.orderedIds.includes(sh.provider_package_id)) {
+        let tracking: string[] = []; try { tracking = extractTracking(await api.fetchPackage(sh.provider_package_id)); } catch (_e) { /* later */ }
+        const done = await finishShipment(s, sh.id, sh.provider_package_id, tracking);
+        await audit(s, 'shipping.recheck', 'shipments', sh.id, done.org_id, null, { result: 'purchased' });
+        return { ok: true, result: 'purchased', message: 'The label had been bought. It is recorded now and the order is shipped.' };
+      }
+      await userClient(s.token).rpc('fail_shipment', { p_id: sh.id, p_error: 'Furgonetka did not order it' + (v.errors.length ? ': ' + v.errors.join('; ') : '') });
+      await audit(s, 'shipping.recheck', 'shipments', sh.id, null, null, { result: 'not_ordered' });
+      return { ok: true, result: 'closed', message: 'Furgonetka did not order it, so nothing was charged. You can buy again.' };
+    } catch (e) {
+      if (e instanceof OrderPending) return { ok: true, result: 'pending', message: 'Furgonetka still has not decided. Try again in a few minutes.' };
+      return shippingFail(e);
+    }
+  } },
+
+  // The label file (PDF) for a shipped order, for printing.
+  'shipping.label': { roles: ['admin', 'warehouse'], run: async (s, b) => {
+    if (!isUuid(b.order_id)) throw new Bad('Invalid order');
+    const { data: sh } = await admin.from('shipments').select('id, org_id, provider_package_id').eq('order_id', b.order_id).eq('status', 'purchased').maybeSingle();
+    if (!sh?.provider_package_id) throw new Bad('No label has been bought for this order', 404);
+    const api = shippingApi();
+    try {
+      let file = null;
+      for (let i = 0; i < 5 && !file; i++) { file = await api.label(sh.provider_package_id); if (!file) await new Promise((r) => setTimeout(r, 1500)); }
+      if (!file) throw new Bad('Furgonetka has not produced the label yet. Try again in a moment.', 409);
+      await audit(s, 'shipping.label', 'shipments', sh.id, sh.org_id, null, { package: sh.provider_package_id });
+      return { content_type: file.contentType, pdf_base64: b64(file.bytes) };
+    } catch (e) { return shippingFail(e); }
   } },
 
   // ---------- orders ----------

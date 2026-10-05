@@ -85,6 +85,79 @@ export class Furgonetka {
   // Read-only and free:
   balance() { return this.call('GET', '/account/balance'); }
   services() { return this.call('GET', '/account/services'); }
+
+  // Prices for a shipment from several carriers at once. Free. A carrier that cannot take it comes back marked unavailable, not as an error.
+  quote(pkg: unknown, scope: { carriers?: string[]; serviceIds?: number[] }) {
+    const services: Record<string, unknown> = {};
+    if (scope.carriers?.length) services.service = scope.carriers;
+    if (scope.serviceIds?.length) services.service_id = scope.serviceIds;
+    return this.call('POST', '/packages/calculate-price', { json: { services, package: pkg } });
+  }
+
+  // Dry run: Furgonetka checks the shipment and answers with field errors. Nothing is created and nothing is charged.
+  async validate(pkg: unknown): Promise<{ ok: boolean; errors: string[] }> {
+    try {
+      const r = await this.call('POST', '/packages/validate', { json: pkg });
+      const errs = fieldErrors(r);
+      return { ok: errs.length === 0, errors: errs };
+    } catch (e) {
+      if (e instanceof FurgonetkaError && e.status === 400) { const errs = fieldErrors(e.payload); if (errs.length) return { ok: false, errors: errs }; }
+      throw e;
+    }
+  }
+
+  // Creates the shipment in Furgonetka's cart ("waiting"). This does NOT charge: the charge happens when it is ordered.
+  createPackage(pkg: unknown) { return this.call('POST', '/packages', { json: pkg }) as Promise<Record<string, unknown>>; }
+  fetchPackage(id: string) { return this.call('GET', `/packages/${id}`) as Promise<Record<string, unknown>>; }
+
+  // Orders (and so CHARGES) shipments. Safe to repeat with the same uuid: Furgonetka answers 400 commandExists and the order is not placed twice.
+  async submitOrder(packageIds: string[], uuid: string): Promise<void> {
+    try { await this.call('PUT', `/order-commands/${uuid}`, { json: { packages: packageIds.map((id) => ({ id })) } }); }
+    catch (e) { if (e instanceof FurgonetkaError && e.status === 400 && JSON.stringify(e.payload).includes('commandExists')) return; throw e; }
+  }
+  orderStatus(uuid: string) { return this.call('GET', `/order-commands/${uuid}`) as Promise<Record<string, unknown>>; }
+
+  // Submits the order and waits for the verdict. Throws OrderPending when no verdict arrived in time: then it is NOT known whether money was spent.
+  async orderAndWait(packageIds: string[], uuid: string, wait: { tries?: number; delayMs?: number; sleep?: (ms: number) => Promise<void> } = {}): Promise<OrderVerdict> {
+    await this.submitOrder(packageIds, uuid);
+    return this.waitForOrder(uuid, wait);
+  }
+  async waitForOrder(uuid: string, wait: { tries?: number; delayMs?: number; sleep?: (ms: number) => Promise<void> } = {}): Promise<OrderVerdict> {
+    const tries = wait.tries ?? 20, delay = wait.delayMs ?? 1500, sleep = wait.sleep ?? ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)));
+    let last = '';
+    for (let i = 0; i < tries; i++) {
+      const r = await this.orderStatus(uuid); last = String(r.status ?? '');
+      if (['successful', 'partial_success', 'error', 'cancelled'].includes(last)) {
+        const ok = Array.isArray(r.successfully_ordered_packages) ? (r.successfully_ordered_packages as unknown[]).map(String) : [];
+        return { status: last, orderedIds: ok, errors: fieldErrors(r) };
+      }
+      await sleep(delay);
+    }
+    throw new OrderPending(uuid, last);
+  }
+
+  // The label file, or null when Furgonetka has none yet (HTTP 204, normal just after ordering).
+  async label(id: string): Promise<{ bytes: Uint8Array; contentType: string } | null> {
+    const r = await this.call('GET', `/packages/${id}/label`, { raw: true }) as Response;
+    if (r.status === 204) return null;
+    return { bytes: new Uint8Array(await r.arrayBuffer()), contentType: r.headers.get('Content-Type') ?? 'application/pdf' };
+  }
+}
+
+export type OrderVerdict = { status: string; orderedIds: string[]; errors: string[] };
+export class OrderPending extends Error {
+  constructor(public uuid: string, public lastStatus: string) { super('Furgonetka has not confirmed the order yet'); }
+}
+
+// Pulls human-readable messages out of Furgonetka's error lists ({ errors: [{ path, message }] }).
+export function fieldErrors(payload: unknown): string[] {
+  const list = (payload as { errors?: unknown })?.errors;
+  if (!Array.isArray(list)) return [];
+  return list.map((e) => {
+    if (typeof e === 'string') return e;
+    const o = e as { path?: string; message?: string; code?: string };
+    return [o.path, o.message ?? o.code].filter(Boolean).join(': ');
+  }).filter(Boolean);
 }
 
 async function safeJson(r: Response): Promise<unknown> {
