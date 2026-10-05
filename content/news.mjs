@@ -6,7 +6,7 @@ export const articles = [
     title: 'Opening a company in Poland as a foreigner: PESEL, trusted profile and the steps that follow',
     summary: 'A plain-language route from nothing to a registered Polish company: which form to choose, how to get a PESEL and a Profil Zaufany, how the registration works, and what to sort out afterwards.',
     date: '2026-10-04', minutes: 6, tag: 'Company setup', cover: 'company', image: null,
-    cta: { title: 'Want help with all of this?', text: 'We can walk you through every step, from your PESEL appointment and trusted profile to registering the company and setting up your first import. Tell us where you are in the process and we will reply within one working day.', href: '/#talk', label: 'Talk to us' },
+    cta: { title: 'Want help with all of this?', text: 'We can walk you through every step, from your PESEL appointment and trusted profile to registering the company and setting up your first import. Tell us where you are in the process and we will reply within one working day.', href: '/?about=company#talk', label: 'Talk to us' },
     body: `
 <p>Selling into the EU is easier with a company inside it: you can register for VAT, import goods in your own name and hold stock in a hub such as Poland. Foreigners can do this, and much of it can be done online. This guide explains the order of the steps and the two things people most often get stuck on: the <strong>PESEL</strong> number and the <strong>Profil Zaufany</strong> (trusted profile).</p>
 <h2>1. Choose the form</h2>

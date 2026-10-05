@@ -480,6 +480,7 @@ class Component extends DCLogic {
     this.setupAuth();
     this.setupReveals();
     this.setupForm();
+    this.jumpToHash();
     this.setupSlider();
   }
 
@@ -765,6 +766,23 @@ class Component extends DCLogic {
       });
     }, { rootMargin: '0px 0px -12% 0px', threshold: 0.12 });
     els.forEach((el) => this.io.observe(el));
+  }
+
+  // Arriving from another page with #talk (or any #section): the page is built by script and its layout keeps settling, so the browser's own
+  // jump lands in the wrong place or nowhere. Scroll again as it settles, and stop as soon as the visitor scrolls themselves.
+  jumpToHash() {
+    const id = decodeURIComponent((location.hash || '').slice(1));
+    const about = new URLSearchParams(location.search).get('about');
+    const ABOUT = { company: 'Hi, I would like help opening a company in Poland: my PESEL and trusted profile, registering the company, and setting up my first import.\n\nWhere I am now: ' };
+    const ta = document.querySelector('#f3');
+    if (about && ABOUT[about] && ta && !ta.value) ta.value = ABOUT[about];
+    if (!id) return;
+    let stop = false;
+    const halt = () => { stop = true; };
+    ['wheel', 'touchstart', 'keydown', 'mousedown'].forEach((ev) => window.addEventListener(ev, halt, { once: true, passive: true }));
+    const go = () => { if (stop) return; const t = document.getElementById(id); if (t) t.scrollIntoView({ block: 'start' }); };
+    [0, 250, 700, 1400, 2400].forEach((ms) => setTimeout(go, ms));
+    window.addEventListener('load', () => setTimeout(go, 100), { once: true });
   }
 
   setupForm() {
