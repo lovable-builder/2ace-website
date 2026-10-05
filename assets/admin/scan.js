@@ -41,6 +41,16 @@ async function camera(onCode) {
 
 const shell = (title, back, ...kids) => clear(app).append(el('header', { class: 'bar' }, back ? el('button', { class: 'back', text: '‹', 'aria-label': 'Back', onclick: back }) : el('span', { class: 'logo', text: '2ACE' }), el('strong', { text: title }), el('a', { class: 'out', href: '/admin', text: 'Admin' })), el('main', {}, msg, ...kids));
 
+// First photo of a product, so the person at the shelf can check they hold the right thing. Optional: no photo, no picture.
+async function productPhoto(productId) {
+  try {
+    const { data } = await sb.from('products').select('photo_paths').eq('id', productId).maybeSingle();
+    const path = data && (data.photo_paths || [])[0]; if (!path) return null;
+    const { data: sg } = await sb.storage.from('products').createSignedUrl(path, 3600);
+    return sg && sg.signedUrl ? el('img', { src: sg.signedUrl, alt: '', class: 'pimg' }) : null;
+  } catch { return null; }
+}
+
 // Tell the customer (and our inbox) about the differences, once. A failure here never undoes the receiving.
 async function notify(bookingId) {
   try {
@@ -86,9 +96,10 @@ async function receive(id, current) {
       receive(id, r);
     } catch (e) { say(e.message, true); }
   };
+  const pic = current ? await productPhoto(current.id) : null;
   shell(b.ref, receiveList,
     el('p', { class: 'muted', text: orgName(b.org_id) + (b.tracking ? ' · ' + b.tracking : '') }),
-    current ? el('div', { class: 'card' }, el('b', { text: current.sku }), el('div', { text: current.name }), el('div', { class: 'row2' }, el('span', { text: 'Quantity' }), qty),
+    current ? el('div', { class: 'card' }, pic, el('b', { text: current.sku }), el('div', { text: current.name }), el('div', { class: 'row2' }, el('span', { text: 'Quantity' }), qty),
       el('label', { class: 'photo' }, el('small', { class: 'muted', text: 'Photos if damaged (optional)' }), photos),
       el('div', { class: 'row2' }, el('button', { class: 'btn big', text: 'Good', onclick: () => post(current, 'good') }), el('button', { class: 'btn big warn', text: 'Damaged', onclick: () => post(current, 'damaged') })),
       el('button', { class: 'btn ghost', text: 'Scan something else', onclick: () => receive(id) })) : scanInput(onCode, 'Scan a product'),
@@ -112,7 +123,8 @@ async function moveStart(product) {
   if (!rows.length) { shell('Put away', home, el('div', { class: 'card' }, el('b', { text: product.sku }), el('div', { text: 'Nothing waiting in the receiving area.' })), scanInput(onCode, 'Scan another product')); return; }
   moveTo(product, rows[0], rows);
 }
-function moveTo(product, row, rows) {
+async function moveTo(product, row, rows) {
+  const pic = await productPhoto(product.id);
   const free = row.on_hand - row.reserved;
   const qty = el('input', { class: 'qty', type: 'number', inputmode: 'numeric', min: '1', max: String(free), value: String(free), 'aria-label': 'Quantity' });
   const onCode = async (code) => {
@@ -123,7 +135,7 @@ function moveTo(product, row, rows) {
       say(`Moved ${qty.value} × ${product.sku} to ${r.code}`); moveStart();
     } catch (e) { say(e.message, true); }
   };
-  shell('Put away', () => moveStart(), el('div', { class: 'card' }, el('b', { text: product.sku }), el('div', { text: product.name }), el('small', { class: 'muted', text: orgName(row.org_id) + ' · ' + free + ' waiting at ' + row.locations.code }), el('div', { class: 'row2' }, el('span', { text: 'Quantity' }), qty)),
+  shell('Put away', () => moveStart(), el('div', { class: 'card' }, pic, el('b', { text: product.sku }), el('div', { text: product.name }), el('small', { class: 'muted', text: orgName(row.org_id) + ' · ' + free + ' waiting at ' + row.locations.code }), el('div', { class: 'row2' }, el('span', { text: 'Quantity' }), qty)),
     el('p', { class: 'hint', text: 'Now scan the bin label' }), scanInput(onCode, 'Scan the bin'));
 }
 

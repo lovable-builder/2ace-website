@@ -1,5 +1,5 @@
 import { el, clear, table, pill, field, modal, toast, kv, fmtDate, confirmBox } from './ui.js';
-import { rpc, canAct, loadOrgs, orgName, orgSelect, guarded } from './wms.js';
+import { rpc, canAct, loadOrgs, orgName, orgSelect, guarded, uploadProductPhotos, signedUrls, setProductPhotos, thumb } from './wms.js';
 
 const num = (v) => (v === '' || v == null ? null : Number(v));
 
@@ -9,13 +9,14 @@ export async function render(ctx, root, params) {
   const orgs = await loadOrgs(ctx);
   const [inv, bc] = await Promise.all([ctx.sb.from('v_inventory_by_product').select('*').order('sku'), ctx.sb.from('product_barcodes').select('product_id, barcode')]);
   if (inv.error) return clear(root).append(el('h1', { text: 'Products' }), el('p', { class: 'err', text: inv.error.message }));
+  const urls = await signedUrls(ctx, inv.data.map((x) => (x.photo_paths || [])[0]).filter(Boolean), 'products');
   const codes = {}; for (const b of bc.data || []) (codes[b.product_id] = codes[b.product_id] || []).push(b.barcode);
   const cust = orgSelect(orgs, '', 'All customers'), q = el('input', { type: 'search', placeholder: 'Search SKU, name or barcode', class: 'grow' }), holder = el('div');
   const draw = () => {
     const t = q.value.trim().toLowerCase();
     const rows = inv.data.filter((p) => (!cust.value || p.org_id === cust.value) && (!t || p.sku.toLowerCase().includes(t) || p.name.toLowerCase().includes(t) || (codes[p.product_id] || []).some((c) => c.toLowerCase().includes(t))));
     clear(holder).append(table([
-      { label: 'Customer', render: (p) => orgName(orgs, p.org_id) }, { label: 'SKU', render: (p) => el('strong', { text: p.sku }) }, { label: 'Name', key: 'name' },
+      { label: '', render: (p) => thumb(urls[(p.photo_paths || [])[0]]) }, { label: 'Customer', render: (p) => orgName(orgs, p.org_id) }, { label: 'SKU', render: (p) => el('strong', { text: p.sku }) }, { label: 'Name', key: 'name' },
       { label: 'Barcode', render: (p) => (codes[p.product_id] || []).join(', ') || '-' },
       { label: 'On hand', render: (p) => String(p.on_hand) }, { label: 'Unplaced', render: (p) => (p.unplaced ? el('b', { text: String(p.unplaced) }) : '0') },
       { label: 'Incoming', render: (p) => String(p.incoming) }, { label: '', render: (p) => (p.active ? '' : pill('off', 'muted')) },
@@ -24,8 +25,13 @@ export async function render(ctx, root, params) {
   q.addEventListener('input', draw); cust.addEventListener('change', draw); draw();
   const create = () => modal('New product', (body, done) => {
     const o = orgSelect(orgs, ''), sku = el('input', { maxlength: '60' }), name = el('input'), ean = el('input', { placeholder: 'EAN / barcode (optional)' }), err = el('p', { class: 'err' });
-    const go = el('button', { class: 'btn', text: 'Create', onclick: () => guarded(go, err, async () => { if (!o.value) throw new Error('Choose a customer'); await rpc(ctx, 'create_product', { p_org: o.value, p_sku: sku.value, p_name: name.value, p_ean: ean.value }); done(true); }) });
-    body.append(el('p', { class: 'muted', text: 'Creating on behalf of a customer. Customers can add their own from their dashboard.' }), field('Customer', o), field('SKU', sku), field('Name', name), field('Barcode', ean), err, el('div', { class: 'row end' }, el('button', { class: 'btn ghost', onclick: () => done(null), text: 'Cancel' }), go));
+    const photos = el('input', { type: 'file', accept: 'image/*', multiple: true });
+    const go = el('button', { class: 'btn', text: 'Create', onclick: () => guarded(go, err, async () => {
+      if (!o.value) throw new Error('Choose a customer');
+      const id = await rpc(ctx, 'create_product', { p_org: o.value, p_sku: sku.value, p_name: name.value, p_ean: ean.value });
+      if (photos.files.length) { try { await setProductPhotos(ctx, id, await uploadProductPhotos(ctx, o.value, id, photos.files)); } catch (e) { toast('Product created, but the photos did not upload: ' + e.message, true); } }
+      done(true); }) });
+    body.append(el('p', { class: 'muted', text: 'Creating on behalf of a customer. Customers can add their own from their dashboard.' }), field('Customer', o), field('SKU', sku), field('Name', name), field('Barcode', ean), field('Photos (optional, up to 4)', photos), err, el('div', { class: 'row end' }, el('button', { class: 'btn ghost', onclick: () => done(null), text: 'Cancel' }), go));
   }).then((ok) => { if (ok) { toast('Product created'); render(ctx, root); } });
   clear(root).append(el('div', { class: 'row between' }, el('h1', { text: 'Products' }), canAct(ctx) && el('button', { class: 'btn', onclick: create, text: 'New product' })), el('div', { class: 'row' }, q, cust), holder);
 }
@@ -41,6 +47,17 @@ async function detail(ctx, root, id) {
   ]);
   const pr = p.data; if (!pr) return clear(root).append(el('p', { class: 'err', text: 'Product not found.' }), el('button', { class: 'btn ghost', onclick: () => ctx.go('products'), text: 'Back' }));
   const act = canAct(ctx);
+  const purls = await signedUrls(ctx, pr.photo_paths || [], 'products');
+  const photosCard = () => {
+    const file = el('input', { type: 'file', accept: 'image/*', multiple: true }), err = el('p', { class: 'err' });
+    const add = el('button', { class: 'btn ghost tiny', text: 'Add photos', onclick: () => guarded(add, err, async () => {
+      const room = 4 - (pr.photo_paths || []).length; if (room <= 0) throw new Error('At most 4 photos. Remove one first.'); if (!file.files.length) throw new Error('Choose photos first.');
+      const paths = await uploadProductPhotos(ctx, pr.org_id, id, [...file.files].slice(0, room)); await setProductPhotos(ctx, id, [...(pr.photo_paths || []), ...paths]); toast('Photos added'); detail(ctx, root, id); }) });
+    return el('section', { class: 'card' }, el('h2', { text: 'Photos' }),
+      (pr.photo_paths || []).length ? el('div', { class: 'row' }, (pr.photo_paths || []).map((x, i) => el('div', {}, el('a', { href: purls[x], target: '_blank', rel: 'noopener' }, thumb(purls[x], 96)), i === 0 ? el('small', { class: 'muted', text: 'thumbnail' }) : null,
+        act && el('div', {}, el('button', { class: 'btn ghost tiny', text: 'Remove', onclick: async () => { try { await setProductPhotos(ctx, id, pr.photo_paths.filter((y) => y !== x)); detail(ctx, root, id); } catch (e) { toast(e.message, true); } } }))))) : el('p', { class: 'muted', text: 'No photos yet.' }),
+      act && el('div', { class: 'row' }, file, add), err);
+  };
   const edit = () => modal('Edit ' + pr.sku, (body, done) => {
     const f = { name: el('input', { value: pr.name }), length_cm: el('input', { type: 'number', step: '0.1', value: pr.length_cm ?? '' }), width_cm: el('input', { type: 'number', step: '0.1', value: pr.width_cm ?? '' }), height_cm: el('input', { type: 'number', step: '0.1', value: pr.height_cm ?? '' }), weight_g: el('input', { type: 'number', value: pr.weight_g ?? '' }), hs_code: el('input', { value: pr.hs_code ?? '' }), origin_country: el('input', { maxlength: '2', value: pr.origin_country ?? '' }) };
     const act2 = el('select', {}, el('option', { value: 'true', text: 'Active' }), el('option', { value: 'false', text: 'Switched off', ...(pr.active ? {} : { selected: true }) })); const err = el('p', { class: 'err' });
@@ -61,5 +78,6 @@ async function detail(ctx, root, id) {
     el('div', { class: 'cols' },
       el('section', { class: 'card' }, el('h2', { text: 'Details' }), kv([['Customer', orgName(orgs, pr.org_id)], ['SKU', pr.sku], ['Barcodes', (bc.data || []).map((b) => b.barcode).join(', ')], ['Size cm', [pr.length_cm, pr.width_cm, pr.height_cm].every((x) => x) ? `${pr.length_cm} × ${pr.width_cm} × ${pr.height_cm}` : null], ['Weight', pr.weight_g ? pr.weight_g + ' g' : null], ['HS code', pr.hs_code], ['Origin', pr.origin_country], ['Status', pr.active ? 'active' : 'switched off']])),
       el('section', { class: 'card' }, el('h2', { text: 'Stock by location' }), table([{ label: 'Location', render: (r) => el('strong', { text: r.locations.code }) }, { label: 'Type', render: (r) => r.locations.kind }, { label: 'On hand', render: (r) => String(r.on_hand) }, { label: 'Reserved', render: (r) => String(r.reserved) }], (lv.data || []).filter((r) => r.on_hand > 0)))),
+    photosCard(),
     el('section', { class: 'card' }, el('h2', { text: 'Ledger (latest 100)' }), table([{ label: 'When', render: (m) => fmtDate(m.at) }, { label: 'Location', render: (m) => m.locations.code }, { label: 'Change', render: (m) => el('b', { text: (m.qty > 0 ? '+' : '') + m.qty }) }, { label: 'Reason', key: 'reason' }, { label: 'Note', render: (m) => m.note || '' }], mv.data || [])));
 }

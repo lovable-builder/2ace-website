@@ -37,21 +37,29 @@ export async function resizeImage(file, max = 1600) {
   } catch { return file; }
 }
 const ext = (t) => (t === 'image/png' ? 'png' : t === 'image/webp' ? 'webp' : 'jpg');
-export async function uploadPhotos(ctx, orgId, bookingId, files) {
+async function uploadTo(ctx, bucket, orgId, folderId, files, max) {
   const paths = [];
-  for (const f of [...files].slice(0, 8)) {
+  for (const f of [...files].slice(0, max)) {
     const blob = await resizeImage(f);
     const type = blob.type && /^image\/(jpeg|png|webp)$/.test(blob.type) ? blob.type : 'image/jpeg';
-    const path = `${orgId}/${bookingId}/${newKey()}.${ext(type)}`;
-    const { error } = await ctx.sb.storage.from('receiving').upload(path, blob, { contentType: type });
+    const path = `${orgId}/${folderId}/${newKey()}.${ext(type)}`;
+    const { error } = await ctx.sb.storage.from(bucket).upload(path, blob, { contentType: type });
     if (error) throw new Error(error.message);
     paths.push(path);
   }
   return paths;
 }
-export async function signedUrls(ctx, paths) {
+export const uploadPhotos = (ctx, orgId, bookingId, files) => uploadTo(ctx, 'receiving', orgId, bookingId, files, 8);
+export const uploadProductPhotos = (ctx, orgId, productId, files) => uploadTo(ctx, 'products', orgId, productId, files, 4);
+export async function signedUrls(ctx, paths, bucket = 'receiving') {
   const out = {}; if (!paths.length) return out;
-  const { data } = await ctx.sb.storage.from('receiving').createSignedUrls(paths, 3600);
+  const { data } = await ctx.sb.storage.from(bucket).createSignedUrls([...new Set(paths)], 3600);
   for (const x of data || []) if (x.signedUrl && x.path) out[x.path] = x.signedUrl;
   return out;
 }
+// Replace a product's photo list. The database returns the files that dropped out; delete them from storage.
+export async function setProductPhotos(ctx, productId, paths) {
+  const removed = await rpc(ctx, 'set_product_photos', { p_product: productId, p_paths: paths });
+  if (removed && removed.length) await ctx.sb.storage.from('products').remove(removed);
+}
+export const thumb = (url, size = 44) => (url ? el('img', { src: url, alt: '', style: `width:${size}px;height:${size}px;object-fit:cover;border-radius:3px;display:block` }) : el('span', { style: `width:${size}px;height:${size}px;border-radius:3px;background:rgba(11,12,14,.08);display:inline-block` }));

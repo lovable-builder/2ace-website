@@ -1,5 +1,5 @@
 import { el, clear, table, pill, field, modal, toast, fmtDate } from './ui.js';
-import { rpc, canAct, loadOrgs, orgName, orgSelect, guarded, newKey } from './wms.js';
+import { rpc, canAct, loadOrgs, orgName, orgSelect, guarded, newKey, signedUrls, thumb } from './wms.js';
 
 export async function render(ctx, root, params) {
   const tab = (params && params[0]) || 'putaway';
@@ -17,9 +17,10 @@ export async function render(ctx, root, params) {
       { label: 'Change', render: (m) => el('b', { text: (m.qty > 0 ? '+' : '') + m.qty }) }, { label: 'Reason', key: 'reason' }, { label: 'Note', render: (m) => m.note || '' }], data));
   }
 
-  const { data, error } = await ctx.sb.from('stock_levels').select('org_id, product_id, location_id, lot, on_hand, reserved, products(sku, name), locations(code, kind)').gt('on_hand', 0).order('org_id').limit(2000);
+  const { data, error } = await ctx.sb.from('stock_levels').select('org_id, product_id, location_id, lot, on_hand, reserved, products(sku, name, photo_paths), locations(code, kind)').gt('on_hand', 0).order('org_id').limit(2000);
   if (error) return clear(holder).append(el('p', { class: 'err', text: error.message }));
 
+  const purls = await signedUrls(ctx, data.map((r) => (r.products.photo_paths || [])[0]).filter(Boolean), 'products');
   const putaway = async (r) => {
     const { data: asg } = await ctx.sb.from('location_assignments').select('location_id, locations(code, kind)').eq('org_id', r.org_id).is('released_at', null);
     const { data: shared } = await ctx.sb.from('locations').select('id, code, kind').in('kind', ['pack', 'returns', 'quarantine']).eq('active', true);
@@ -42,7 +43,7 @@ export async function render(ctx, root, params) {
     const t = q.value.trim().toLowerCase();
     const list = data.filter((r) => (tab !== 'putaway' || r.locations.kind === 'receiving') && (!cust.value || r.org_id === cust.value) && (!t || r.products.sku.toLowerCase().includes(t) || r.locations.code.toLowerCase().includes(t)));
     clear(rows).append(table([
-      { label: 'Customer', render: (r) => orgName(orgs, r.org_id) }, { label: 'Product', render: (r) => el('a', { href: '#products/' + r.product_id, text: r.products.sku + ' - ' + r.products.name }) },
+      { label: '', render: (r) => thumb(purls[(r.products.photo_paths || [])[0]]) }, { label: 'Customer', render: (r) => orgName(orgs, r.org_id) }, { label: 'Product', render: (r) => el('a', { href: '#products/' + r.product_id, text: r.products.sku + ' - ' + r.products.name }) },
       { label: 'Location', render: (r) => el('span', {}, el('strong', { text: r.locations.code }), ' ', pill(r.locations.kind)) }, { label: 'On hand', render: (r) => String(r.on_hand) }, { label: 'Reserved', render: (r) => String(r.reserved) },
       act && { label: '', render: (r) => el('div', { class: 'row' }, el('button', { class: 'btn tiny', text: 'Move', onclick: () => putaway(r) }), el('button', { class: 'btn ghost tiny', text: 'Adjust', onclick: () => adjust(r) })) },
     ].filter(Boolean), list));
