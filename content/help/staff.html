@@ -155,7 +155,7 @@
     <li>Assign a bin: click <span class="ui">Assign</span> on A-01-01 and choose the customer. The Customer column now shows the company.</li>
     <li>Tick the locations you want and click <span class="ui">Print labels</span> (allow pop-ups). Print the page and stick the barcodes on the shelves.</li>
   </ol>
-  <div class="ex"><b>Example</b><p>Acme's plan includes 12 pallets. You create <code>PAL-01</code> to <code>PAL-12</code> as pallet locations and assign each to Acme Home. Storage is billed from these assignments.</p></div>
+  <div class="ex"><b>Example</b><p>Acme's plan is 15 m². You mark out that space in the park as pallet slots, create <code>PAL-01</code> to <code>PAL-12</code> and assign each to Acme Home. The plan is sold by the square metre; the bins and pallet slots are how you lay that space out.</p></div>
   <div class="rule"><b>Rules</b>
     <p>A bin or pallet belongs to one customer at a time, and the database refuses to put another company's stock in it.</p>
     <p>A location holding stock cannot be released, reassigned or switched off. Move the stock first.</p>
@@ -171,9 +171,9 @@
   <h3>Receive the goods</h3>
   <ol class="steps">
     <li>Open the delivery. Under <span class="ui">Receive goods</span> choose the product, the quantity and the condition: <span class="ui">Good</span> or <span class="ui">Damaged</span>.</li>
-    <li>Good goods go to the receiving area. Damaged goods go to quarantine. For damaged goods, attach photos (a camera button appears on a phone) and add a note.</li>
+    <li><b>Good goods go straight into the customer's own bin and are available at once.</b> The bin is created and assigned automatically the first time, so there is nothing to set up. Damaged goods go to quarantine: attach photos (a camera button appears on a phone) and add a note.</li>
     <li>Click <span class="ui">Receive</span>. Repeat for every product and condition. The delivery becomes <span class="pill">Being received</span>.</li>
-    <li>If a product arrives that was not booked, it is accepted but flagged "unexpected".</li>
+    <li>If a product arrives that was not booked, it is accepted but flagged "unexpected". It waits in the receiving area until someone decides.</li>
     <li>When everything is counted, click <span class="ui">Close receiving</span>. Differences become discrepancies, and the customer and the team inbox are emailed once.</li>
   </ol>
   <div class="ex"><b>Example: delivery IN-000012</b>
@@ -188,16 +188,21 @@
 </section>
 
 <section id="s-stock">
-  <h2>10. Put away, count and adjust stock</h2>
-  <p class="lead">The Stock screen has three tabs: <span class="ui">To put away</span>, <span class="ui">All stock</span> and <span class="ui">Ledger</span>.</p>
-  <h3>Put goods away</h3>
+  <h2>10. Add stock, move, count and adjust</h2>
+  <p class="lead">The Stock screen has three tabs: <span class="ui">All stock</span>, <span class="ui">To put away</span> and <span class="ui">Ledger</span>. Most days you only use <span class="ui">All stock</span>.</p>
+  <h3>Add stock in one step</h3>
+  <p>For opening stock, a recount of a new customer, or test stock, you do not need to book and receive a delivery.</p>
   <ol class="steps">
-    <li>Open <span class="ui">Stock → To put away</span>. It lists goods waiting in the receiving area, with a thumbnail of each product.</li>
-    <li>Click <span class="ui">Move</span> on a row. Choose the destination (the customer's own bins, plus pack, returns and quarantine areas) and the quantity.</li>
-    <li>Click <span class="ui">Move</span>. The stock leaves the receiving area and appears in the bin.</li>
+    <li>Open <span class="ui">Stock</span> and click <span class="ui">Add stock</span>.</li>
+    <li>Choose the customer, then the product (only their active products are listed), the units, and an optional note such as "Opening stock".</li>
+    <li>Click <span class="ui">Add stock</span>. The units go into the customer's own bin (created automatically if they have none) and can be ordered immediately.</li>
   </ol>
-  <div class="ex"><b>Example</b><p>Marta moves 590 MUG-BLUE and 400 MUG-RED to bin <code>A-01-01</code>, which is assigned to Acme. Both rows leave the queue. The Locations screen now shows 990 units in A-01-01. The 10 damaged units stay in quarantine <code>Q1</code> until Acme decides what to do.</p></div>
-  <div class="rule"><b>Rules</b><p>You can only move stock into a bin assigned to that customer. You cannot move more than is free, and you cannot move stock back into the receiving area.</p></div>
+  <div class="ex"><b>Example</b><p>Acme Home already has 40 MUG-BLUE on a pallet at the park. Marta opens Add stock, chooses Acme Home and MUG-BLUE, enters 40 and the note "Opening stock". The Ledger shows one line, +40, adjust, with that note, and Anna can order the mugs straight away.</p></div>
+  <h3>Move stock between places</h3>
+  <p>Click <span class="ui">Move</span> on a row of <span class="ui">All stock</span> to move units to another of the customer's bins, or to the pack, returns or quarantine areas.</p>
+  <h3>Goods waiting in the receiving area</h3>
+  <p>Good goods normally never wait there. <span class="ui">To put away</span> only lists goods that arrived <b>unexpectedly</b> (not on the booking), or all received goods if automatic storing has been switched off. Click <span class="ui">Move</span> on a row and choose the customer's bin.</p>
+  <div class="rule"><b>Rules</b><p>You can only move stock into a bin assigned to that customer. You cannot move more than is free, and you cannot move stock back into the receiving area. Damaged goods in quarantine are not available until someone moves them.</p></div>
   <h3>Adjust a count</h3>
   <p>When a physical count differs from the system, post the difference. On <span class="ui">All stock</span> click <span class="ui">Adjust</span> on the row, enter the <b>change</b> (not the new total) and a reason.</p>
   <div class="ex"><b>Example</b><p>Marta counts 588 MUG-BLUE in A-01-01 but the system says 590. She enters change <code>-2</code>, reason "Cycle count: two broken, found in bin". The ledger gets one line: -2, adjust.</p></div>
@@ -237,7 +242,7 @@
   <h3>How reserving works</h3>
   <ul>
     <li>An order reserves stock only if <b>every line</b> can be filled. Otherwise nothing is reserved and the order is <span class="pill bad">on hold</span>, with text such as <i>MUG-BLUE: need 7, available 6</i>. The customer is emailed once.</li>
-    <li>Only stock in <b>bins and pallets</b> counts. Goods in the receiving area or in quarantine are not for sale until you put them away.</li>
+    <li>Only stock in <b>bins and pallets</b> counts. Goods in the receiving area (unexpected deliveries) or in quarantine are not for sale until someone moves them to a bin.</li>
     <li>Stock is taken earliest expiry first, then by location code. Reserved units cannot be moved away or removed by a count.</li>
     <li>Held orders are retried automatically, oldest first, whenever stock is put away, a count adds stock, or an order is cancelled.</li>
   </ul>
@@ -252,8 +257,8 @@
 <section id="s-pickpack">
   <h2>Picking and packing</h2>
   <p class="lead">A reserved order is picked from the shelves, checked and packed on the phone scan page. Every step moves real stock in the ledger and records the parcels.</p>
-  <h3>Set up once: a packing station</h3>
-  <p>Create a location of type <code>pack</code> (for example <code>PACK-1</code>) under <span class="ui">Locations</span>. Picked items go there. Picking is refused until one exists.</p>
+  <h3>The packing station</h3>
+  <p>Picked items go to a packing station, <code>PACK-1</code>. It is created automatically the first time you pick, so there is nothing to set up.</p>
   <h3>Pick</h3>
   <ol class="steps">
     <li>On <code>/scan</code> tap <span class="ui">Pick</span> and choose an order. Lines are listed in bin order, so you walk the floor once.</li>
@@ -344,7 +349,7 @@
     <tr><td>As trucks arrive</td><td>Warehouse</td><td>Receive deliveries. Photograph damage. Close receiving.</td></tr>
     <tr><td>After receiving</td><td>Warehouse</td><td>Put goods away. Resolve discrepancies.</td></tr>
     <tr><td>Through the day</td><td>Warehouse or admin</td><td>Approve or decline customer change requests.</td></tr>
-    <tr><td>End of day</td><td>Admin</td><td>Check the audit log for anything unusual. Confirm nothing is left in "To put away".</td></tr>
+    <tr><td>End of day</td><td>Admin</td><td>Check the audit log for anything unusual. Check <span class="ui">To put away</span> for unexpected goods that still need a decision.</td></tr>
   </table></div>
   <div class="ex"><b>Example: Tuesday</b><p>08:30 two new requests, one asks for a quote, one is a billing question. 09:15 the DSV truck with IN-000012 arrives. 10:20 receiving is closed with two discrepancies and the customer is emailed. 10:40 goods are on shelf A-01-01. 14:00 Anna asks to change a unit count on a booked delivery and Marta approves it.</p></div>
 </section>

@@ -22,13 +22,8 @@
   <h2>2. Build your plan</h2>
   <p class="lead">You choose what you need in four steps and see the monthly price update as you go. Nothing is charged until you sign and pay.</p>
   <h3>Step 1: Space</h3>
-  <p>Space is what you store goods in. You pick shelf bins or pallets, and how many.</p>
-  <div class="tw"><table>
-    <tr><th>Space type</th><th class="n">Price per month</th><th class="n">Area</th><th class="n">Range</th></tr>
-    <tr><td>Shelf bin</td><td class="n">90 zł</td><td class="n">0.3 m²</td><td class="n">1 to 2,000 bins</td></tr>
-    <tr><td>Pallet</td><td class="n">360 zł</td><td class="n">1.2 m²</td><td class="n">1 to 1,000 pallets</td></tr>
-  </table></div>
-  <p>Both work out to 300 zł per m² a month. You type the number or drag the slider.</p>
+  <p>Space is what you store goods in. You choose <b>how many square metres</b> you need, from 1 to 1,000 m². Storage costs <b>300 zł per m² a month</b>. You type the number or drag the slider, and the picture fills one square for every m².</p>
+  <div class="ex"><b>Example</b><p>Anna sells mugs and expects about 6,000 small items. She types 6,000 into "Not sure? Estimate from your stock", picks "Shoebox", and the builder suggests 18 m². She clicks <span class="ui">Use 18 m²</span>. Storage shows 5 400 zł a month. A month later she needs less, so she changes the plan to 12 m² and pays 3 600 zł.</p></div>
   <h3>Step 2: Services</h3>
   <ul>
     <li><b>E-commerce fulfillment</b>: we pick, pack and ship your orders. 350 zł per m² of your space, per month.</li>
@@ -38,13 +33,7 @@
   <h3>Step 3: Sell</h3>
   <ul>
     <li><b>.pl storefront</b>: we build and host your online shop. 199 zł per month plus a 2,950 zł one-time setup. The setup includes your .pl domain, so you choose a name here and we check it is free.</li>
-    <li><b>2ACE Market</b>: sell on our marketplace with no setup and no monthly fee. You pay a commission only when something sells: 3.6% to 9.2% depending on category.</li>
   </ul>
-  <div class="tw"><table>
-    <tr><th>Market category</th><th class="n">Commission per sale</th></tr>
-    <tr><td>Home and kitchen</td><td class="n">7.1%</td></tr><tr><td>Beauty and health</td><td class="n">6.4%</td></tr>
-    <tr><td>Fashion</td><td class="n">9.2%</td></tr><tr><td>Kids</td><td class="n">7.1%</td></tr><tr><td>Tech accessories</td><td class="n">3.6%</td></tr>
-  </table></div>
   <h3>Step 4: Review, sign and pay</h3>
   <ol class="steps">
     <li>Check the lines and the totals. All prices are net, without VAT.</li>
@@ -81,7 +70,7 @@
     <tr><td>Domain</td><td>Request your .pl domain.</td><td><span class="pill ok">Live</span></td></tr>
     <tr><td>Orders</td><td>Place orders by hand or from a CSV file and follow them. Picking and shipping status is coming.</td><td><span class="pill ok">Live</span></td></tr>
     <tr><td>Returns, Imports, Shipment tracking</td><td>Fill with real data as returns and import tracking open.</td><td><span class="pill">Coming</span></td></tr>
-    <tr><td>Storefront, 2ACE Market</td><td>Status of your shop and marketplace listings.</td><td><span class="pill">Coming</span></td></tr>
+    <tr><td>Storefront</td><td>Status of your online shop.</td><td><span class="pill">Coming</span></td></tr>
     <tr><td>Team</td><td>Give colleagues their own access. For now ask us from the Contact button.</td><td><span class="pill">Coming</span></td></tr>
   </table></div>
   <p>Tabs that are not live yet say so in plain words. They never show invented numbers.</p>
@@ -154,11 +143,11 @@
     <tr><th>Column</th><th>Meaning</th></tr>
     <tr><td>On hand</td><td>Units physically in our warehouse for you, anywhere.</td></tr>
     <tr><td>Available</td><td>On hand minus anything already reserved for orders.</td></tr>
-    <tr><td>Awaiting put-away</td><td>Received, but not yet moved to your bin (still in the receiving area), or held in quarantine because they were damaged.</td></tr>
+    <tr><td>Awaiting put-away</td><td>Arrived but not on your shelf yet: goods that were not on your booking and wait for a decision, or damaged goods held in quarantine. Good goods from a booked delivery go straight to your shelf and show as available.</td></tr>
     <tr><td>Incoming</td><td>Units on deliveries that are booked or being received.</td></tr>
   </table></div>
   <div class="ex"><b>Example</b>
-    <p>Right after Marta receives IN-000012 and before she puts goods on the shelf, Anna sees MUG-BLUE: on hand 600, available 600, awaiting put-away 600, incoming 0. After put-away, awaiting put-away drops to 10 (the damaged units in quarantine) and the rest sits on her shelf.</p>
+    <p>Marta receives IN-000012: 600 good MUG-BLUE and 10 damaged. Anna sees MUG-BLUE straight away: on hand 600, available 600, awaiting put-away 10 (the damaged units, held in quarantine), incoming 0. Nothing has to be put away: the good mugs are already on her shelf.</p>
   </div>
   <div class="note"><b>Good to know</b><p>You only ever see your own stock. The numbers come straight from our stock ledger, where every unit that moves is recorded.</p></div>
 </section>
@@ -175,8 +164,8 @@
   </ol>
   <div class="ex"><b>Example</b><p>Anna places order <code>SHOP-1001</code> for Jan Nowak, Prosta 1, 00-001 Warszawa, PL: MUG-BLUE × 2 and MUG-RED × 1. We have both on the shelf, so the order shows <i>Reserved, waiting to be picked</i> straight away.</p></div>
   <h3>All of it or none of it</h3>
-  <p>We reserve an order only when <b>every</b> line can be filled. If one line is short, nothing is reserved, the order goes <span class="pill bad">On hold</span> with the reason, and we email you. It is reserved automatically when more stock is put away on our shelves, oldest orders first. Stock that is still in our receiving area, or in quarantine, cannot be sold yet.</p>
-  <div class="ex"><b>Example</b><p>Anna orders MUG-BLUE × 7 and MUG-RED × 1, but only 6 blue mugs are on the shelf. The order is on hold: <i>MUG-BLUE: need 7, available 6</i>. The red mug is not reserved either. When her next delivery is put away, the order is reserved by itself.</p></div>
+  <p>We reserve an order only when <b>every</b> line can be filled. If one line is short, nothing is reserved, the order goes <span class="pill bad">On hold</span> with the reason, and we email you. It is reserved automatically when more stock arrives on our shelves, oldest orders first. Stock that is still in our receiving area, or in quarantine, cannot be sold yet.</p>
+  <div class="ex"><b>Example</b><p>Anna orders MUG-BLUE × 7 and MUG-RED × 1, but only 6 blue mugs are on the shelf. The order is on hold: <i>MUG-BLUE: need 7, available 6</i>. The red mug is not reserved either. When her next delivery is received, the order is reserved by itself.</p></div>
   <h3>Import many orders from a CSV file</h3>
   <ol class="steps">
     <li>Click <span class="ui">Import CSV</span> and <span class="ui">Download the template</span>.</li>
@@ -216,7 +205,7 @@
     <p>Acme goes from 12 to 6 pallets: 4,320 zł becomes 2,160 zł. With half the month left, the review says: <i>You get a credit of about 1,080 zł on your next invoice.</i> Nothing is charged today.</p>
   </div>
   <div class="ex"><b>No price change</b>
-    <p>Acme adds 2ACE Market or Import and customs. They have no monthly price (a commission per sale, a quote per shipment), so the badge says "No price change" and the review says "Nothing is charged today". Your plan is updated and your monthly price stays the same.</p>
+    <p>Acme adds Import and customs. It has no monthly price (it is quoted per shipment), so the badge says "No price change" and the review says "Nothing is charged today". Your plan is updated and your monthly price stays the same.</p>
   </div>
   <div class="note"><b>Good to know</b><p>Adding a storefront needs a .pl domain name and adds the one-time 2,950 zł setup. If the card payment fails, the plan is not changed and you are not charged.</p></div>
 </section>
@@ -269,8 +258,8 @@
     <tr><td>I cannot book a delivery.</td><td>You need an active plan and at least one active product. Check the Overview checklist and your Products tab.</td></tr>
     <tr><td>My edit does not show.</td><td>Edits to products and deliveries wait for our approval. Look for "Waiting for approval" on the row.</td></tr>
     <tr><td>I cannot delete a product.</td><td>It has been used. Request a switch off instead.</td></tr>
-    <tr><td>The price after a plan change looks the same.</td><td>Market and Import and customs have no monthly price. See the "No price change" example.</td></tr>
-    <tr><td>Stock shows "awaiting put-away".</td><td>Goods are received but not yet on your shelf, or are in quarantine. This clears when the team puts them away.</td></tr>
+    <tr><td>The price after a plan change looks the same.</td><td>Import and customs has no monthly price. See the "No price change" example.</td></tr>
+    <tr><td>Stock shows "awaiting put-away".</td><td>Those goods were not on your booking, or were damaged. We contact you about them. Good goods from a booked delivery are available immediately.</td></tr>
     <tr><td>Payment failed.</td><td>Update your card under Account → Manage payment method and subscription.</td></tr>
   </table></div>
 </section>

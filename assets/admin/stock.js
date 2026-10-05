@@ -2,12 +2,29 @@ import { el, clear, table, pill, field, modal, toast, fmtDate } from './ui.js';
 import { rpc, canAct, loadOrgs, orgName, orgSelect, guarded, newKey, signedUrls, thumb } from './wms.js';
 
 export async function render(ctx, root, params) {
-  const tab = (params && params[0]) || 'putaway';
+  const tab = (params && params[0]) || 'all';
   const orgs = await loadOrgs(ctx), act = canAct(ctx);
-  const tabs = el('div', { class: 'row tabs' }, [['putaway', 'To put away'], ['all', 'All stock'], ['ledger', 'Ledger']].map(([k, l]) => el('a', { class: 'btn tiny ' + (tab === k ? '' : 'ghost'), href: '#stock/' + k, text: l })));
+  const tabs = el('div', { class: 'row tabs' }, [['all', 'All stock'], ['putaway', 'To put away'], ['ledger', 'Ledger']].map(([k, l]) => el('a', { class: 'btn tiny ' + (tab === k ? '' : 'ghost'), href: '#stock/' + k, text: l })));
   const holder = el('div', {}, el('p', { class: 'muted', text: 'Loading…' }));
-  clear(root).append(el('h1', { text: 'Stock' }), tabs, holder);
   const reload = () => render(ctx, root, params);
+  // One form to put units on the shelf: opening stock, a recount, or test stock. No delivery to book, nothing to put away.
+  const addStock = () => modal('Add stock', (body, done) => {
+    const cust = orgSelect(orgs, '', 'Choose a customer'), prod = el('select', {}, el('option', { value: '', text: 'Choose a customer first' })), qty = el('input', { type: 'number', min: '1', value: '10' }), note = el('input', { placeholder: 'Note (optional), e.g. Opening stock' }), err = el('p', { class: 'err' });
+    cust.addEventListener('change', async () => {
+      clear(prod).append(el('option', { value: '', text: cust.value ? 'Loading…' : 'Choose a customer first' }));
+      if (!cust.value) return;
+      const { data: ps } = await ctx.sb.from('products').select('id, sku, name').eq('org_id', cust.value).eq('active', true).order('sku');
+      clear(prod).append(el('option', { value: '', text: (ps || []).length ? 'Choose a product' : 'This customer has no active products yet' }), ...(ps || []).map((p) => el('option', { value: p.id, text: p.sku + ' - ' + p.name })));
+    });
+    const key = newKey();
+    const go = el('button', { class: 'btn', text: 'Add stock', onclick: () => guarded(go, err, async () => {
+      if (!cust.value || !prod.value) throw new Error('Choose a customer and a product');
+      const r = await rpc(ctx, 'add_stock', { p_org: cust.value, p_product: prod.value, p_qty: Number(qty.value), p_note: note.value || null, p_key: key });
+      done({ qty: r.qty, location: r.location });
+    }) });
+    body.append(el('p', { class: 'muted', text: 'The units go straight into the customer\'s own bin (created automatically if they have none) and can be ordered at once.' }), field('Customer', cust), field('Product', prod), field('Units', qty), field('Note', note), err, el('div', { class: 'row end' }, el('button', { class: 'btn ghost', onclick: () => done(null), text: 'Cancel' }), go));
+  }).then((r) => { if (r) { toast(`Added ${r.qty} units to ${r.location}`); reload(); } });
+  clear(root).append(el('div', { class: 'row between' }, el('h1', { text: 'Stock' }), act && el('button', { class: 'btn', onclick: addStock, text: 'Add stock' })), tabs, holder);
 
   if (tab === 'ledger') {
     const { data, error } = await ctx.sb.from('stock_movements').select('id, at, org_id, qty, reason, note, products(sku, name), locations(code)').order('id', { ascending: false }).limit(200);
@@ -49,5 +66,5 @@ export async function render(ctx, root, params) {
     ].filter(Boolean), list));
   };
   q.addEventListener('input', draw); cust.addEventListener('change', draw); draw();
-  clear(holder).append(tab === 'putaway' ? el('p', { class: 'muted', text: 'Goods waiting in the receiving area. Move each one to the customer\'s bin.' }) : null, el('div', { class: 'row' }, q, cust), rows);
+  clear(holder).append(tab === 'putaway' ? el('p', { class: 'muted', text: 'Goods waiting in the receiving area: deliveries that were not on the booking, or all goods when automatic storing is switched off. Good goods are normally stored in the customer\'s bin on arrival.' }) : null, el('div', { class: 'row' }, q, cust), rows);
 }

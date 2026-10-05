@@ -87,7 +87,7 @@ async function receive(id, current) {
       const r = await rpc('receive_line', { p_booking: id, p_product: p.id, p_qty: Number(qty.value), p_condition: cond, p_lot: '', p_expiry: null, p_note: null, p_key: key() });
       let note = '';
       if (cond === 'damaged' && photos.files.length) { try { const paths = await uploadPhotos({ sb }, b.org_id, id, photos.files); await rpc('add_receipt_photos', { p_line: r.receipt_id, p_paths: paths }); note = ' with photos'; } catch (e) { note = ' (photos failed: ' + e.message + ')'; } }
-      say(r.condition === 'unexpected' ? 'Received, but NOT on the booking' : cond === 'damaged' ? 'Damaged goods booked to quarantine' + note : 'Booked in', r.condition === 'unexpected'); receive(id);
+      say(r.condition === 'unexpected' ? 'Received, but NOT on the booking' : cond === 'damaged' ? 'Damaged goods booked to quarantine' + note : r.location ? 'Stored in ' + r.location + '. Available now' : 'Booked in', r.condition === 'unexpected'); receive(id);
     } catch (e) { say(e.message, true); }
   };
   const onCode = async (code) => {

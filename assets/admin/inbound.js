@@ -84,9 +84,9 @@ async function detail(ctx, root, id) {
       const r = await rpc(ctx, 'receive_line', { p_booking: id, p_product: sel.value, p_qty: Number(qty.value), p_condition: cond.value, p_lot: '', p_expiry: null, p_note: note.value || null, p_key: newKey() });
       let photoFail = '';
       if (cond.value === 'damaged' && photos.files.length) { try { const paths = await uploadPhotos(ctx, b.org_id, id, photos.files); await rpc(ctx, 'add_receipt_photos', { p_line: r.receipt_id, p_paths: paths }); } catch (e) { photoFail = e.message; } }
-      toast(photoFail ? 'Received, but the photos did not upload: ' + photoFail : r.condition === 'unexpected' ? 'Received. This product was not on the booking, so it is flagged.' : 'Received', !!photoFail); reload(); }) });
+      toast(photoFail ? 'Received, but the photos did not upload: ' + photoFail : r.condition === 'unexpected' ? 'Received. This product was not on the booking, so it is flagged.' : r.condition === 'good' && r.location ? 'Received and stored in ' + r.location + '. Available now.' : 'Received', !!photoFail); reload(); }) });
     return el('section', { class: 'card' }, el('h2', { text: 'Receive goods' }), el('div', { class: 'row' }, sel, qty, cond, note, go), photoBox, err,
-      el('p', { class: 'muted', text: 'Good goods go to the receiving area, damaged goods to quarantine. Use the scan page on a phone for fast receiving.' }));
+      el('p', { class: 'muted', text: 'Good goods go straight into the customer\'s own bin (created automatically) and are available at once. Damaged goods go to quarantine. Use the scan page on a phone for fast receiving.' }));
   };
   const close = async () => {
     const short = (ln.data || []).filter((l) => got(l.product_id, 'good') < l.expected_qty).length;

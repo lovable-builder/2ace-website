@@ -6,6 +6,7 @@ http.createServer((req, res) => {
   const u = new URL(req.url, 'http://x');
   let p = decodeURIComponent(u.pathname);
   if (/\/\.(?!well-known)/.test(p) || /^\/(supabase|node_modules|content|scripts)(\/|$)/.test(p) || p === '/skills-lock.json') { res.writeHead(404); return res.end('Not found'); }
+  if (/^\/market(\.html)?\/?$/.test(p)) { res.writeHead(302, { Location: '/' }); return res.end(); }   // 2ACE Market is switched off for now (see .htaccess)
   if (/^\/index(\.html)?$/.test(p)) { res.writeHead(301, { Location: '/' + u.search }); return res.end(); }
   if (/^\/news\/index(\.html)?$/.test(p)) { res.writeHead(301, { Location: '/news/' }); return res.end(); }
   if (/\.html$/.test(p)) { res.writeHead(301, { Location: p.slice(0, -5) + u.search }); return res.end(); }

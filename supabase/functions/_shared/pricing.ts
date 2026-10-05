@@ -1,32 +1,50 @@
 // Server-side port of pricing() in platform.html. Amounts are whole PLN, net of VAT.
 // Keep in sync with the browser version; the browser total is display only.
 
-export const STORAGE = {
-  shelf: { name: 'Shelf bins', unit: 'bins', price: 90, min: 1, max: 2000, m2: 0.3 },
-  pallet: { name: 'Pallets', unit: 'pallets', price: 360, min: 1, max: 1000, m2: 1.2 },
-} as const;
+// Storage is sold by the square metre: 300 zł net a month for each m².
+// Plans bought before this were sold per shelf bin (90 zł, 0.3 m²) or per pallet (360 zł, 1.2 m²). Both are exactly 300 zł per m²,
+// so an old plan is read as its area and costs exactly what it always did.
+export const PRICE_PER_M2 = 300;
+export const MIN_M2 = 1;           // smallest space a new plan can ask for
+export const MAX_M2 = 2000;
+const LEGACY_M2 = { shelf: 0.3, pallet: 1.2 } as const;
+const LEGACY_MAX_QTY = { shelf: 2000, pallet: 1000 } as const;
 
 export type PlanConfig = {
-  storageType: keyof typeof STORAGE;
-  qty: number;
+  m2?: number;                                    // the area, in square metres (current plans)
+  storageType?: keyof typeof LEGACY_M2;           // old plans: 'shelf' or 'pallet'
+  qty?: number;                                   // old plans: how many of them
   pkgs: { ful?: boolean; ret?: boolean; imp?: boolean };
   storeOn?: boolean;
   domain?: string;
   tt?: 'off' | 'setup' | 'managed';
   meta?: 'off' | 'setup' | 'managed';
-  marketOn?: boolean;
+  marketOn?: boolean;                             // 2ACE Market is switched off for now; the field is kept so old plans stay valid
 };
+
+const round1 = (n: number) => Math.round(n * 10) / 10;
+
+// The area of a plan in m², from either the current format or an old bin / pallet plan. Throws on anything that is not a sane amount.
+export function storageM2(c: PlanConfig): number {
+  if (c.m2 !== undefined && c.m2 !== null) {
+    const v = Number(c.m2);
+    if (!Number.isFinite(v) || v < MIN_M2 || v > MAX_M2) throw new Error('invalid m2');
+    return round1(v);
+  }
+  const f = c.storageType ? LEGACY_M2[c.storageType] : undefined;
+  if (!f) throw new Error('invalid storageType');
+  const qty = Math.round(Number(c.qty));
+  if (!Number.isFinite(qty) || qty < 1 || qty > LEGACY_MAX_QTY[c.storageType!]) throw new Error('invalid qty');
+  return round1(qty * f);
+}
+export const fmtM2 = (n: number) => String(round1(n)).replace(/\.0$/, '');
 
 export type Line = { label: string; monthly: number; once: number };
 
 export function priceConfig(c: PlanConfig) {
-  const st = STORAGE[c.storageType];
-  if (!st) throw new Error('invalid storageType');
-  const qty = Math.round(Number(c.qty));
-  if (!Number.isFinite(qty) || qty < st.min || qty > st.max) throw new Error('invalid qty');
-
-  const lines: Line[] = [{ label: `${st.name} (${qty} ${st.unit})`, monthly: qty * st.price, once: 0 }];
-  const fp = qty * st.m2;
+  const m2 = storageM2(c);
+  const lines: Line[] = [{ label: `Storage (${fmtM2(m2)} m²)`, monthly: Math.round(m2 * PRICE_PER_M2), once: 0 }];
+  const fp = m2;
   if (c.pkgs?.ful) lines.push({ label: 'Fulfillment', monthly: Math.round(fp * 350), once: 0 });
   if (c.pkgs?.ret) lines.push({ label: 'Returns handling', monthly: Math.round(fp * 150), once: 0 });
   // Import & customs is quoted per shipment: not billed here.

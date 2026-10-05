@@ -7,11 +7,12 @@ const file = (f) => new URL('../' + f, import.meta.url);
 const read = (f) => fs.readFileSync(file(f), 'utf8');
 const attr = (s) => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 
+import { MARKET_ENABLED } from './features.mjs';
 const pages = [
-  { f: 'index.html', url: '/', title: '2ACE | Warehousing and fulfillment in Poland', preload: '/assets/seq/b000.webp', desc: 'Dedicated storage from 300 zł per m² a month, fulfillment, returns, import and customs, a .pl storefront and a marketplace. One plan, priced online.', ld: true },
-  { f: 'platform.html', url: '/platform', title: 'Build your plan | 2ACE', desc: 'Choose your space, services and storefront and watch the monthly price update. Shelf bins from 90 zł, pallets from 360 zł, no minimum term. Sign and pay online.' },
-  { f: 'market.html', url: '/market', title: '2ACE Market | Sell in Europe without building a website', desc: 'Sell on the 2ACE marketplace with no setup and no monthly fee. You pay a commission of 3.6% to 9.2% by category, only when something sells.' },
-  { f: 'terms.html', url: '/terms', title: 'Terms of service | 2ACE', desc: 'The terms of the 2ACE service: plans, billing, service levels, insurance, customs, domains and 2ACE Market.' },
+  { f: 'index.html', url: '/', title: '2ACE | Warehousing and fulfillment in Poland', preload: '/assets/seq/b000.webp', desc: 'Dedicated storage from 300 zł per m² a month, fulfillment, returns, import and customs and a .pl storefront. One plan, priced online.', ld: true },
+  { f: 'platform.html', url: '/platform', title: 'Build your plan | 2ACE', desc: 'Choose your space, services and storefront and watch the monthly price update. Storage from 300 zł per m², no minimum term. Sign and pay online.' },
+  ...(MARKET_ENABLED ? [{ f: 'market.html', url: '/market', title: '2ACE Market | Sell in Europe without building a website', desc: 'Sell on the 2ACE marketplace with no setup and no monthly fee. You pay a commission of 3.6% to 9.2% by category, only when something sells.' }] : []),
+  { f: 'terms.html', url: '/terms', title: 'Terms of service | 2ACE', desc: 'The terms of the 2ACE service: plans, billing, service levels, insurance, customs, domains and domains.' },
   { f: 'privacy.html', url: '/privacy', title: 'Privacy policy | 2ACE', desc: 'How 2ACE collects, uses and protects personal data, who we share it with, and your rights.' },
   { f: 'login.html', url: '/login', title: 'Log in | 2ACE', desc: 'Log in to your 2ACE account.', noindex: true },
   { f: 'account.html', url: '/account', title: 'Your account | 2ACE', desc: 'Your 2ACE account.', noindex: true },
@@ -36,16 +37,15 @@ const graph = (lang) => ({
     {
       '@type': 'Service', '@id': SITE + '/#service', name: 'Warehousing and fulfillment in Poland', serviceType: 'Warehousing, e-commerce fulfillment, returns handling, import and customs',
       provider: { '@id': SITE + '/#org' }, areaServed: [{ '@type': 'Country', name: 'Poland' }, { '@type': 'Place', name: 'European Union' }],
-      description: 'Dedicated shelf bins and pallet slots in a warehouse in Poland, with fulfillment, returns, import and customs help, a hosted .pl storefront and the 2ACE Market marketplace. Monthly plans with no minimum term, priced online.',
+      description: 'Dedicated storage, sized in square metres, in a warehouse in Poland, with fulfillment, returns, import and customs help and a hosted .pl storefront. Monthly plans with no minimum term, priced online.',
       hasOfferCatalog: {
         '@type': 'OfferCatalog', name: '2ACE services and prices (net of VAT)',
         itemListElement: [
-          offer('Shelf bin storage', 'A shelf bin of 0.3 m² dedicated to your products.', unit(90, 'per bin per month')),
-          offer('Pallet storage', 'A pallet slot of 1.2 m² dedicated to your products.', unit(360, 'per pallet per month')),
+          offer('Storage', 'Space in square metres dedicated to your products, resized month to month.', unit(300, 'per m² per month')),
           offer('E-commerce fulfillment', 'Pick, pack and ship your orders, with same-day dispatch before 15:00.', unit(350, 'per m² of your space per month')),
           offer('Returns handling', 'Returned items are inspected, graded within 48 hours and restocked.', unit(150, 'per m² of your space per month')),
           offer('.pl storefront', 'A designed and hosted .pl online shop, domain included.', [unit(199, 'per month'), unit(2950, 'one-time setup')]),
-          { '@type': 'Offer', itemOffered: { '@type': 'Service', name: '2ACE Market', description: 'Sell on the 2ACE marketplace with no setup or monthly fee. A commission of 3.6% to 9.2% applies by category, only when something sells.' } },
+          ...(MARKET_ENABLED ? [{ '@type': 'Offer', itemOffered: { '@type': 'Service', name: '2ACE Market', description: 'Sell on the 2ACE marketplace with no setup or monthly fee. A commission of 3.6% to 9.2% applies by category, only when something sells.' } }] : []),
           { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Import and customs', description: 'Freight and customs clearance into Poland, quoted per shipment.' } },
         ],
       },
@@ -73,22 +73,20 @@ for (const p of pages) {
 // llms.txt: a short, plain-language profile for AI assistants (https://llmstxt.org).
 fs.writeFileSync(file('llms.txt'), `# 2ACE
 
-> 2ACE is a warehousing and fulfillment company in Warsaw, Poland. Brands (especially overseas sellers) rent dedicated shelf bins or pallet slots, import goods into the EU, and have orders picked, packed, shipped and returned from one hub. Everything is priced online as a monthly plan with no minimum term, and run from one customer dashboard.
+> 2ACE is a warehousing and fulfillment company in Warsaw, Poland. Brands (especially overseas sellers) rent dedicated storage space by the square metre, import goods into the EU, and have orders picked, packed, shipped and returned from one hub. Everything is priced online as a monthly plan with no minimum term, and run from one customer dashboard.
 
 ## What 2ACE offers (prices in PLN, net of VAT)
-- Storage: shelf bin 90 zł per month (0.3 m²), pallet slot 360 zł per month (1.2 m²). Both are 300 zł per m² per month.
+- Storage: 300 zł per m² per month, sized in square metres and resized month to month.
 - E-commerce fulfillment: 350 zł per m² of your space per month. Same-day dispatch for orders before 15:00.
 - Returns handling: 150 zł per m² of your space per month. Items graded within 48 hours.
 - Import and customs: freight and customs clearance into Poland, quoted per shipment.
 - .pl storefront: 199 zł per month plus 2,950 zł one-time setup, domain included.
-- 2ACE Market: sell on the 2ACE marketplace with no setup or monthly fee. Commission 3.6% to 9.2% by category, only when something sells.
-- Plans are monthly, billed in advance, cancel or resize with 30 days notice. VAT: 23% for Polish companies, reverse charge for EU companies with a VAT number.
+${MARKET_ENABLED ? '- 2ACE Market: sell on the 2ACE marketplace with no setup or monthly fee. Commission 3.6% to 9.2% by category, only when something sells.\n' : ''}- Plans are monthly, billed in advance, cancel or resize with 30 days notice. VAT: 23% for Polish companies, reverse charge for EU companies with a VAT number.
 
 ## Pages
 - [Home](${SITE}/): overview of the five services.
 - [Build your plan](${SITE}/platform): choose space and services, see the monthly price, sign and pay online.
-- [2ACE Market](${SITE}/market): the marketplace and its commission by category.
-- [Help and user guide](${SITE}/help): step-by-step guide to the customer account with examples (PDF: ${SITE}/assets/2ACE-Customer-Guide.pdf).
+${MARKET_ENABLED ? `- [2ACE Market](${SITE}/market): the marketplace and its commission by category.\n` : ''}- [Help and user guide](${SITE}/help): step-by-step guide to the customer account with examples (PDF: ${SITE}/assets/2ACE-Customer-Guide.pdf).
 - [News](${SITE}/news): plain-language articles on EU customs, packaging law, product compliance and opening a company in Poland.
 - [Terms of service](${SITE}/terms) and [Privacy policy](${SITE}/privacy).
 

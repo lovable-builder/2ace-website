@@ -8,6 +8,8 @@ RewriteEngine On
 # One address for the site: www goes to the bare domain, so search engines and link previews see a single canonical host.
 RewriteCond %{HTTP_HOST} ^www\.2ace\.pl$ [NC]
 RewriteRule ^ https://2ace.pl%{REQUEST_URI} [R=301,L]
+# 2ACE Market is switched off for now: its page and files are kept, but visitors go to the home page. Remove this rule to bring it back.
+RewriteRule ^market(\.html)?/?$ / [R=302,L]
 RewriteCond %{THE_REQUEST} \s/+index(\.html)?[\s?] [NC]
 RewriteRule ^ / [R=301,L]
 RewriteCond %{THE_REQUEST} \s/+([^\s?]+?)\.html[\s?] [NC]

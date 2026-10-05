@@ -1,4 +1,5 @@
 import { el, clear, table, pill, field, modal, toast, kv, fmtDate, confirmBox } from './ui.js';
+import { orderStepper } from './journey.js';
 import { rpc, canAct, loadOrgs, orgName, orgSelect, guarded } from './wms.js';
 
 // Orders: every customer's orders with what is reserved for them. A held order has reserved nothing and says what is short.
@@ -68,6 +69,7 @@ async function detail(ctx, root, id) {
   clear(root).append(
     el('div', { class: 'row between' }, el('div', {}, el('button', { class: 'btn ghost tiny', onclick: () => ctx.go('orders'), text: '← Orders' }), el('h1', { text: o.ref + ' ' }), pill(LABEL[o.status] || o.status, KIND[o.status])),
       act && el('div', { class: 'row' }, o.status === 'held' && el('button', { class: 'btn', onclick: reserve, text: 'Try to reserve now' }), cancellable && el('button', { class: 'btn ghost', onclick: cancel, text: 'Cancel order' }))),
+    orderStepper(o.status),
     (cr.data || []).length > 0 && el('div', { class: 'note' }, el('b', { text: 'Customer request' }), el('p', {}, 'The customer asked: ' + cr.data[0].summary + '. Decide it under '), el('a', { href: '#approvals', text: 'Approvals' }), '.'),
     o.status === 'held' && el('div', { class: 'rule' }, el('b', { text: 'On hold' }), el('p', { text: o.hold_reason || 'Not enough stock.' }), el('p', { class: 'muted', text: 'Nothing is reserved. It reserves itself when stock is put away in a bin, or use "Try to reserve now". If a picker reported a problem, return the picked items from the packing station to the shelf and count the bin first.' })),
     el('div', { class: 'cols' },

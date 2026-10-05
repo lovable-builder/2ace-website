@@ -1,7 +1,9 @@
 import { el, clear, table, statusPill, fmtDate, fmtDay, zl, field, kv, askReason, modal, toast } from './ui.js';
 
 const REASONS = ['Support request', 'Billing check', 'Domain order', 'Onboarding help', 'Data correction', 'Other'];
-const planSummary = (c) => { if (!c) return '-'; const on = [c.pkgs && c.pkgs.ful && 'fulfillment', c.pkgs && c.pkgs.ret && 'returns', c.pkgs && c.pkgs.imp && 'import', c.storeOn && 'storefront', c.marketOn && 'Market'].filter(Boolean); return `${c.qty} ${c.storageType === 'shelf' ? 'bins' : 'pallets'}` + (on.length ? ' + ' + on.join(', ') : ''); };
+// Storage is sold by the square metre. Plans bought earlier per bin (0.3 m²) or pallet (1.2 m²) are shown as their area.
+const planM2 = (c) => (c.m2 != null ? Number(c.m2) : Math.round(Number(c.qty) * (c.storageType === 'shelf' ? 0.3 : 1.2) * 10) / 10);
+const planSummary = (c) => { if (!c) return '-'; const on = [c.pkgs && c.pkgs.ful && 'fulfillment', c.pkgs && c.pkgs.ret && 'returns', c.pkgs && c.pkgs.imp && 'import', c.storeOn && 'storefront'].filter(Boolean); return `${String(planM2(c)).replace(/\.0$/, '')} m²` + (on.length ? ' + ' + on.join(', ') : ''); };
 
 export async function render(ctx, root, params) {
   if (params && params[0]) return detail(ctx, root, params[0]);
