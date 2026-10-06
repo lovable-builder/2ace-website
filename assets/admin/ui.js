@@ -59,7 +59,7 @@ export function table(cols, rows, onRow) {
   const tb = el('tbody'); t.append(tb);
   if (!rows.length) tb.append(el('tr', {}, el('td', { colspan: String(cols.length), class: 'empty', text: 'Nothing here yet.' })));
   for (const r of rows) tb.append(el('tr', { class: onRow ? 'click' : '', tabindex: onRow ? '0' : null, onclick: onRow ? () => onRow(r) : null, onkeydown: onRow ? (e) => { if (e.key === 'Enter') onRow(r); } : null },
-    cols.map((c) => el('td', {}, c.render ? c.render(r) : (r[c.key] ?? '-')))));
+    cols.map((c) => el('td', { 'data-label': c.label || null }, c.render ? c.render(r) : (r[c.key] ?? '-')))));   // data-label lets phones show each row as a labelled card
   return el('div', { class: 'tbl-wrap' }, t);
 }
 export const field = (label, input) => el('label', { class: 'field' }, el('span', { text: label }), input);

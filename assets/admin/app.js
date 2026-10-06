@@ -102,16 +102,26 @@ async function start() {
   if (me.role !== 'warehouse') { try { staff = (await api('staff.directory')).staff; } catch { /* names only */ } }
   const ctx = { sb, api, me, staff, session: {}, go: (r) => { location.hash = r; } };
   const main = el('main', { class: 'main' });
-  const nav = el('nav', { class: 'side' }, NAV[me.role].map(([r, label]) => el('a', { href: r.startsWith('/') ? r : '#' + r, 'data-route': r, text: label })));
+  const nav = el('nav', { class: 'side', id: 'sidenav', 'aria-label': 'Admin menu' }, NAV[me.role].map(([r, label]) => el('a', { href: r.startsWith('/') ? r : '#' + r, 'data-route': r, text: label })));
+  // On a phone the menu is a drawer: the Menu button opens it, and it closes on a tap outside, on a link, on Escape and on every page change.
+  const scrim = el('div', { class: 'scrim' });
+  const menuBtn = el('button', { class: 'menubtn', type: 'button', 'aria-label': 'Open the menu', 'aria-expanded': 'false', 'aria-controls': 'sidenav', text: '☰ Menu' });
+  const setMenu = (open) => { nav.classList.toggle('open', open); scrim.classList.toggle('open', open); document.body.classList.toggle('menu-open', open); menuBtn.setAttribute('aria-expanded', open ? 'true' : 'false'); menuBtn.setAttribute('aria-label', open ? 'Close the menu' : 'Open the menu'); };
+  menuBtn.addEventListener('click', () => setMenu(!nav.classList.contains('open')));
+  scrim.addEventListener('click', () => setMenu(false));
+  nav.addEventListener('click', (e) => { if (e.target.closest && e.target.closest('a')) setMenu(false); });
+  addEventListener('keydown', (e) => { if (e.key === 'Escape') setMenu(false); });
+  addEventListener('resize', () => { if (window.innerWidth > 860) setMenu(false); });
   clear(app).append(el('div', { class: 'shell' },
-    el('header', { class: 'top' }, el('a', { class: 'logo', href: '#', text: '2ACE' }), el('span', { class: 'tag', text: 'admin' }), el('span', { class: 'sp' }),
+    el('header', { class: 'top' }, menuBtn, el('a', { class: 'logo', href: '#', text: '2ACE' }), el('span', { class: 'tag', text: 'admin' }), el('span', { class: 'sp' }),
       el('span', { class: 'who', text: me.email }), el('span', { class: 'pill', text: me.role }), signOutLink()),
-    el('div', { class: 'body' }, nav, main)));
+    el('div', { class: 'body' }, nav, main), scrim));
 
   const route = async () => {
     const parts = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
     const name = parts[0] || '';
     nav.querySelectorAll('a').forEach((a) => a.classList.toggle('on', a.dataset.route === name));
+    setMenu(false);
     if (name && !NAV[me.role].some(([r]) => r === name)) return clear(main).append(el('h1', { text: 'Not available' }), el('p', { class: 'muted', text: 'Your role cannot open this page.' }));
     try {
       const mod = await import(`./${name || 'home'}.js${V}`);

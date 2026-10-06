@@ -38,6 +38,21 @@ ok('right code verifies, refreshes the token and loads the panel', s.log.include
 const navTxt = [...document.querySelectorAll('.side a')].map((a) => a.textContent).join('|');
 ok('admin menu has every section', navTxt === 'Overview|Customers|Requests|Domains|Approvals|Orders|Inbound|Stock|Products|Discrepancies|Locations|Shipping|Staff|Audit log|Help|Scan app ↗', navTxt);
 
+// 1b. the menu on a phone: a drawer with a Menu button
+{
+  const side = () => document.querySelector('nav.side'), scrim = () => document.querySelector('.scrim'), btn = () => document.querySelector('.menubtn');
+  const w = document.defaultView; const key = (k) => w.dispatchEvent(new w.KeyboardEvent('keydown', { key: k }));
+  ok('there is a Menu button, closed at first, wired to the menu', !!btn() && btn().getAttribute('aria-expanded') === 'false' && btn().getAttribute('aria-controls') === 'sidenav' && side().id === 'sidenav' && !side().classList.contains('open') && !scrim().classList.contains('open'));
+  btn().click(); ok('tapping Menu opens the drawer, shows the backdrop, locks the page behind it and says so to screen readers', side().classList.contains('open') && scrim().classList.contains('open') && document.body.classList.contains('menu-open') && btn().getAttribute('aria-expanded') === 'true' && btn().getAttribute('aria-label') === 'Close the menu');
+  btn().click(); ok('tapping Menu again closes it', !side().classList.contains('open') && !document.body.classList.contains('menu-open') && btn().getAttribute('aria-label') === 'Open the menu');
+  btn().click(); scrim().click(); ok('tapping outside the drawer closes it', !side().classList.contains('open') && !scrim().classList.contains('open'));
+  btn().click(); key('Escape'); ok('Escape closes it', !side().classList.contains('open'));
+  btn().click(); [...side().querySelectorAll('a')].find((a) => a.textContent === 'Customers').click(); ok('choosing a menu item closes it', !side().classList.contains('open') && !document.body.classList.contains('menu-open')); await tick(150);   // let the browser finish navigating before the next step
+  btn().click(); w.history.replaceState(null, '', '#help'); w.dispatchEvent(new w.HashChangeEvent('hashchange')); await tick(150); ok('going to another page closes it, and that page is highlighted', !side().classList.contains('open') && side().querySelector('a.on').textContent === 'Help', side().querySelector('a.on') && side().querySelector('a.on').textContent);
+  btn().click(); Object.defineProperty(w, 'innerWidth', { value: 1200, configurable: true }); w.dispatchEvent(new w.Event('resize')); ok('growing the window to desktop width closes the drawer so the page is not stuck locked', !side().classList.contains('open') && !document.body.classList.contains('menu-open'));
+  w.history.replaceState(null, '', '#');
+}
+
 // 2. brand-new staff: enrolment shows the QR and secret
 s = await scenario('a2', { role: 'support', factors: { totp: [], all: [{ id: 'old', status: 'unverified' }] }, meResponses: [{ status: 403, body: { error: 'mfa_required' } }, { status: 200, body: { id: 'u2', role: 'support', email: 'sup@2ace.pl' } }] });
 ok('no authenticator yet -> setup screen with QR and key', /Set up your authenticator/.test(s.app()) && !!document.querySelector('img.qr') && /JBSWY3DPEHPK3PXP/.test(s.app()));

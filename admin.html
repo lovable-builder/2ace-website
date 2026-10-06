@@ -30,7 +30,32 @@
   .side a { padding: 10px 12px; border-radius: 3px; color: rgba(245,244,241,.72); text-decoration: none; font-weight: 500; }
   .side a:hover { color: var(--paper); } .side a.on { background: rgba(245,244,241,.1); color: var(--paper); }
   .main { flex: 1; min-width: 0; padding: clamp(16px, 3vw, 36px); max-width: 1180px; }
-  @media (max-width: 760px) { .body { flex-direction: column; } .side { width: auto; flex-direction: row; overflow-x: auto; padding: 8px; } .top .who { display: none; } }
+  .menubtn { display: none; font: 500 12px 'IBM Plex Mono', monospace; letter-spacing: .1em; text-transform: uppercase; color: var(--paper); background: transparent; border: 1px solid rgba(245,244,241,.4); border-radius: 3px; padding: 10px 12px; min-height: 44px; cursor: pointer; }
+  .scrim { display: none; }
+  /* Phones and small tablets: the menu is a drawer, tables scroll inside their frame, buttons and fields are big enough for a finger. */
+  @media (max-width: 860px) {
+    body.menu-open { overflow: hidden; }
+    .top { position: sticky; top: 0; z-index: 40; padding: 8px 12px; gap: 10px; }
+    .top .tag, .top .who { display: none; } .menubtn { display: inline-flex; align-items: center; }
+    .top .btn.tiny { min-height: 44px; padding: 8px 12px; }
+    .body { display: block; }
+    .side { position: fixed; top: 0; left: 0; bottom: 0; z-index: 60; width: min(84vw, 300px); padding: 18px 10px; overflow-y: auto; transform: translateX(-104%); visibility: hidden; transition: transform .25s ease, visibility 0s linear .25s; }
+    .side.open { transform: none; visibility: visible; transition-delay: 0s; box-shadow: 10px 0 36px rgba(0,0,0,.4); }
+    .side a { padding: 14px 14px; font-size: 16px; border-radius: 4px; }
+    .scrim { display: block; position: fixed; inset: 0; z-index: 55; background: rgba(11,12,14,.5); opacity: 0; pointer-events: none; transition: opacity .25s ease; } .scrim.open { opacity: 1; pointer-events: auto; }
+    .main { padding: 16px 14px 40px; } h1 { font-size: 24px; margin: 4px 0 12px; }
+    input, select, textarea { font-size: 16px; min-height: 44px; } textarea { min-height: 88px; }
+    .btn { min-height: 44px; display: inline-flex; align-items: center; justify-content: center; } .btn.tiny { min-height: 40px; padding: 8px 12px; }
+    .row { gap: 10px; } .row > .grow { min-width: 0; flex: 1 1 100%; } .row.between { flex-direction: column; align-items: stretch; } .row.between > .row { justify-content: flex-start; }
+    .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; } .stat { padding: 14px; } .stat b { font-size: 28px; }
+    .cols { grid-template-columns: 1fr; } .card { padding: 14px; }
+    .kv { grid-template-columns: 1fr; gap: 0; } .kv dt { margin-top: 8px; font-size: 12px; } .kv dd { margin-bottom: 2px; }
+    .tabs { flex-wrap: nowrap; overflow-x: auto; white-space: nowrap; padding-bottom: 4px; -webkit-overflow-scrolling: touch; }
+    .tbl-wrap { -webkit-overflow-scrolling: touch; } .tbl { font-size: 13px; } .tbl th, .tbl td { padding: 9px 10px; white-space: nowrap; } .tbl td { white-space: normal; min-width: 90px; }
+    .overlay { align-items: end; padding: 0; } .modal { max-width: none; max-height: 92vh; border-radius: 14px 14px 0 0; padding: 18px 16px 24px; }
+    .toast { left: 12px; right: 12px; bottom: 12px; transform: none; text-align: center; }
+    .modal-body .row { flex-direction: column; align-items: stretch; } .modal-body .row.end { flex-direction: row; justify-content: stretch; } .modal-body .row.end .btn { flex: 1; }
+  }
   .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; margin: 0 0 16px; } .row.between { justify-content: space-between; align-items: flex-start; } .row.end { justify-content: flex-end; }
   .grow { flex: 1; min-width: 200px; } .inline { display: inline-flex; gap: 6px; align-items: center; font-size: 14px; }
   .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 16px; }
@@ -81,11 +106,23 @@
   .stepper .dot { position: relative; z-index: 1; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: #fff; border: 2px solid var(--line); font-size: 16px; }
   .stepper .done { color: var(--ink); } .stepper .done .dot { background: var(--ok); border-color: var(--ok); color: #fff; } .stepper .now { color: var(--ink); font-weight: 600; } .stepper .now .dot { border-color: var(--amber); animation: pulse 2s infinite; }
   .stepper .stuck { color: var(--err); font-weight: 600; } .stepper .stuck .dot { background: var(--err); border-color: var(--err); color: #fff; font-weight: 800; }
+  /* Phones: a table row becomes a card, each value with its column name, so nothing hides off to the side. */
+  @media (max-width: 700px) {
+    .tbl-wrap { background: none; border: 0; overflow: visible; }
+    .tbl, .tbl tbody { display: block; } .tbl thead { display: none; }
+    .tbl tr { display: block; background: #fff; border: 1px solid var(--line); border-radius: 6px; padding: 8px 12px; margin: 0 0 10px; }
+    .tbl td { display: flex; justify-content: space-between; align-items: baseline; gap: 14px; padding: 6px 0; border: 0; min-width: 0; text-align: right; font-size: 14px; }
+    .tbl td::before { content: attr(data-label); flex: none; max-width: 40%; text-align: left; font: 11px 'IBM Plex Mono', monospace; letter-spacing: .08em; text-transform: uppercase; color: rgba(11,12,14,.55); }
+    .tbl td:not([data-label])::before, .tbl td[data-label='']::before { content: none; }
+    .tbl td > * { min-width: 0; } .tbl td > .row { justify-content: flex-end; margin: 0; }
+    .tbl td.empty { display: block; text-align: center; } .tbl tr:has(td.empty) { text-align: center; }
+    .tbl tr.click:active { background: rgba(227,154,43,.1); }
+  }
 </style>
 </head>
 <body>
 <div id="app"><p class="muted pad">Loading…</p></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script type="module" src="/assets/admin/app.js?v=16"></script>
+<script type="module" src="/assets/admin/app.js?v=18"></script>
 </body>
 </html>
