@@ -151,7 +151,7 @@ function shippingCard(ctx, o, shipments, act, reload, own) {
     if (act && o.status === 'packed') card.append(el('div', { class: 'row' }, shipBtn()));
     if (act) card.append(el('div', { class: 'row' }, el('button', { class: 'btn', text: 'Download label', onclick: async (e) => {
       const b = e.currentTarget; b.disabled = true;
-      try { const r = await ctx.api('shipping.label', { order_id: o.id }); const bytes = Uint8Array.from(atob(r.pdf_base64), (c) => c.charCodeAt(0)); window.open(URL.createObjectURL(new Blob([bytes], { type: r.content_type || 'application/pdf' })), '_blank'); }
+      try { const r = await ctx.api('shipping.label', { order_id: o.id }); if (r.pending) { toast(r.message, true); return; } const bytes = Uint8Array.from(atob(r.pdf_base64), (c) => c.charCodeAt(0)); window.open(URL.createObjectURL(new Blob([bytes], { type: r.content_type || 'application/pdf' })), '_blank'); }
       catch (err) { toast(err.message, true); } finally { b.disabled = false; }
     } })));
     return card;

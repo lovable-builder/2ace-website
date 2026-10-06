@@ -303,8 +303,10 @@ const actions: Record<string, { roles?: StaffRole[]; run: (s: StaffCtx, b: Recor
     const api = shippingApi();
     try {
       let file = null;
-      for (let i = 0; i < 5 && !file; i++) { file = await api.label(sh.provider_package_id); if (!file) await new Promise((r) => setTimeout(r, 1500)); }
-      if (!file) throw new Bad('Furgonetka has not produced the label yet. Try again in a moment.', 409);
+      // Furgonetka makes the PDF a little after the order (HTTP 204 until then, sometimes more than a minute). Wait up to about 25 seconds.
+      for (let i = 0; i < 10 && !file; i++) { file = await api.label(sh.provider_package_id); if (!file) await new Promise((r) => setTimeout(r, 2500)); }
+      // Not an error: nothing is wrong, the file is just not there yet. The screen says to try again in a minute.
+      if (!file) return { pending: true, message: 'Furgonetka is still preparing the label file. Nothing is wrong and nothing more is charged. Try Download label again in a minute.' };
       await audit(s, 'shipping.label', 'shipments', sh.id, sh.org_id, null, { package: sh.provider_package_id });
       return { content_type: file.contentType, pdf_base64: b64(file.bytes) };
     } catch (e) { return shippingFail(e); }

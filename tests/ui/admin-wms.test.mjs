@@ -314,6 +314,8 @@ ok('a shipped order shows carrier, tracking, our cost, what the customer is char
 ok('it no longer offers to buy', !btn('Get shipping prices'));
 apis.length = 0; btn('Download label').click(); await tick(80);
 ok('Download label fetches the file and opens it', apis.some(([a, p]) => a === 'shipping.label' && p.order_id === 'od5') && /^blob:application\/pdf:13$/.test(opened || ''), String(opened));
+{ const before = opened; DB.__api = { 'shipping.label': { pending: true, message: 'Furgonetka is still preparing the label file. Try again in a minute.' } }; opened = null; [...root().querySelectorAll('button')].find((b) => b.textContent === 'Download label').click(); await tick(60);
+  ok('a label that is not ready yet gives a calm message, opens nothing and is not treated as a failure', opened === null && /still preparing the label/.test(document.querySelector('.toast')?.textContent ?? '') && ![...root().querySelectorAll('button')].find((b) => b.textContent === 'Download label')?.disabled); opened = before; DB.__api = { 'shipping.label': { content_type: 'application/pdf', pdf_base64: btoa('%PDF-1.4 fake') } }; }
 await mount('orders', 'support', ['od5']); ok('support can read the shipment but not download', /WB123/.test(text()) && !btn('Download label'));
 
 // ---- add stock in one step ----
