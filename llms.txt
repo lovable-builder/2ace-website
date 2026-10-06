@@ -15,6 +15,7 @@
 - [Build your plan](https://2ace.pl/platform): choose space and services, see the monthly price, sign and pay online.
 - [Help and user guide](https://2ace.pl/help): step-by-step guide to the customer account with examples (PDF: https://2ace.pl/assets/2ACE-Customer-Guide.pdf).
 - [News](https://2ace.pl/news): plain-language articles on EU customs, packaging law, product compliance and opening a company in Poland.
+- [About 2ACE](https://2ace.pl/about): who runs the company (a Chinese and Egyptian partnership based in China and Poland) and why.
 - [Terms of service](https://2ace.pl/terms) and [Privacy policy](https://2ace.pl/privacy).
 
 ## Company

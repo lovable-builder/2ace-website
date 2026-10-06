@@ -108,8 +108,8 @@ article p,article li{font-size:17px;line-height:1.7}article ul,article ol{paddin
 footer{padding:36px clamp(18px,4vw,48px);border-top:1px solid rgba(11,12,14,.1);font-size:14px;color:rgba(11,12,14,.6);display:flex;flex-wrap:wrap;gap:12px 28px;justify-content:space-between}
 footer a{text-decoration:none}footer a:hover{color:#A8701A}`;
 import { MARKET_ENABLED } from './features.mjs';
-const header = `<header><a class="mark" href="/">2ACE</a><nav><a class="hide" href="/#services">Services</a><a class="hide" href="/#pricing">Pricing</a>${MARKET_ENABLED ? '<a class="hide" href="/#market">Market</a>' : ''}<a href="/news">News</a><a class="hide" href="/login">Log in</a><a class="cta" href="/platform">Build your plan</a></nav></header>`;
-const footer = `<footer><span>2ACE · Warehousing and fulfillment in Poland</span><span><a href="/">Home</a> · <a href="/news">News</a> · <a href="/platform">Build your plan</a> · <a href="/help">Help</a> · <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a> · <a href="mailto:hello@2ace.pl">Contact</a></span><span style="flex-basis:100%;font-size:13px">2ACE sp. z o.o. · ul. Ostrobramska 101A lok. 301, 04-041 Warszawa · NIP 1133212948 · REGON 545746743 · KRS 0001267111 · tel. +48 608 180 946</span></footer>`;
+const header = `<header><a class="mark" href="/">2ACE</a><nav><a class="hide" href="/#services">Services</a><a class="hide" href="/#pricing">Pricing</a>${MARKET_ENABLED ? '<a class="hide" href="/#market">Market</a>' : ''}<a class="hide" href="/about">About</a><a href="/news">News</a><a class="hide" href="/login">Log in</a><a class="cta" href="/platform">Build your plan</a></nav></header>`;
+const footer = `<footer><span>2ACE · Warehousing and fulfillment in Poland</span><span><a href="/">Home</a> · <a href="/about">About</a> · <a href="/news">News</a> · <a href="/platform">Build your plan</a> · <a href="/help">Help</a> · <a href="/terms">Terms</a> · <a href="/privacy">Privacy</a> · <a href="mailto:hello@2ace.pl">Contact</a></span><span style="flex-basis:100%;font-size:13px">2ACE sp. z o.o. · ul. Ostrobramska 101A lok. 301, 04-041 Warszawa · NIP 1133212948 · REGON 545746743 · KRS 0001267111 · tel. +48 608 180 946</span></footer>`;
 // `image` is the 1200x630 link-preview picture (assets/og/...); pages without their own use the default card.
 const head = (title, desc, url, image, extra = '') => `<!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
@@ -158,7 +158,7 @@ else home = home.replace('  <footer ', teaser + '\n  <footer ');
 fs.writeFileSync(idx, home);
 
 // ---- sitemap + robots ----
-const urls = [['/', null], ['/platform', null], ...(MARKET_ENABLED ? [['/market', null]] : []), ['/help', null], ['/terms', null], ['/privacy', null], ['/news', sorted[0]?.date], ...sorted.map((a) => [`/news/${a.slug}`, a.date])];
+const urls = [['/', null], ['/platform', null], ...(MARKET_ENABLED ? [['/market', null]] : []), ['/about', null], ['/help', null], ['/terms', null], ['/privacy', null], ['/news', sorted[0]?.date], ...sorted.map((a) => [`/news/${a.slug}`, a.date])];
 write('sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map(([u, d]) => `  <url><loc>${SITE}${u === '/' ? '/' : u}</loc>${d ? `<lastmod>${d}</lastmod>` : ''}</url>`).join('\n')}\n</urlset>\n`);
 write('robots.txt', `User-agent: *\nAllow: /\nDisallow: /account\nDisallow: /login\nDisallow: /admin\nDisallow: /scan\nDisallow: /assets/admin/\n\nSitemap: ${SITE}/sitemap.xml\n`);
 console.log('built', sorted.length, 'articles:', sorted.map((a) => a.slug).join(', '));
