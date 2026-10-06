@@ -1,5 +1,6 @@
 import { el, clear, table, pill, field, modal, toast, kv, fmtDate, confirmBox } from './ui.js';
 import { orderStepper } from './journey.js';
+import { carrierBadge } from './carriers.js';
 import { rpc, canAct, loadOrgs, orgName, orgSelect, guarded } from './wms.js';
 
 // Orders: every customer's orders with what is reserved for them. A held order has reserved nothing and says what is short.
@@ -147,7 +148,7 @@ function shippingCard(ctx, o, shipments, act, reload, own) {
     card.append(row); return card;
   }
   if (live && live.status === 'purchased') {
-    card.append(kv([['Carrier', live.service_name || live.carrier], ['Tracking', (live.tracking_numbers || []).join(', ') || 'Not available yet'], ['We paid', `${pln(live.cost_net)} + VAT (${pln(live.cost_gross)})`], ['Charged to customer', `${pln(live.bill_net)} + VAT (${pln(live.bill_gross)}), ${Number(live.markup_percent)}% markup`], ['Billing', live.billing_status === 'pending' ? 'Waiting to be invoiced' : live.billing_status], ['Environment', live.env === 'sandbox' ? 'Test (sandbox): nothing real was charged' : 'Live'], ['Bought', fmtDate(live.purchased_at)]]));
+    card.append(kv([['Carrier', el('span', {}, carrierBadge(live.carrier), live.service_name || live.carrier)], ['Tracking', (live.tracking_numbers || []).join(', ') || 'Not available yet'], ['We paid', `${pln(live.cost_net)} + VAT (${pln(live.cost_gross)})`], ['Charged to customer', `${pln(live.bill_net)} + VAT (${pln(live.bill_gross)}), ${Number(live.markup_percent)}% markup`], ['Billing', live.billing_status === 'pending' ? 'Waiting to be invoiced' : live.billing_status], ['Environment', live.env === 'sandbox' ? 'Test (sandbox): nothing real was charged' : 'Live'], ['Bought', fmtDate(live.purchased_at)]]));
     if (act && o.status === 'packed') card.append(el('div', { class: 'row' }, shipBtn()));
     if (act) card.append(el('div', { class: 'row' }, el('button', { class: 'btn', text: 'Download label', onclick: async (e) => {
       const b = e.currentTarget; b.disabled = true;
@@ -196,7 +197,7 @@ function shippingCard(ctx, o, shipments, act, reload, own) {
     if (!r.quotes.length) { out.append(el('p', { class: 'muted', text: 'No carrier answered for this parcel.' })); return; }
     if (!r.enabled) out.append(el('div', { class: 'rule' }, el('b', { text: 'Buying is switched off' }), el('p', { text: 'An admin turns it on with the server setting SHIPPING_ENABLED=true. You can still compare prices.' })));
     out.append(el('p', { class: 'muted' }, 'Environment: ', pill(r.env === 'sandbox' ? 'test' : 'live', r.env === 'sandbox' ? 'ok' : 'bad'), ` · customer markup ${r.markup_percent}%`),
-      table([{ label: 'Carrier', render: (q) => el('span', { class: q.available ? '' : 'muted' }, q.name || q.carrier, q.available ? '' : ' (not available: ' + q.reason + ')') },
+      table([{ label: 'Carrier', render: (q) => el('span', { class: q.available ? '' : 'muted' }, carrierBadge(q.carrier), q.name || q.carrier, q.available ? '' : ' (not available: ' + q.reason + ')') },
         { label: 'We pay (net)', render: (q) => (q.available ? pln(q.cost_net) : '-') },
         { label: 'Customer pays (net)', render: (q) => (q.available ? pln(q.bill_net) : '-') },
         { label: '', render: (q) => (q.available ? el('button', { class: 'btn tiny', text: 'Buy label', onclick: (e) => buy(q, r, e.currentTarget) }) : '') }], r.quotes));

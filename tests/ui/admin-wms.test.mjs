@@ -262,6 +262,7 @@ await mount('orders', 'warehouse', ['od3']); ok('an order that is not packed exp
 await mount('orders', 'warehouse', ['od4']); apis.length = 0; btn('Get shipping prices').click(); await tick(80);
 ok('prices are requested for that order', apis.some(([a, p]) => a === 'shipping.quote' && p.order_id === 'od4'));
 ok('every carrier is listed with what we pay and what the customer pays', /DPD · package, door/.test(text()) && /12,50 zł/.test(text()) && /16,25 zł/.test(text()) && /UPS · package/.test(text()) && /117,00 zł/.test(text()));
+ok('each offer carries its carrier badge, named for screen readers, and the badges follow the carrier', [...root().querySelectorAll('tbody .carrier')].map((c) => c.getAttribute('aria-label')).join() === 'DPD,UPS,INPOST' && !!root().querySelector('tbody .carrier svg') && root().querySelectorAll('tbody .carrier')[2].textContent === 'InPost');
 ok('the environment and the markup are shown', /test/.test(text()) && /customer markup 30%/.test(text()));
 ok('an unavailable carrier shows its reason and has no Buy button', /INPOST · locker \(not available: Parcel too heavy\)/.test(text()) && [...root().querySelectorAll('button')].filter((b) => b.textContent.trim() === 'Buy label').length === 2);
 // buying
