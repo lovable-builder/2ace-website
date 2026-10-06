@@ -14,6 +14,9 @@
     <tr><td>Audit log</td><td class="y">Yes</td><td class="y">Yes</td><td class="no">No</td></tr>
     <tr><td>Orders (create, reserve, cancel)</td><td class="y">Yes</td><td class="ro">Read only</td><td class="y">Yes</td></tr>
     <tr><td>Pick and pack (scan app)</td><td class="y">Yes</td><td class="no">No</td><td class="y">Yes</td></tr>
+    <tr><td>Add stock, Store in bin, Move (Stock screen)</td><td class="y">Yes</td><td class="ro">Read only</td><td class="y">Yes</td></tr>
+    <tr><td>A customer's shipping settings (markup, caps, mode)</td><td class="y">Yes (edit)</td><td class="ro">Read only</td><td class="no">No</td></tr>
+    <tr><td>Mark an order shipped</td><td class="y">Yes</td><td class="no">No</td><td class="y">Yes</td></tr>
     <tr><td>Shipping labels (prices, buy, download)</td><td class="y">Yes</td><td class="ro">Read only</td><td class="y">Yes, over-limit needs an admin</td></tr>
     <tr><td>Approvals (decide)</td><td class="y">Yes</td><td class="ro">Read only</td><td class="y">Yes</td></tr>
     <tr><td>Inbound, receiving, discrepancies</td><td class="y">Yes</td><td class="ro">Read only</td><td class="y">Yes</td></tr>
@@ -35,7 +38,7 @@
 
 <section id="s-home">
   <h2>2. The overview</h2>
-  <p>The first screen is a set of cards that tell you what needs attention. A highlighted card means there is work.</p>
+  <p>The first screen starts with <b>the journey of an order</b>: a picture of seven steps (booked, arriving, on the shelf, ordered, picking, packed, shipped), each with a live number and a link to the screen where you work on it. Steps that have something in them light up in amber. A red tag on <i>Ordered</i> shows orders on hold for missing stock. Below it are the cards that tell you what needs attention. A highlighted card means there is work.</p>
   <div class="tw"><table>
     <tr><th>Card</th><th>Click it to</th></tr>
     <tr><td>New requests, Open requests</td><td>Open the requests inbox.</td></tr>
@@ -44,10 +47,11 @@
     <tr><td>Active customers</td><td>See who is live.</td></tr>
     <tr><td>Changes to approve</td><td>Open Approvals.</td></tr>
     <tr><td>Deliveries expected, Being received</td><td>Open Inbound.</td></tr>
-    <tr><td>Units to put away</td><td>Open Stock, To put away.</td></tr>
+    <tr><td>Orders on hold, Orders to pick</td><td>Open Orders.</td></tr>
+    <tr><td>Units to put away</td><td>Open Stock, To put away. Usually only unexpected goods are here, because good goods are stored on arrival.</td></tr>
     <tr><td>Open discrepancies</td><td>Open Discrepancies.</td></tr>
   </table></div>
-  <div class="ex"><b>Example: your morning</b><p>The overview shows 2 new requests, 1 domain to register, 1 change to approve and 12 units to put away. You work down the cards in that order.</p></div>
+  <div class="ex"><b>Example: your morning</b><p>The overview shows 2 new requests, 1 domain to register, 1 change to approve and 1 order on hold. The journey shows 3 orders ready to pick. You work down the cards in that order.</p></div>
 </section>
 
 <section id="s-customers">
@@ -61,11 +65,13 @@
     <li><b>Company</b>: country, tax ID, address, voivodeship, phone, Stripe customer id, join date.</li>
     <li><b>People</b>: members and their roles.</li>
     <li><b>Plan</b>: the current plan, monthly and one-time amounts, and history of earlier plans.</li>
+    <li><b>Shipping and fulfilment</b> (the box right under Plan): the customer's fulfilment mode (from their plan: Fulfilment, Fulfilment as you go, or storage only), their shipping markup, whether they may buy labels themselves, the most unpaid shipping they may have at once, and the labels waiting to be invoiced. An <b>admin</b> clicks <span class="ui">Edit</span> to change these. The mode override is for testing only; normally it follows the plan. The markup is added to the carrier's net price (empty = the default of 30%).</li>
     <li><b>Subscription</b>: Stripe subscription id, status and renewal date.</li>
     <li><b>Invoices</b>: loaded live from Stripe.</li>
     <li><b>Signed agreements</b>: who signed, which version, from which IP and when. Domain customers also have a "hostinger-domain-registration" row. Keep this evidence at least 3 years, as Hostinger requires.</li>
     <li><b>Domain orders</b> and <b>Requests</b> for that company.</li>
   </ul>
+  <p class="muted">Where to find it: <span class="ui">Customers</span> in the left menu, then <b>click a company's row</b>. Scroll past the Company, People and Plan boxes. The separate <span class="ui">Shipping</span> item in the left menu is only the connection test to Furgonetka.</p>
   <h3>Invoices and resending</h3>
   <ol class="steps">
     <li>On the customer page find the <span class="ui">Invoices</span> card.</li>
@@ -138,24 +144,25 @@
 </section>
 
 <section id="s-setup">
-  <h2>8. Set up the warehouse</h2>
-  <p class="lead">Do this once. A location is a labelled place in the warehouse. Its code is what the barcode label says.</p>
+  <h2>8. Locations</h2>
+  <p class="lead">A location is a labelled place in the warehouse. Its code is what the barcode label says. <b>You do not have to set anything up before your first delivery:</b> the places the system needs are created the first time they are used.</p>
   <div class="tw"><table>
-    <tr><th>Type</th><th>Use</th><th>Shared or dedicated</th></tr>
-    <tr><td>receiving</td><td>Where goods land before they are put away.</td><td>Shared by all customers</td></tr>
-    <tr><td>quarantine</td><td>Damaged goods or goods on hold.</td><td>Shared</td></tr>
-    <tr><td>bin</td><td>A shelf bin for stock.</td><td>Dedicated to one customer</td></tr>
-    <tr><td>pallet</td><td>A pallet slot for stock.</td><td>Dedicated to one customer</td></tr>
-    <tr><td>pack, returns, shipping</td><td>Stations for later order handling.</td><td>Shared</td></tr>
+    <tr><th>Type</th><th>Use</th><th>Created</th></tr>
+    <tr><td>bin</td><td>A shelf bin for one customer's stock. Good goods are received straight into it.</td><td>Automatically, per customer, named after them (for example <code>ACMEHOME-01</code>) and assigned to them. If you assigned a bin by hand, that one is used first.</td></tr>
+    <tr><td>pallet</td><td>A pallet slot for one customer's stock.</td><td>By hand, for the space you mark out.</td></tr>
+    <tr><td>receiving</td><td>Where unexpected goods wait for a decision.</td><td>Automatically (<code>RECEIVING</code>) when first needed.</td></tr>
+    <tr><td>quarantine</td><td>Damaged goods or goods on hold. Not for sale.</td><td>Automatically (<code>QUARANTINE</code>).</td></tr>
+    <tr><td>pack</td><td>The packing station: picked goods wait here until shipped.</td><td>Automatically (<code>PACK-1</code>) at the first pick.</td></tr>
+    <tr><td>returns, shipping</td><td>Stations for later use.</td><td>By hand.</td></tr>
   </table></div>
+  <p>Use <span class="ui">Locations</span> yourself when you want to lay the space out: extra bins or pallet slots for a customer, or printed labels for the shelves.</p>
   <ol class="steps">
-    <li>Open <span class="ui">Locations</span>. Click <span class="ui">New location</span>, code <code>R1</code>, type <code>receiving</code>.</li>
-    <li>Create <code>Q1</code>, type <code>quarantine</code>.</li>
-    <li>Click <span class="ui">Create many</span>: starts with <code>A-01-</code>, from 1 to 20, type <code>bin</code>. You get A-01-01 to A-01-20 in one go.</li>
-    <li>Assign a bin: click <span class="ui">Assign</span> on A-01-01 and choose the customer. The Customer column now shows the company.</li>
+    <li>Open <span class="ui">Locations</span>. Click <span class="ui">New location</span>, give a code such as <code>A-01-01</code> and a type.</li>
+    <li>Or click <span class="ui">Create many</span>: starts with <code>A-01-</code>, from 1 to 20, type <code>bin</code>. You get A-01-01 to A-01-20 in one go.</li>
+    <li>Assign a bin or pallet to a customer: click <span class="ui">Assign</span> and choose the customer. The Customer column shows the company.</li>
     <li>Tick the locations you want and click <span class="ui">Print labels</span> (allow pop-ups). Print the page and stick the barcodes on the shelves.</li>
   </ol>
-  <div class="ex"><b>Example</b><p>Acme's plan is 15 m². You mark out that space in the park as pallet slots, create <code>PAL-01</code> to <code>PAL-12</code> and assign each to Acme Home. The plan is sold by the square metre; the bins and pallet slots are how you lay that space out.</p></div>
+  <div class="ex"><b>Example</b><p>Acme's plan is 15 m². You mark out that space in the park as pallet slots, create <code>PAL-01</code> to <code>PAL-12</code> and assign each to Acme Home. The plan is sold by the square metre; the bins and pallet slots are how you lay that space out. Without doing this, Acme's goods would still go into an automatic bin called <code>ACMEHOME-01</code>.</p></div>
   <div class="rule"><b>Rules</b>
     <p>A bin or pallet belongs to one customer at a time, and the database refuses to put another company's stock in it.</p>
     <p>A location holding stock cannot be released, reassigned or switched off. Move the stock first.</p>
@@ -242,7 +249,7 @@
 </section>
 
 <section id="s-orders">
-  <h2>Orders and reserved stock</h2>
+  <h2>13. Orders and reserved stock</h2>
   <p class="lead">Customers place orders (by hand or from a CSV file). Each order is reserved as a whole, or held with a reason. You see them under <span class="ui">Orders</span>.</p>
   <h3>How reserving works</h3>
   <ul>
@@ -260,7 +267,7 @@
 </section>
 
 <section id="s-pickpack">
-  <h2>Picking and packing</h2>
+  <h2>14. Picking and packing</h2>
   <p class="lead">A reserved order is picked from the shelves, checked and packed on the phone scan page. Every step moves real stock in the ledger and records the parcels.</p>
   <h3>The packing station</h3>
   <p>Picked items go to a packing station, <code>PACK-1</code>. It is created automatically the first time you pick, so there is nothing to set up.</p>
@@ -291,7 +298,7 @@
 </section>
 
 <section id="s-shipping">
-  <h2>Shipping labels</h2>
+  <h2>15. Shipping labels</h2>
   <p class="lead">When an order is packed, you buy its label here. The carriers are compared for the exact parcels, you choose one, and the order becomes shipped.</p>
   <h3>Buy a label</h3>
   <ol class="steps">
@@ -340,10 +347,10 @@
 </section>
 
 <section id="s-scan">
-  <h2>13. The scan app on a phone</h2>
-  <p class="lead">Open <code>2ace.pl/scan</code> on a phone or handheld scanner. It works for Warehouse accounts, and for admins after the two-step check. It has four jobs: Receive, Put away, Pick and Pack. Receiving and putting away are described here; picking and packing have their own section above.</p>
+  <h2>16. The scan app on a phone</h2>
+  <p class="lead">Open <code>2ace.pl/scan</code> on a phone or handheld scanner. It works for Warehouse accounts, and for admins after the two-step check. It has four jobs: Receive, Put away, Pick and Pack. Receiving and putting away are described here; picking and packing have their own section (14), and what happens to the label after packing is in section 15.</p>
   <ol class="steps">
-    <li>Sign in at <code>2ace.pl/login</code> with a Warehouse account, then open <code>/scan</code>. The first screen has <span class="ui">Receive</span> and <span class="ui">Put away</span>.</li>
+    <li>Sign in at <code>2ace.pl/login</code> with a Warehouse account, then open <code>/scan</code>. The first screen has four big buttons: <span class="ui">Receive</span>, <span class="ui">Put away</span>, <span class="ui">Pick</span> and <span class="ui">Pack</span>.</li>
     <li>A hardware scanner types into the big box and presses Enter. On a phone, tap <span class="ui">Camera</span>, or type the code and tap <span class="ui">OK</span>.</li>
   </ol>
   <h3>Receive on the phone</h3>
@@ -353,10 +360,11 @@
     <li>Set the quantity, then tap <span class="ui">Good</span> or <span class="ui">Damaged</span>. For damaged goods, take photos first.</li>
     <li>The list below shows progress, for example <i>590 / 600 good · 10 damaged</i>. Tap <span class="ui">Finish delivery</span> when done. If there are differences, the customer is emailed.</li>
   </ol>
+  <p>Good goods from a booked delivery are stored in the customer's bin the moment you tap <span class="ui">Good</span>, and the green message says where ("Stored in ACMEHOME-01. Available now"). You only need Put away for goods that were not on the booking, or when automatic storing is switched off.</p>
   <h3>Put away on the phone</h3>
   <ol class="steps">
     <li>Tap <span class="ui">Put away</span> and scan the product.</li>
-    <li>The card shows how many are waiting in receiving. Check the quantity.</li>
+    <li>The card shows how many are waiting in the receiving area. Check the quantity.</li>
     <li>Scan the bin label, for example <code>A-01-01</code>. The move is posted, and the green message reads "Moved 590 × MUG-BLUE to A-01-01".</li>
   </ol>
   <div class="ex"><b>Example</b><p>Marta scans <code>5901234123457</code>. The card shows the blue mug photo and "590 waiting at R1". She scans the label on the shelf, <code>A-01-01</code>, and hears the confirmation beep.</p></div>
@@ -364,16 +372,18 @@
 </section>
 
 <section id="s-daily">
-  <h2>14. A day in the warehouse</h2>
+  <h2>17. A day in the warehouse</h2>
   <p>Put the pieces together with one routine.</p>
   <div class="tw"><table>
     <tr><th>When</th><th>Who</th><th>What</th></tr>
     <tr><td>Start of day</td><td>Everyone</td><td>Open the overview. Work down the cards.</td></tr>
     <tr><td>Morning</td><td>Support</td><td>Answer new requests. Register pending domains. Check customers past due.</td></tr>
-    <tr><td>As trucks arrive</td><td>Warehouse</td><td>Receive deliveries. Photograph damage. Close receiving.</td></tr>
-    <tr><td>After receiving</td><td>Warehouse</td><td>Put goods away. Resolve discrepancies.</td></tr>
+    <tr><td>As trucks arrive</td><td>Warehouse</td><td>Receive deliveries. Photograph damage. Close receiving. Good goods are on the shelf at once.</td></tr>
+    <tr><td>After receiving</td><td>Warehouse</td><td>Resolve discrepancies. Deal with unexpected goods in <span class="ui">To put away</span>. Use <span class="ui">Add stock</span> for opening stock.</td></tr>
+    <tr><td>Orders come in</td><td>Warehouse</td><td>Check the journey strip for orders on hold. Pick and pack on the phone. If automatic labels are on, the label is bought when you finish packing.</td></tr>
+    <tr><td>After packing</td><td>Warehouse</td><td>Open the order, click <span class="ui">Download label</span> (or <span class="ui">Open the PDF to print</span> for a customer's own label), print it and stick it on. For own labels, click <span class="ui">Mark shipped</span>.</td></tr>
     <tr><td>Through the day</td><td>Warehouse or admin</td><td>Approve or decline customer change requests.</td></tr>
     <tr><td>End of day</td><td>Admin</td><td>Check the audit log for anything unusual. Check <span class="ui">To put away</span> for unexpected goods that still need a decision.</td></tr>
   </table></div>
-  <div class="ex"><b>Example: Tuesday</b><p>08:30 two new requests, one asks for a quote, one is a billing question. 09:15 the DSV truck with IN-000012 arrives. 10:20 receiving is closed with two discrepancies and the customer is emailed. 10:40 goods are on shelf A-01-01. 14:00 Anna asks to change a unit count on a booked delivery and Marta approves it.</p></div>
+  <div class="ex"><b>Example: Tuesday</b><p>08:30 two new requests, one asks for a quote, one is a billing question. 09:15 the DSV truck with IN-000012 arrives. 10:20 receiving is closed with two discrepancies and the customer is emailed. 10:40 the good mugs are already on Acme's shelf, ready to order. 14:00 Anna asks to change a unit count on a booked delivery and Marta approves it.</p></div>
 </section>

@@ -130,11 +130,11 @@
     <li>When the payment clears, your plan goes live. This usually takes a few seconds.</li>
   </ol>
   <div class="ex"><b>Example: Acme's plan</b>
-    <p>Acme chooses 12 pallets, fulfillment, returns, and a storefront.</p>
+    <p>Acme chooses 14.4 m², fulfillment, returns, and a storefront.</p>
     <div class="tw"><table>
       <tr><th>Line</th><th>How it is worked out</th><th class="n">Per month</th></tr>
-      <tr><td>12 pallets</td><td>12 × 360 zł</td><td class="n">4,320 zł</td></tr>
-      <tr><td>Fulfillment</td><td>12 × 1.2 m² = 14.4 m² × 350 zł</td><td class="n">5,040 zł</td></tr>
+      <tr><td>Storage, 14.4 m²</td><td>14.4 × 300 zł</td><td class="n">4,320 zł</td></tr>
+      <tr><td>Fulfillment</td><td>14.4 m² × 350 zł</td><td class="n">5,040 zł</td></tr>
       <tr><td>Returns handling</td><td>14.4 m² × 150 zł</td><td class="n">2,160 zł</td></tr>
       <tr><td>Storefront hosting</td><td>fixed</td><td class="n">199 zł</td></tr>
       <tr><td><b>Monthly total (net)</b></td><td></td><td class="n"><b>11,719 zł</b></td></tr>
@@ -150,13 +150,13 @@
   <p class="lead">After you pay, <code>2ace.pl/platform</code> opens your dashboard. The menu on the left (or the burger button on a phone) has these tabs.</p>
   <div class="tw"><table>
     <tr><th>Tab</th><th>What you do there</th><th>Status</th></tr>
-    <tr><td>Overview</td><td>Greeting, a getting-started checklist, and your plan with its monthly price.</td><td><span class="pill ok">Live</span></td></tr>
+    <tr><td>Overview</td><td>Greeting, the journey of your goods, a getting-started checklist, and your plan with its monthly price.</td><td><span class="pill ok">Live</span></td></tr>
     <tr><td>Products</td><td>Your catalogue: SKUs, names, barcodes, photos.</td><td><span class="pill ok">Live</span></td></tr>
     <tr><td>Inbound</td><td>Tell us what is arriving and when. Follow each delivery.</td><td><span class="pill ok">Live</span></td></tr>
     <tr><td>Inventory</td><td>See how many units of each product we hold.</td><td><span class="pill ok">Live</span></td></tr>
     <tr><td>Domain</td><td>Request your .pl domain.</td><td><span class="pill ok">Live</span></td></tr>
-    <tr><td>Orders</td><td>Place orders by hand or from a CSV file and follow them. Picking and shipping status is coming.</td><td><span class="pill ok">Live</span></td></tr>
-    <tr><td>Returns, Imports, Shipment tracking</td><td>Fill with real data as returns and import tracking open.</td><td><span class="pill">Coming</span></td></tr>
+    <tr><td>Orders</td><td>Place orders by hand or from a CSV file, follow them from reserved to shipped, and add your own shipping label.</td><td><span class="pill ok">Live</span></td></tr>
+    <tr><td>Returns, Imports, Shipment tracking</td><td>Fill with real data as returns, imports and tracking open. Shipment tracking numbers will show here and on your orders.</td><td><span class="pill">Coming</span></td></tr>
     <tr><td>Storefront</td><td>Status of your online shop.</td><td><span class="pill">Coming</span></td></tr>
     <tr><td>Team</td><td>Give colleagues their own access. For now ask us from the Contact button.</td><td><span class="pill">Coming</span></td></tr>
   </table></div>
@@ -253,12 +253,12 @@
 </section>
 
 <section id="c-orders">
-  <h2>Place and follow orders</h2>
+  <h2>7. Place and follow orders</h2>
   <p class="lead">Orders are the parcels you want us to send to your buyers. We reserve the stock for each order the moment you place it.</p>
   <h3>Place one order</h3>
   <ol class="steps">
     <li>Open <span class="ui">Orders</span> and click <span class="ui">New order</span>. Your plan must be active and your products must be on our shelves.</li>
-    <li>Enter your own order number (optional but recommended), the recipient's name, address, postal code, city and a two-letter country code such as <code>PL</code> or <code>DE</code>. Email and phone are optional.</li>
+    <li>Enter your own order number (optional but recommended), the recipient's name, address, postal code, city and a two-letter country code such as <code>PL</code> or <code>DE</code>. Email is optional, but <b>add a phone number</b>: couriers usually need it to deliver.</li>
     <li>Choose each product and quantity and click <span class="ui">Add</span>. The list shows how many of each you have available.</li>
     <li>Click <span class="ui">Place order</span>.</li>
   </ol>
@@ -290,34 +290,38 @@
 </section>
 
 <section id="c-shipping">
-  <h2>Ship your orders with your own label</h2>
-  <p class="lead">If you already have a shipping label for an order (from Allegro, InPost, Amazon or your own carrier contract), give it to us and we print it, put it on the parcel and hand it to the courier. We do not charge for shipping when you bring the label.</p>
+  <h2>8. Ship your orders</h2>
+  <p class="lead">Every order leaves with a shipping label. There are two ways to get it: we choose and buy it when we pack your order, or you give us your own.</p>
+  <h3>The normal way: we do it</h3>
+  <p>On <b>Fulfilment</b> you do nothing. When our team has packed your order they weigh and measure the parcel, and we choose the carrier and create the label. Your order then shows <span class="pill ok">Shipped</span>. This is also what happens to any order for which you did not add a label.</p>
+  <h3>Or use your own label</h3>
+  <p>If you already have a label for an order (from Allegro, InPost, Amazon or your own carrier contract), give it to us. We print it, put it on the parcel and hand it to the courier. We do not charge for shipping when you bring the label.</p>
   <ol class="steps">
     <li>Open <span class="ui">Orders</span> and click <span class="ui">Shipping</span> under the order. It is available while the order is received, reserved, being picked or packed.</li>
     <li>Click <span class="ui">Choose file</span> and select the label as a <b>PDF of at most 2 MB</b>.</li>
     <li>Optionally add the carrier name and the tracking number(s), separated by commas. You can add tracking numbers without a file too.</li>
     <li>Click <span class="ui">Save the label</span>. You see "Saved" and the label on file. The button on the order now reads <span class="ui">Shipping (own label added)</span>.</li>
   </ol>
-  <div class="ex"><b>Example</b><p>Anna sells on Allegro. For ORD-000014 she downloads the InPost label PDF from Allegro, opens Shipping on that order, chooses the file, types "InPost" and the tracking number, and saves. When Marta packs the order she prints Anna's label and sticks it on the box.</p></div>
+  <div class="ex"><b>Example</b><p>Anna sells on Allegro. For ORD-000014 she downloads the InPost label PDF from Allegro, opens Shipping on that order, chooses the file, types "InPost" and the tracking number, and saves. When Marta packs the order she prints Anna's label and sticks it on the box. Marta then marks the order shipped.</p></div>
   <h3>Changing or removing the label</h3>
-  <p>Upload another file and click <span class="ui">Replace the label</span>, or click <span class="ui">Remove</span>. This works until the order is shipped.</p>
-  <div class="rule"><b>Good to know</b><p>Only owner, operations and staff members of your company can add labels. The file must be a real PDF. If your plan does not include fulfilment, the Shipping panel says so. On <b>Fulfilment</b> we normally buy the label ourselves when we pack; adding your own label simply replaces that for this order.</p></div>
+  <p>Upload another file and click <span class="ui">Replace the label</span>, or click <span class="ui">Remove</span>. This works until the order is shipped. After that the order cannot get a label any more.</p>
+  <div class="rule"><b>Good to know</b><p>Only owner, operations and staff members of your company can add labels. The file must be a real PDF. If your plan does not include fulfilment, the Shipping panel says so and we do not ship your orders. A label from you replaces ours for that order only; we never buy a second label for an order that has yours.</p></div>
 </section>
 
 <section id="c-change">
-  <h2>7. Change your plan</h2>
+  <h2>9. Change your plan</h2>
   <p class="lead">You can upgrade or downgrade yourself. We show the difference first and you confirm once.</p>
   <ol class="steps">
-    <li>Click <span class="ui">Build plan</span> in the top bar. A banner says "You already have an active plan". Click <span class="ui">Change plan</span>. The same button is on the Storefront and 2ACE Market tabs. The builder opens with your current plan.</li>
+    <li>Click <span class="ui">Build plan</span> in the top bar. A banner says "You already have an active plan". Click <span class="ui">Change plan</span>. The same button is on the Overview and the Storefront tab. The builder opens with your current plan.</li>
     <li>Change what you need and go to the Review step. A badge shows Upgrade, Downgrade or No price change.</li>
     <li>Read the sentence about what is charged today and your new monthly price. Click <span class="ui">Confirm</span>.</li>
   </ol>
   <h3>Three examples</h3>
   <div class="ex"><b>Upgrade</b>
-    <p>Acme has 12 pallets at 4,320 zł and adds fulfillment: the monthly price becomes 9,360 zł, a difference of 5,040 zł. With half of the billing month left, the review says: <i>Charged today: about 2,520 zł. From your next invoice you pay 9,360 zł a month.</i> The card on file is charged straight away, and the invoice is emailed.</p>
+    <p>Acme has 14.4 m² at 4,320 zł and adds fulfillment: the monthly price becomes 9,360 zł, a difference of 5,040 zł. With half of the billing month left, the review says: <i>Charged today: about 2,520 zł. From your next invoice you pay 9,360 zł a month.</i> The card on file is charged straight away, and the invoice is emailed.</p>
   </div>
   <div class="ex"><b>Downgrade</b>
-    <p>Acme goes from 12 to 6 pallets: 4,320 zł becomes 2,160 zł. With half the month left, the review says: <i>You get a credit of about 1,080 zł on your next invoice.</i> Nothing is charged today.</p>
+    <p>Acme goes from 14.4 to 7.2 m²: 4,320 zł becomes 2,160 zł. With half the month left, the review says: <i>You get a credit of about 1,080 zł on your next invoice.</i> Nothing is charged today.</p>
   </div>
   <div class="ex"><b>No price change</b>
     <p>Acme adds Import and customs. It has no monthly price (it is quoted per shipment), so the badge says "No price change" and the review says "Nothing is charged today". Your plan is updated and your monthly price stays the same.</p>
@@ -326,7 +330,7 @@
 </section>
 
 <section id="c-domain">
-  <h2>8. Get a .pl domain</h2>
+  <h2>10. Get a .pl domain</h2>
   <p class="lead">If your active plan has no domain yet, a <span class="pill">New</span> badge appears on the Domain tab.</p>
   <ol class="steps">
     <li>Open <span class="ui">Domain</span>. Type the name you want, without <code>.pl</code>, and click <span class="ui">Check</span>. We check it against the Polish registry.</li>
@@ -339,7 +343,7 @@
 </section>
 
 <section id="c-billing">
-  <h2>9. Invoices and payments</h2>
+  <h2>11. Invoices and payments</h2>
   <ul>
     <li><b>Every payment</b> sends you an email with a link to the invoice and a PDF.</li>
     <li><b>Your invoices</b> are listed under <span class="ui">Account</span> → <span class="ui">Billing and invoices</span>, each with a link to view or download it.</li>
@@ -351,7 +355,7 @@
 </section>
 
 <section id="c-contact">
-  <h2>10. Contact us</h2>
+  <h2>12. Contact us</h2>
   <p>Use the <span class="ui">Contact us</span> button in your dashboard. A form opens with a topic list that pre-fills a helpful template. You can also write to <code>hello@2ace.pl</code> or call <code>+48 608 180 946</code>.</p>
   <div class="tw"><table>
     <tr><th>Topic</th><th>Use it for</th></tr>
@@ -365,7 +369,7 @@
 </section>
 
 <section id="c-faq">
-  <h2>11. Questions and fixes</h2>
+  <h2>13. Questions and fixes</h2>
   <div class="tw"><table>
     <tr><th>Problem</th><th>What to do</th></tr>
     <tr><td>I did not get the confirmation email.</td><td>Check spam. If it is not there, try Create account again with the same email, or contact us.</td></tr>
@@ -375,6 +379,8 @@
     <tr><td>I cannot delete a product.</td><td>It has been used. Request a switch off instead.</td></tr>
     <tr><td>The price after a plan change looks the same.</td><td>Import and customs has no monthly price. See the "No price change" example.</td></tr>
     <tr><td>Stock shows "awaiting put-away".</td><td>Those goods were not on your booking, or were damaged. We contact you about them. Good goods from a booked delivery are available immediately.</td></tr>
+    <tr><td>I cannot add a shipping label to an order.</td><td>The order must not be shipped or cancelled yet, you need to be an owner, operations or staff member, and your plan must include fulfilment. The Shipping panel says which one applies. The file must be a PDF of at most 2 MB.</td></tr>
+    <tr><td>My order says Packed, not Shipped.</td><td>It is boxed and waiting for its label. With your own label we mark it shipped as soon as it is handed over; otherwise it turns Shipped when we have bought the label. If it stays Packed for more than a working day, use the Contact button.</td></tr>
     <tr><td>Payment failed.</td><td>Update your card under Account → Manage payment method and subscription.</td></tr>
   </table></div>
 </section>
