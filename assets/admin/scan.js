@@ -180,20 +180,17 @@ async function pickOrder(id, stage = 'bin') {
     return shell(o.ref, pickList, el('div', { class: 'card' }, el('b', { text: 'All picked' }), el('div', { text: 'Take the items to the packing station.' }), el('button', { class: 'btn big', text: 'Pack this order', onclick: () => packOrder(id) })), progress);
   }
   const pic = await productPhoto(cur.product_id);
-  const problem = () => shell('Problem', () => pickOrder(id, 'bin'), el('div', { class: 'card' }, el('b', { text: 'What is wrong?' }), el('small', { class: 'muted', text: 'The whole order stops and goes on hold. Return anything already picked to the shelf, then count the bin.' }),
+  const problem = () => shell('Problem', () => pickOrder(id), el('div', { class: 'card' }, el('b', { text: 'What is wrong?' }), el('small', { class: 'muted', text: 'The whole order stops and goes on hold. Return anything already picked to the shelf, then count the bin.' }),
     (() => { const t = el('textarea', { rows: '3', placeholder: 'For example: bin ' + cur.locations.code + ' is empty', 'aria-label': 'What is wrong' }); const b = el('button', { class: 'btn big warn', text: 'Stop this order', onclick: async () => { try { await rpc('report_pick_problem', { p_order: id, p_note: t.value }); say('Order stopped and put on hold'); pickList(); } catch (e) { say(e.message, true); } } }); return el('div', { class: 'row2' }, t, b); })()));
   const head = el('div', { class: 'card' }, pic, el('small', { class: 'muted', text: 'Line ' + (done + 1) + ' of ' + lines.length }), el('b', { text: 'Go to ' + cur.locations.code }), el('div', { text: cur.products.sku + ' · ' + cur.products.name }), el('div', { class: 'row2' }, el('span', { text: 'Pick' }), el('b', { text: cur.qty + ' ×' })));
   const stuck = el('button', { class: 'btn ghost', text: "Can't find it", onclick: problem });
-  if (stage === 'bin') {
-    const onCode = async (code) => { try { const r = await rpc('wms_lookup', { p_code: code }); if (r.type !== 'location') return say('Scan the bin label', true); if (r.id !== cur.location_id) return say('Wrong bin. This line is at ' + cur.locations.code, true); say('Bin ' + r.code + ' confirmed'); pickOrder(id, 'item'); } catch (e) { say(e.message, true); } };
-    return shell(o.ref, pickList, head, el('p', { class: 'hint', text: 'Scan the bin label' }), scanInput(onCode, 'Scan the bin ' + cur.locations.code), stuck, progress);
-  }
-  if (stage === 'item') {
-    const onCode = async (code) => { try { const r = await rpc('wms_lookup', { p_code: code, p_org: o.org_id }); if (r.type !== 'product') return say('No product with that code for this customer', true); if (r.id !== cur.product_id) return say('Wrong item. This line needs ' + cur.products.sku, true); say('Item confirmed'); pickOrder(id, 'confirm'); } catch (e) { say(e.message, true); } };
-    return shell(o.ref, () => pickOrder(id, 'bin'), head, el('p', { class: 'hint', text: 'Scan the product' }), scanInput(onCode, 'Scan ' + cur.products.sku), stuck, progress);
-  }
-  const confirm = el('button', { class: 'btn big', text: 'Picked ' + cur.qty, onclick: async () => { confirm.disabled = true; try { const r = await rpc('pick_line', { p_allocation: cur.id, p_key: key() }); say(r.remaining ? 'Picked. ' + r.remaining + ' to go' : 'Everything is picked'); pickOrder(id, 'bin'); } catch (e) { confirm.disabled = false; say(e.message, true); } } });
-  shell(o.ref, () => pickOrder(id, 'item'), head, el('p', { class: 'hint', text: 'Take ' + cur.qty + ' and confirm' }), confirm, stuck, progress);
+  // One screen per line: the bin is shown, so a tap is enough. Scanning is optional and only double-checks (it never blocks).
+  const check = async (code) => { try { const r = await rpc('wms_lookup', { p_code: code, p_org: o.org_id });
+    if (r.type === 'location') return r.id === cur.location_id ? say('Right bin ' + r.code) : say('Wrong bin. This line is at ' + cur.locations.code, true);
+    if (r.type === 'product') return r.id === cur.product_id ? say('Right item') : say('Wrong item. This line needs ' + cur.products.sku, true);
+    say('Code not recognised', true); } catch (e) { say(e.message, true); } };
+  const confirm = el('button', { class: 'btn big', text: 'Picked ' + cur.qty, onclick: async () => { confirm.disabled = true; try { const r = await rpc('pick_line', { p_allocation: cur.id, p_key: key() }); say(r.remaining ? 'Picked. ' + r.remaining + ' to go' : 'Everything is picked'); pickOrder(id); } catch (e) { confirm.disabled = false; say(e.message, true); } } });
+  shell(o.ref, pickList, head, confirm, el('p', { class: 'muted', text: 'Take ' + cur.qty + ' from bin ' + cur.locations.code + ', then tap Picked. You can also scan the bin or the item to double-check.' }), scanInput(check, 'Scan to double-check (optional)'), stuck, progress);
 }
 
 // ---------- pack ----------

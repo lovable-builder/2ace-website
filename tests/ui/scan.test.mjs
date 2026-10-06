@@ -64,12 +64,12 @@ ok('the pick list shows orders with lines left to pick, and hides the rest', /OR
 await click('ORD-000001');
 ok('lines are walked in bin order: the first stop is A-01-01 with its photo', /Go to A-01-01/.test(text()) && /MUG-BLUE/.test(text()) && /Pick\s*4/.test(text()) && !!document.querySelector('img.pimg'), text().slice(0, 200));
 ok('the whole order is listed with what comes next', /A-02-01 · MUG-RED/.test(text()));
-await scan('A-02-01'); ok('the wrong bin is refused and says where to go', /Wrong bin. This line is at A-01-01/.test(text()));
-await scan('nonsense'); ok('a code that is not a bin is refused', /Scan the bin label/.test(text()));
-await scan('A-01-01'); ok('the right bin moves on to scanning the product', /Scan the product/.test(text()));
-await scan('600'); ok('the wrong product is refused, naming the one needed', /Wrong item. This line needs MUG-BLUE/.test(text()));
-await scan('700'); ok('another product that is not on the line is refused too', /Wrong item/.test(text()));
-await scan('590'); ok('the right product moves on to confirming the quantity', /Take 4 and confirm/.test(text()) && !!document.querySelector('button.big'));
+ok('the bin is shown and Picked is one tap away, with no scanning needed', /Go to A-01-01/.test(text()) && /Take 4 from bin A-01-01/.test(text()) && !!document.querySelector('button.big'));
+await scan('A-02-01'); ok('optional scan: the wrong bin is flagged but nothing is blocked', /Wrong bin. This line is at A-01-01/.test(text()) && !!document.querySelector('button.big'));
+await scan('A-01-01'); ok('optional scan: the right bin is confirmed', /Right bin A-01-01/.test(text()));
+await scan('600'); ok('optional scan: the wrong product is flagged, naming the one needed', /Wrong item. This line needs MUG-BLUE/.test(text()));
+await scan('590'); ok('optional scan: the right product is confirmed', /Right item/.test(text()));
+await scan('nonsense'); ok('optional scan: an unknown code is reported', /Code not recognised/.test(text()));
 rpcs.length = 0; await click('Picked 4');
 const pl = rpcs.find(([n]) => n === 'pick_line'); ok('confirming picks that allocation with a repeat-safe key', pl && pl[1].p_allocation === 'al1' && typeof pl[1].p_key === 'string' && pl[1].p_key.length > 8, JSON.stringify(pl));
 ok('after a pick the screen says how many remain', /Picked. 1 to go/.test(text()));
