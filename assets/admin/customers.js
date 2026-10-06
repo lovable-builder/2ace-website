@@ -42,7 +42,7 @@ async function detail(ctx, root, orgId) {
     try { await ctx.api('viewas.start', { org_id: orgId, reason }); ctx.session[key] = true; } catch (e) { toast(e.message, true); return ctx.go('customers'); }
   }
   const sb = ctx.sb;
-  const [org, mem, plans, subs, agr, doms, reqs] = await Promise.all([
+  const [org, mem, plans, subs, agr, doms, reqs, shipSet, modeRes, charges] = await Promise.all([
     sb.from('organizations').select('*').eq('id', orgId).maybeSingle(),
     sb.from('members').select('user_id, role').eq('org_id', orgId),
     sb.from('plans').select('*').eq('org_id', orgId).order('created_at', { ascending: false }),
@@ -50,12 +50,28 @@ async function detail(ctx, root, orgId) {
     sb.from('agreements').select('*').eq('org_id', orgId).order('signed_at', { ascending: false }),
     sb.from('domain_orders').select('*').eq('org_id', orgId).order('created_at', { ascending: false }),
     sb.from('requests').select('id, subject, status, last_message_at').eq('org_id', orgId).order('last_message_at', { ascending: false }),
+    sb.from('org_shipping_settings').select('*').eq('org_id', orgId).maybeSingle(),
+    sb.rpc('my_fulfil_mode', { p_org: orgId }),
+    sb.from('shipping_charges').select('net, status, env').eq('org_id', orgId).in('status', ['pending', 'queued']),
   ]);
   const o = org.data; if (!o) return clear(root).append(el('p', { class: 'err', text: 'Customer not found.' }), el('button', { class: 'btn ghost', onclick: () => ctx.go('customers'), text: 'Back' }));
   const ids = (mem.data || []).map((m) => m.user_id);
   const profs = ids.length ? (await sb.from('profiles').select('user_id, full_name, email, phone').in('user_id', ids)).data || [] : [];
   const pmap = Object.fromEntries(profs.map((p) => [p.user_id, p]));
   const active = (plans.data || []).find((p) => p.status === 'active');
+  const ss = shipSet.data || {}, MODE = { full: 'Fulfilment (we do everything)', payg: 'Fulfilment as you go (they prepare labels)', storage: 'Storage only' };
+  const unbilled = (charges.data || []).reduce((t, c) => t + Number(c.net), 0);
+  const editShipping = () => modal('Shipping and fulfilment settings', (body, done) => {
+    const mode = el('select', {}, [['', 'Follow the plan'], ['full', MODE.full], ['payg', MODE.payg], ['storage', MODE.storage]].map(([v, l]) => el('option', { value: v, text: l, ...(v === (ss.fulfil_mode_override || '') ? { selected: true } : {}) })));
+    const num = (v, ph) => el('input', { type: 'number', step: 'any', min: '0', value: v == null ? '' : String(v), placeholder: ph });
+    const markup = num(ss.markup_percent, 'Default (30)'), cap = num(ss.exposure_cap_net ?? 300, '300'), daily = num(ss.daily_label_cap ?? 10, '10');
+    const buying = el('input', { type: 'checkbox', ...(ss.label_buying_enabled ? { checked: true } : {}) }), err = el('p', { class: 'err' });
+    body.append(el('p', { class: 'muted', text: 'The fulfilment mode normally follows the plan. Override it only to test. Markup is added to the carrier price (net) and shown on the customer\'s monthly invoice.' }),
+      field('Fulfilment mode', mode), field('Shipping markup % (empty = default)', markup), field('Most unpaid shipping at once (zł, net)', cap), field('Most labels per day', daily),
+      el('label', { class: 'field' }, el('span', { text: 'May buy labels themselves' }), buying), err,
+      el('div', { class: 'row end' }, el('button', { class: 'btn ghost', onclick: () => done(null), text: 'Cancel' }), el('button', { class: 'btn', text: 'Save', onclick: async () => {
+        try { await ctx.api('org.setShipping', { org_id: orgId, patch: { fulfil_mode_override: mode.value, markup_percent: markup.value, exposure_cap_net: Number(cap.value), daily_label_cap: Number(daily.value), label_buying_enabled: buying.checked } }); done(true); } catch (e) { err.textContent = e.message; } } })));
+  }).then((ok) => { if (ok) { toast('Shipping settings saved'); detail(ctx, root, orgId); } });
 
   const changeStatus = () => modal('Change customer status', (body, done) => {
     const sel = el('select', {}, ['pending', 'active', 'past_due', 'canceled'].map((s) => el('option', { value: s, text: s, ...(s === o.status ? { selected: true } : {}) })));
@@ -78,6 +94,9 @@ async function detail(ctx, root, orgId) {
       active ? kv([['Current', planSummary(active.config)], ['Monthly', zl(active.monthly_pln)], ['Setup (one-time)', zl(active.once_pln)], ['Since', fmtDate(active.created_at)]]) : el('p', { class: 'muted', text: 'No active plan.' }),
       (plans.data || []).length > 1 && el('details', {}, el('summary', { text: 'Plan history (' + plans.data.length + ')' }), table([
         { label: 'When', render: (p) => fmtDate(p.created_at) }, { label: 'Plan', render: (p) => planSummary(p.config) }, { label: 'Monthly', render: (p) => zl(p.monthly_pln) }, { label: 'Status', render: (p) => statusPill(p.status) }], plans.data))),
+    el('section', { class: 'card' }, el('h2', { text: 'Shipping and fulfilment' }),
+      kv([['Mode', (MODE[modeRes.data] || '-') + (ss.fulfil_mode_override ? ' (set by an admin, not the plan)' : '')], ['Shipping markup', ss.markup_percent == null ? 'Default' : Number(ss.markup_percent) + ' %'], ['May buy labels themselves', ss.label_buying_enabled ? 'Yes' : 'No'], ['Unpaid shipping cap', zl(ss.exposure_cap_net ?? 300) + ' net'], ['Labels waiting to be invoiced', unbilled ? zl(unbilled) + ' net' : 'None']]),
+      ctx.me.role === 'admin' && el('div', { class: 'row' }, el('button', { class: 'btn ghost tiny', onclick: editShipping, text: 'Edit' }))),
     el('section', { class: 'card' }, el('h2', { text: 'Subscription' }), table([
       { label: 'Stripe id', key: 'stripe_subscription_id' }, { label: 'Status', render: (s) => statusPill(s.status) }, { label: 'Renews / ends', render: (s) => fmtDay(s.current_period_end) }], subs.data || [])),
     invoicesCard(ctx, orgId),

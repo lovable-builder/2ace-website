@@ -54,12 +54,13 @@ async function detail(ctx, root, id) {
   const orgs = await loadOrgs(ctx);
   const o = (await ctx.sb.from('orders').select('*').eq('id', id).maybeSingle()).data;
   if (!o) return clear(root).append(el('p', { class: 'err', text: 'Order not found.' }), el('button', { class: 'btn ghost', onclick: () => ctx.go('orders'), text: 'Back' }));
-  const [ln, al, cr, pc, sh] = await Promise.all([
+  const [ln, al, cr, pc, sh, ol] = await Promise.all([
     ctx.sb.from('order_lines').select('id, qty, products(sku, name)').eq('order_id', id),
     ctx.sb.from('allocations').select('order_line_id, qty, status, lot, locations(code)').eq('order_id', id),
     ctx.sb.from('change_requests').select('summary, status').eq('entity_id', id).eq('status', 'pending'),
     ctx.sb.from('parcels').select('seq, weight_g, length_cm, width_cm, height_cm, packed_at').eq('order_id', id).order('seq'),
     ctx.sb.from('shipments').select('*').eq('order_id', id).order('created_at', { ascending: false }),
+    ctx.sb.from('own_labels').select('*').eq('order_id', id).is('voided_at', null).maybeSingle(),
   ]);
   const act = canAct(ctx), reload = () => detail(ctx, root, id);
   const where = (lineId) => (al.data || []).filter((a) => a.order_line_id === lineId && a.status !== 'released').map((a) => `${a.locations.code} × ${a.qty} (${a.status === 'picked' ? 'picked' : 'to pick'})`).join(', ') || '-';
@@ -77,17 +78,35 @@ async function detail(ctx, root, id) {
       el('section', { class: 'card' }, el('h2', { text: 'Ship to' }), kv([['Name', o.ship_name], ['Company', o.ship_company], ['Address', [o.ship_line1, o.ship_line2].filter(Boolean).join(', ')], ['Postal code and city', `${o.ship_postal} ${o.ship_city}`], ['Country', o.ship_country], ['Email', o.ship_email], ['Phone', o.ship_phone]]))),
     el('section', { class: 'card' }, el('h2', { text: 'Items' }), table([{ label: 'Product', render: (l) => `${l.products.sku} - ${l.products.name}` }, { label: 'Units', render: (l) => String(l.qty) }, { label: 'Reserved at', render: (l) => where(l.id) }], ln.data || [])),
     (pc.data || []).length > 0 && el('section', { class: 'card' }, el('h2', { text: 'Parcels' }), table([{ label: '#', render: (p) => String(p.seq) }, { label: 'Weight', render: (p) => (p.weight_g / 1000).toLocaleString('en-GB', { minimumFractionDigits: 1, maximumFractionDigits: 3 }) + ' kg' }, { label: 'Size', render: (p) => `${Number(p.length_cm)} × ${Number(p.width_cm)} × ${Number(p.height_cm)} cm` }, { label: 'Packed', render: (p) => fmtDate(p.packed_at) }], pc.data)),
-    shippingCard(ctx, o, sh.data || [], act, reload));
+    shippingCard(ctx, o, sh.data || [], act, reload, ol.data || null));
 }
 
 const pln = (n) => Number(n).toFixed(2).replace('.', ',') + ' zł';
 
 // Shipping label: prices from the carriers, buying one, the label file, and the way out of an unconfirmed order.
-function shippingCard(ctx, o, shipments, act, reload) {
+function shippingCard(ctx, o, shipments, act, reload, own) {
   const live = shipments.find((s) => s.status === 'purchased' || s.status === 'buying'), last = shipments[0];
   const card = el('section', { class: 'card' }, el('h2', { text: 'Shipping label' }));
+  // "Mark shipped": the order leaves the building. Goods leave the stock here, for labels that were not bought and shipped in one go.
+  const shipBtn = () => el('button', { class: 'btn', text: 'Mark shipped', onclick: async (e) => {
+    const b = e.currentTarget; b.disabled = true;
+    try { await rpc(ctx, 'ship_order', { p_order: o.id }); toast('Marked as shipped'); reload(); } catch (err) { toast(err.message, true); b.disabled = false; }
+  } });
+  // The customer brought their own label (a PDF and/or tracking numbers): we print it and stick it. Nothing is bought.
+  if (own) {
+    card.append(kv([['Label', "The customer's own label"], ['Carrier', own.carrier_name], ['Tracking', (own.tracking_numbers || []).join(', ') || 'None given'], ['File', own.storage_path ? (own.filename || 'label.pdf') : 'No file, tracking only'], ['Added', fmtDate(own.created_at)], ['Charged', 'Nothing: 2ACE did not buy it']]));
+    const row = el('div', { class: 'row' });
+    if (own.storage_path) row.append(el('button', { class: 'btn ghost', text: 'Open the PDF to print', onclick: async (e) => {
+      const b = e.currentTarget; b.disabled = true;
+      try { const { data, error } = await ctx.sb.storage.from('labels').createSignedUrl(own.storage_path, 120); if (error) throw new Error(error.message); window.open(data.signedUrl, '_blank'); } catch (err) { toast(err.message, true); } finally { b.disabled = false; }
+    } }));
+    if (act && o.status === 'packed') row.append(shipBtn());
+    else if (o.status !== 'packed' && o.status !== 'shipped') row.append(el('span', { class: 'muted', text: 'It can be marked shipped once the order is packed.' }));
+    card.append(row); return card;
+  }
   if (live && live.status === 'purchased') {
     card.append(kv([['Carrier', live.service_name || live.carrier], ['Tracking', (live.tracking_numbers || []).join(', ') || 'Not available yet'], ['We paid', `${pln(live.cost_net)} + VAT (${pln(live.cost_gross)})`], ['Charged to customer', `${pln(live.bill_net)} + VAT (${pln(live.bill_gross)}), ${Number(live.markup_percent)}% markup`], ['Billing', live.billing_status === 'pending' ? 'Waiting to be invoiced' : live.billing_status], ['Environment', live.env === 'sandbox' ? 'Test (sandbox): nothing real was charged' : 'Live'], ['Bought', fmtDate(live.purchased_at)]]));
+    if (act && o.status === 'packed') card.append(el('div', { class: 'row' }, shipBtn()));
     if (act) card.append(el('div', { class: 'row' }, el('button', { class: 'btn', text: 'Download label', onclick: async (e) => {
       const b = e.currentTarget; b.disabled = true;
       try { const r = await ctx.api('shipping.label', { order_id: o.id }); const bytes = Uint8Array.from(atob(r.pdf_base64), (c) => c.charCodeAt(0)); window.open(URL.createObjectURL(new Blob([bytes], { type: r.content_type || 'application/pdf' })), '_blank'); }

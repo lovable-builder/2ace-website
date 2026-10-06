@@ -15,6 +15,11 @@ export const SENDER = {
 export const DEFAULT_CARRIERS = ['inpost', 'dpd', 'dhl', 'gls', 'ups', 'fedex', 'poczta', 'orlen'];
 export const DEFAULT_MARKUP_PERCENT = 30;
 export const DEFAULT_MAX_LABEL_PLN = 80;
+// The markup for one customer: their own setting if they have one, else the default (SHIPPING_MARKUP_PERCENT, 30).
+export function markupFor(orgPercent: number | string | null | undefined, get: (k: string) => string | undefined): number {
+  if (orgPercent !== null && orgPercent !== undefined && String(orgPercent) !== '') { const n = Number(orgPercent); if (Number.isFinite(n) && n >= 0 && n <= 500) return n; }
+  return settingNum(get, 'SHIPPING_MARKUP_PERCENT', DEFAULT_MARKUP_PERCENT, 0, 500);
+}
 export const DEFAULT_DAILY_CAP_PLN = 500;
 
 export type OrderShip = { ref: string; ship_name: string; ship_company?: string | null; ship_line1: string; ship_line2?: string | null; ship_postal: string; ship_city: string; ship_country: string; ship_email?: string | null; ship_phone?: string | null };

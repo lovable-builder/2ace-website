@@ -917,7 +917,21 @@
                     <span style="display: {{ o.reasonDisplay }}; font-size: 14px; color: #8A5A10;">{{ o.reason }}</span>
                     <span style="display: {{ o.pendDisplay }}; font-size: 14px; color: #8A5A10;">Waiting for approval: {{ o.pendText }} <button onClick="{{ o.onCancelReq }}" style="border: 0; background: none; cursor: pointer; text-decoration: underline; color: #0B0C0E; font-size: 14px;">Cancel request</button></span>
                     <span style="display: {{ o.rejDisplay }}; font-size: 14px; color: #B4442E;">Last request declined: {{ o.rejText }}</span>
-                    <div style="margin-top: 6px;"><button onClick="{{ o.onCancel }}" style="cursor: pointer; min-height: 38px; padding: 8px 14px; border: 1px solid rgba(11,12,14,0.3); border-radius: 3px; background: transparent; color: #0B0C0E; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; display: {{ o.cancelDisplay }}; color: #B4442E; border-color: #B4442E;">Request cancellation</button></div>
+                    <div style="margin-top: 6px;"><button onClick="{{ o.onCancel }}" style="cursor: pointer; min-height: 38px; padding: 8px 14px; border: 1px solid rgba(11,12,14,0.3); border-radius: 3px; background: transparent; color: #0B0C0E; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; display: {{ o.cancelDisplay }}; color: #B4442E; border-color: #B4442E;">Request cancellation</button> <button onClick="{{ o.onShip }}" style="display: {{ o.shipDisplay }}; cursor: pointer; min-height: 38px; padding: 8px 14px; border: 1px solid #0B0C0E; border-radius: 3px; background: transparent; color: #0B0C0E; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;">{{ o.shipLabel }}</button></div>
+                    <div style="display: {{ o.panelDisplay }}; flex-direction: column; gap: 10px; margin-top: 8px; padding: 14px; background: #F5F4F1; border-radius: 4px;">
+                      <span style="font-weight: 600;">How is this order shipped?</span>
+                      <span style="font-size: 14px; color: rgba(11,12,14,0.7);">{{ o.shIntro }}</span>
+                      <span style="display: {{ o.shErrDisplay }}; font-size: 14px; color: #B4442E;">{{ o.shErr }}</span>
+                      <span style="display: {{ o.shNoteDisplay }}; font-size: 14px; color: #1F5C3D;">{{ o.shNote }}</span>
+                      <div style="display: {{ o.shOwnDisplay }}; flex-direction: column; gap: 10px;">
+                        <span style="font-size: 14px;"><strong>I provide my own label.</strong> Upload the PDF from Allegro, InPost, your carrier or marketplace. We print it and put it on the parcel. There is no shipping charge from us.</span>
+                        <span style="display: {{ o.hasLabelDisplay }}; font-size: 14px; color: #1F5C3D;">Current label: {{ o.shLabelText }} <button onClick="{{ o.onShRemove }}" style="border: 0; background: none; cursor: pointer; text-decoration: underline; color: #B4442E; font-size: 14px;">Remove</button></span>
+                        <input type="file" accept="application/pdf,.pdf" onChange="{{ o.onShFile }}" aria-label="Label PDF" style="font-size: 14px;" />
+                        <input type="text" placeholder="Carrier (optional), e.g. InPost" value="{{ o.shCarrier }}" onInput="{{ o.onShCarrier }}" aria-label="Carrier" style="padding: 11px 12px; border: 1px solid rgba(11,12,14,0.25); border-radius: 3px; font-size: 15px; background: #FFFFFF;" />
+                        <input type="text" placeholder="Tracking number(s), separated by commas" value="{{ o.shTracking }}" onInput="{{ o.onShTracking }}" aria-label="Tracking numbers" style="padding: 11px 12px; border: 1px solid rgba(11,12,14,0.25); border-radius: 3px; font-size: 15px; background: #FFFFFF;" />
+                        <div><button onClick="{{ o.onShSave }}" style="cursor: pointer; min-height: 42px; padding: 10px 18px; border: 0; border-radius: 3px; background: #0B0C0E; color: #F5F4F1; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;">{{ o.shSaveLabel }}</button></div>
+                      </div>
+                    </div>
                   </div>
                 </sc-for>
               </div>
@@ -1028,6 +1042,7 @@
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900}}">
 class Component extends DCLogic {
   state = {
+    shOpen: '', shCaps: null, shInfo: null, shCarrier: '', shTracking: '', shFileName: '', shBusy: false, shErr: '', shNote: '',
     orgId: '', whLoaded: false, whErr: '', whInv: [], whCodes: {}, whBook: [], whIssues: {}, whPhotos: {}, whChanges: {}, whPhotoUrls: {}, pdPhotoBusy: false, whOrders: [], oOpen: false, oRef: '', oName: '', oEmail: '', oPhone: '', oLine1: '', oPostal: '', oCity: '', oCountry: 'PL', oLines: [], oPick: '', oQty: '1', oBusy: false, oErr: '', csvOpen: false, csvOrders: null, csvInfo: '', csvBusy: false, csvErr: '', csvResult: null, pdOpen: false, pdSku: '', pdName: '', pdEan: '', pdBusy: false, pdErr: '', pdEditId: '', pdEditName: '', pdEditEan: '', pdEditActive: true, inEditId: '', inNotes: '', inOpen: false, inDate: '', inCarrier: '', inTracking: '', inLines: [], inPick: '', inQty: '1', inBusy: false, inErr: '', whNote: '',
     contactOpen: false, contactSubject: 'other', contactMsg: '', contactBusy: false, contactDone: false, contactErr: '',
     logoUrl: '', orgName: '', domainName: '', curPlan: null, hasDomain: false,
@@ -1232,7 +1247,7 @@ class Component extends DCLogic {
         this.whGet('discrepancies?select=booking_id,kind,expected_qty,received_qty,products(sku)&order=created_at'),
         this.whGet('receipt_lines?select=booking_id,photo_paths&condition=eq.damaged'),
         this.whGet('change_requests?select=id,entity_id,summary,status,decision_note&order=requested_at.desc&limit=200'),
-        this.whGet('orders?select=id,ref,external_ref,status,hold_reason,ship_name,ship_city,ship_country,created_at,shipped_at,order_lines(qty,products(sku,name))&order=created_at.desc&limit=100')
+        this.whGet('orders?select=id,ref,external_ref,status,label_source,hold_reason,ship_name,ship_city,ship_country,created_at,shipped_at,order_lines(qty,products(sku,name))&order=created_at.desc&limit=100')
       ]);
       const changes = {}; chg.forEach((c) => { if (!changes[c.entity_id] && (c.status === 'pending' || c.status === 'rejected')) changes[c.entity_id] = c; else if (!changes[c.entity_id]) changes[c.entity_id] = { status: 'done' }; });
       const map = {}; codes.forEach((c) => { (map[c.product_id] = map[c.product_id] || []).push(c.barcode); });
@@ -1288,6 +1303,58 @@ class Component extends DCLogic {
       else await this.whRpc('book_inbound', { p_org: s.orgId, p_carrier: s.inCarrier || null, p_tracking: s.inTracking || null, p_expected: s.inDate || null, p_notes: null, p_lines: lines });
       this.setState({ inBusy: false, inOpen: false, inEditId: '', inLines: [], inDate: '', inCarrier: '', inTracking: '', inNotes: '', whNote: s.inEditId ? 'Sent for approval. Your delivery stays as booked until we approve the change. We email you the result.' : 'Delivery booked. We will receive it when it arrives.' }); this.whLoad();
     } catch (e) { this.setState({ inBusy: false, inErr: String(e.message || e) }); }
+  }
+  // ---- Shipping label for one order (the customer's own label). The server checks the file; the browser only helps. ----
+  async csCall(body) {
+    const H = this.authHeaders(); if (!H) throw new Error('Please log in again.');
+    const r = await fetch(this.API + '/functions/v1/customer-shipping', { method: 'POST', headers: H, body: JSON.stringify(body) });
+    const out = await r.json().catch(() => ({}));
+    if (r.status === 404 && !out.error) throw new Error('Shipping tools are not available yet. Please try again later.');
+    if (!r.ok) throw new Error(out.error || 'Request failed');
+    return out;
+  }
+  async shToggle(id) {
+    if (this.state.shOpen === id) { this.shFile = null; this.setState({ shOpen: '' }); return; }
+    this.shFile = null;
+    this.setState({ shOpen: id, shCaps: null, shInfo: null, shCarrier: '', shTracking: '', shFileName: '', shBusy: true, shErr: '', shNote: '' });
+    try { await this.shRefresh(id); } catch (e) { this.setState({ shBusy: false, shErr: String(e.message || e) }); }
+  }
+  async shRefresh(id) {
+    const [caps, info] = await Promise.all([this.csCall({ action: 'capabilities' }), this.csCall({ action: 'status', order_id: id })]);
+    if (this.state.shOpen !== id) return;
+    const l = info.own_label;
+    this.setState({ shCaps: caps, shInfo: info, shBusy: false, shCarrier: l ? l.carrier || '' : this.state.shCarrier, shTracking: l ? (l.tracking_numbers || []).join(', ') : this.state.shTracking });
+  }
+  async shSave() {
+    const s = this.state, id = s.shOpen;
+    if (!id || s.shBusy) return;
+    const f = this.shFile, tracking = (s.shTracking || '').trim();
+    if (!f && !tracking) { this.setState({ shErr: 'Add the label file, or at least a tracking number.', shNote: '' }); return; }
+    if (f && !(f.type === 'application/pdf' || /\.pdf$/i.test(f.name))) { this.setState({ shErr: 'The label must be a PDF file.', shNote: '' }); return; }
+    if (f && f.size > 2 * 1024 * 1024) { this.setState({ shErr: 'The label file must be at most 2 MB.', shNote: '' }); return; }
+    this.setState({ shBusy: true, shErr: '', shNote: '' });
+    try {
+      let path = null;
+      if (f) {
+        path = s.orgId + '/' + id + '/' + (crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(16).slice(2)) + '.pdf';
+        const H = this.authHeaders();
+        const up = await fetch(this.API + '/storage/v1/object/labels/' + path, { method: 'POST', headers: { apikey: this.ANON, Authorization: H.Authorization, 'Content-Type': 'application/pdf', 'x-upsert': 'false' }, body: f });
+        if (!up.ok) throw new Error('The label could not be uploaded. Use a PDF under 2 MB.');
+      }
+      await this.csCall({ action: 'own_label.attach', order_id: id, path, filename: f ? f.name : null, tracking, carrier: (s.shCarrier || '').trim() || null });
+      this.shFile = null; if (this.shInput) { try { this.shInput.value = ''; } catch (e) { /* ignore */ } }
+      await this.shRefresh(id);
+      this.setState({ shBusy: false, shFileName: '', shNote: 'Saved. We will print this label and use it when we pack your order.', whOrders: this.state.whOrders.map((o) => (o.id === id ? Object.assign({}, o, { label_source: 'own' }) : o)) });
+    } catch (e) { this.setState({ shBusy: false, shErr: String(e.message || e) }); }
+  }
+  async shRemove() {
+    const s = this.state, id = s.shOpen; if (!id || s.shBusy) return;
+    this.setState({ shBusy: true, shErr: '', shNote: '' });
+    try {
+      await this.csCall({ action: 'own_label.remove', order_id: id });
+      await this.shRefresh(id);
+      this.setState({ shBusy: false, shNote: 'Label removed.', shCarrier: '', shTracking: '', whOrders: this.state.whOrders.map((o) => (o.id === id ? Object.assign({}, o, { label_source: null }) : o)) });
+    } catch (e) { this.setState({ shBusy: false, shErr: String(e.message || e) }); }
   }
   // Edits and deletes of existing items are requests: staff approve or decline them. Nothing changes until then.
   async whChange(body) {
@@ -1824,7 +1891,18 @@ class Component extends DCLogic {
         status: { new: 'Received', held: 'On hold, not enough stock', allocated: 'Reserved, waiting to be picked', picking: 'Being picked', packed: 'Packed', shipped: 'Shipped', cancelled: 'Cancelled' }[o.status] || o.status,
         color: o.status === 'held' ? '#8A5A10' : o.status === 'cancelled' ? 'rgba(11,12,14,0.5)' : '#2F7D55', reason: o.status === 'held' ? (o.hold_reason || '') : '', reasonDisplay: o.status === 'held' ? 'block' : 'none',
         cancelDisplay: cancellable ? 'inline-block' : 'none', onCancel: () => this.oCancel(o),
-        pendDisplay: ch.status === 'pending' ? 'block' : 'none', pendText: ch.summary || '', onCancelReq: () => this.whCancelRequest(ch.id), rejDisplay: ch.status === 'rejected' ? 'block' : 'none', rejText: ch.decision_note || 'Declined' }; }),
+        pendDisplay: ch.status === 'pending' ? 'block' : 'none', pendText: ch.summary || '', onCancelReq: () => this.whCancelRequest(ch.id), rejDisplay: ch.status === 'rejected' ? 'block' : 'none', rejText: ch.decision_note || 'Declined',
+        ...(() => {
+          const open = s.shOpen === o.id, can = ['new', 'held', 'allocated', 'picking', 'packed'].includes(o.status), caps = open ? s.shCaps : null, l = open && s.shInfo ? s.shInfo.own_label : null;
+          const intro = !open ? '' : s.shBusy && !caps ? 'Checking…' : !caps ? '' : caps.mode === 'full' ? 'On your Fulfilment plan we choose the carrier and buy the label when your order is packed. If you already have a label for this order, add it here instead.' : caps.mode === 'payg' ? 'On Fulfilment as you go you prepare the label yourself. Buying a label with 2ACE is coming soon; for now, add your own label here.' : 'Your plan does not include fulfilment, so we do not ship orders for you. Add Fulfilment to your plan to use this.';
+          return { shipDisplay: can ? 'inline-block' : 'none', shipLabel: open ? 'Hide shipping' : o.label_source === 'own' ? 'Shipping (own label added)' : 'Shipping', onShip: () => this.shToggle(o.id),
+            panelDisplay: open ? 'flex' : 'none', shIntro: intro, shErr: open ? s.shErr : '', shErrDisplay: open && s.shErr ? 'block' : 'none', shNote: open ? s.shNote : '', shNoteDisplay: open && s.shNote ? 'block' : 'none',
+            shOwnDisplay: open && caps && caps.own_label ? 'flex' : 'none', hasLabelDisplay: l ? 'block' : 'none',
+            shLabelText: l ? [l.filename || 'tracking only', l.carrier, (l.tracking_numbers || []).join(', ')].filter(Boolean).join(' · ') : '',
+            shCarrier: open ? s.shCarrier : '', onShCarrier: (e) => this.setState({ shCarrier: e.target.value }), shTracking: open ? s.shTracking : '', onShTracking: (e) => this.setState({ shTracking: e.target.value }),
+            onShFile: (e) => { this.shInput = e.target; this.shFile = e.target.files && e.target.files[0]; this.setState({ shFileName: this.shFile ? this.shFile.name : '', shErr: '' }); },
+            shSaveLabel: open && s.shBusy ? 'Please wait…' : l ? 'Replace the label' : 'Save the label', onShSave: () => this.shSave(), onShRemove: () => this.shRemove() };
+        })() }; }),
 
       tabProducts: s.tab === 'products', tabInbound: s.tab === 'inbound', tabInventory: s.tab === 'inventory',
       whLoading: !s.whLoaded && !!s.orgId, whErrShow: !!s.whErr, whErrText: s.whErr, whNoteShow: !!s.whNote, whNoteText: s.whNote, whNoteClear: () => this.setState({ whNote: '' }),

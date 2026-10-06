@@ -1,5 +1,5 @@
 // deno test supabase/functions/_shared/shipping.test.ts
-import { buildPackage, parseQuotes, customerNet, customerGross, spendCheck, settingNum, carriersFrom, warsawDayStart, extractTracking, SENDER, DEFAULT_CARRIERS } from './shipping.ts';
+import { markupFor, buildPackage, parseQuotes, customerNet, customerGross, spendCheck, settingNum, carriersFrom, warsawDayStart, extractTracking, SENDER, DEFAULT_CARRIERS } from './shipping.ts';
 const eq = (a: unknown, b: unknown, m: string) => { if (JSON.stringify(a) !== JSON.stringify(b)) throw new Error(`${m}: expected ${JSON.stringify(b)}, got ${JSON.stringify(a)}`); };
 const ok = (c: unknown, m: string) => { if (!c) throw new Error(m); };
 const order = { ref: 'ORD-000007', ship_name: 'Jan Nowak', ship_company: null, ship_line1: 'Prosta 1', ship_line2: '4', ship_postal: '00-001', ship_city: 'Warszawa', ship_country: 'pl', ship_email: 'jan@example.pl', ship_phone: ' +48600100200 ' };
@@ -63,4 +63,12 @@ Deno.test('the Polish day starts at midnight local time in summer and in winter'
 });
 Deno.test('extractTracking collects waybill numbers once', () => {
   eq(extractTracking({ package_no: 'A1', parcels: [{ package_no: 'A1' }, { package_no: 'B2' }, { waybill_number: 'C3' }, {}] }), ['A1', 'B2', 'C3'], 'unique'); eq(extractTracking({}), [], 'none');
+});
+
+Deno.test('a customer\'s own markup wins; otherwise the default (30, or the server setting)', () => {
+  const none = () => undefined, set40 = (k: string) => ({ SHIPPING_MARKUP_PERCENT: '40' } as Record<string, string>)[k];
+  eq(markupFor(null, none), 30, 'no setting: 30'); eq(markupFor(undefined, none), 30, 'undefined'); eq(markupFor('', none), 30, 'empty text');
+  eq(markupFor(15, none), 15, 'their own'); eq(markupFor('12.5', none), 12.5, 'numeric text from the database'); eq(markupFor(0, none), 0, 'zero is a real choice: no markup');
+  eq(markupFor(null, set40), 40, 'the server default can change'); eq(markupFor(15, set40), 15, 'their own beats the server default');
+  eq(markupFor(501, none), 30, 'an absurd value falls back to the default'); eq(markupFor(-5, none), 30, 'negative falls back'); eq(markupFor('abc', none), 30, 'text falls back');
 });

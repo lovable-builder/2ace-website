@@ -20,3 +20,6 @@ skills-lock.json
 
 .DS_Store
 node_modules/
+
+# test helpers generated from the pages
+tests/.cache/

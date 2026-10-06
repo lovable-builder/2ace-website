@@ -7,7 +7,7 @@ import { STAFF_GUIDE, OWNER_GUIDE } from '../_shared/helpContent.ts';
 import { notifyHeld } from '../_shared/orderNotice.ts';
 import { Furgonetka, FurgonetkaError, OrderPending, configFromEnv, fieldErrors, type TokenStore } from '../_shared/furgonetka.ts';
 import { buyLabel, ShipError } from '../_shared/shipBuy.ts';
-import { buildPackage, parseQuotes, customerNet, customerGross, spendCheck, settingNum, carriersFrom, warsawDayStart, extractTracking, DEFAULT_MARKUP_PERCENT, DEFAULT_MAX_LABEL_PLN, DEFAULT_DAILY_CAP_PLN, type OrderShip, type ParcelRow } from '../_shared/shipping.ts';
+import { buildPackage, parseQuotes, markupFor, customerNet, customerGross, spendCheck, settingNum, carriersFrom, warsawDayStart, extractTracking, DEFAULT_MARKUP_PERCENT, DEFAULT_MAX_LABEL_PLN, DEFAULT_DAILY_CAP_PLN, type OrderShip, type ParcelRow } from '../_shared/shipping.ts';
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!);
 
@@ -61,7 +61,11 @@ async function packedOrder(id: unknown) {
   if (!pc?.length) throw new Bad('This order has no parcels recorded');
   return { order: o as OrderShip & { id: string; org_id: string; status: string }, parcels: pc as ParcelRow[] };
 }
-const markupPct = () => settingNum(env, 'SHIPPING_MARKUP_PERCENT', DEFAULT_MARKUP_PERCENT, 0, 500);
+// A customer's own markup if the admin set one, else the default.
+async function orgMarkup(orgId: string): Promise<number> {
+  const { data } = await admin.from('org_shipping_settings').select('markup_percent').eq('org_id', orgId).maybeSingle();
+  return markupFor(data?.markup_percent as number | null | undefined, env);
+}
 async function spentToday(e: string): Promise<number> {
   const { data } = await admin.from('shipments').select('cost_gross').eq('env', e).in('status', ['buying', 'purchased']).gte('created_at', warsawDayStart(new Date()).toISOString());
   return (data ?? []).reduce((t, r) => t + Number(r.cost_gross), 0);
@@ -103,11 +107,20 @@ const actions: Record<string, { roles?: StaffRole[]; run: (s: StaffCtx, b: Recor
     }
   } },
 
+  // ---------- per-customer shipping settings (admin only; the database function re-checks the role and audits) ----------
+  'org.setShipping': { roles: ['admin'], run: async (s, b) => {
+    if (!isUuid(b.org_id)) throw new Bad('Invalid customer');
+    const patch = (b.patch ?? {}) as Record<string, unknown>;
+    const { error } = await userClient(s.token).rpc('set_org_shipping', { p_org: b.org_id, p_patch: patch });
+    if (error) throw new Bad(error.message);
+    return { ok: true };
+  } },
+
   // ---------- shipping labels ----------
   // Prices for a packed order from the main carriers. Free: nothing is created or charged. The customer price includes our markup.
   'shipping.quote': { roles: ['admin', 'warehouse'], run: async (_s, b) => {
     const { order, parcels } = await packedOrder(b.order_id);
-    const api = shippingApi(), pct = markupPct();
+    const api = shippingApi(), pct = await orgMarkup(order.org_id);
     try {
       const raw = await api.quote(buildPackage(order, parcels), { carriers: carriersFrom(env) });
       const quotes = parseQuotes(raw).map((q) => (q.available ? { ...q, bill_net: customerNet(q.cost_net, pct), bill_gross: customerGross(q.cost_net, pct, q.tax) } : q));
@@ -122,7 +135,7 @@ const actions: Record<string, { roles?: StaffRole[]; run: (s: StaffCtx, b: Recor
     const serviceId = Number(b.service_id);
     if (!Number.isInteger(serviceId) || serviceId <= 0) throw new Bad('Choose a carrier service');
     const { order, parcels } = await packedOrder(b.order_id);
-    const api = shippingApi(), db = userClient(s.token), pct = markupPct();
+    const api = shippingApi(), db = userClient(s.token), pct = await orgMarkup(order.org_id);
     try {
       return await buyLabel({
         env: api.env, api,

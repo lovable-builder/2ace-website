@@ -1,0 +1,7 @@
+{
+  "name": "2ace-tests",
+  "private": true,
+  "description": "Local test suites for the 2ACE site and warehouse system. Not deployed: the folder is blocked on the server.",
+  "scripts": { "test": "bash run.sh" },
+  "devDependencies": { "@electric-sql/pglite": "^0.5.8", "jsdom": "^29.1.1" }
+}
