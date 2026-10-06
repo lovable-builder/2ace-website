@@ -1,5 +1,5 @@
 // deno test supabase/functions/_shared/shipping.test.ts
-import { markupFor, buildPackage, parseQuotes, customerNet, customerGross, spendCheck, settingNum, carriersFrom, warsawDayStart, extractTracking, SENDER, DEFAULT_CARRIERS } from './shipping.ts';
+import { normalizePhone, markupFor, buildPackage, parseQuotes, customerNet, customerGross, spendCheck, settingNum, carriersFrom, warsawDayStart, extractTracking, SENDER, DEFAULT_CARRIERS } from './shipping.ts';
 const eq = (a: unknown, b: unknown, m: string) => { if (JSON.stringify(a) !== JSON.stringify(b)) throw new Error(`${m}: expected ${JSON.stringify(b)}, got ${JSON.stringify(a)}`); };
 const ok = (c: unknown, m: string) => { if (!c) throw new Error(m); };
 const order = { ref: 'ORD-000007', ship_name: 'Jan Nowak', ship_company: null, ship_line1: 'Prosta 1', ship_line2: '4', ship_postal: '00-001', ship_city: 'Warszawa', ship_country: 'pl', ship_email: 'jan@example.pl', ship_phone: ' +48600100200 ' };
@@ -11,7 +11,7 @@ Deno.test('the sender is the Box 17 warehouse in Puchały, with the company cont
 Deno.test('buildPackage: Furgonetka field names, sizes rounded up, weight in kg, country upper-cased, empty fields left out', () => {
   const p = buildPackage(order, [{ weight_g: 1800, length_cm: 30, width_cm: 20.2, height_cm: '15' }, { weight_g: 5, length_cm: 0.2, width_cm: 1, height_cm: 1 }], 12056165) as Record<string, any>;
   eq(p.service_id, 12056165, 'service'); eq(p.pickup, SENDER, 'pickup'); eq(p.user_reference_number, 'ORD-000007', 'reference');
-  eq(p.receiver, { name: 'Jan Nowak', street: 'Prosta 1 4', postcode: '00-001', city: 'Warszawa', country_code: 'PL', email: 'jan@example.pl', phone: '+48600100200' }, 'receiver (no company key when empty)');
+  eq(p.receiver, { name: 'Jan Nowak', street: 'Prosta 1 4', postcode: '00-001', city: 'Warszawa', country_code: 'PL', email: 'jan@example.pl', phone: '600100200' }, 'receiver (no company key when empty, phone as 9 digits)');
   eq(p.parcels[0], { type: 'package', width: 21, depth: 30, height: 15, weight: 1.8, description: 'E-commerce goods' }, 'parcel 1: width 20.2 → 21, length is "depth"');
   eq([p.parcels[1].depth, p.parcels[1].weight], [1, 0.01], 'tiny parcel is raised to the minimums');
 });
@@ -71,4 +71,26 @@ Deno.test('a customer\'s own markup wins; otherwise the default (30, or the serv
   eq(markupFor(15, none), 15, 'their own'); eq(markupFor('12.5', none), 12.5, 'numeric text from the database'); eq(markupFor(0, none), 0, 'zero is a real choice: no markup');
   eq(markupFor(null, set40), 40, 'the server default can change'); eq(markupFor(15, set40), 15, 'their own beats the server default');
   eq(markupFor(501, none), 30, 'an absurd value falls back to the default'); eq(markupFor(-5, none), 30, 'negative falls back'); eq(markupFor('abc', none), 30, 'text falls back');
+});
+
+Deno.test('the sender name has letters only, as Furgonetka requires', () => {
+  ok(/^[A-Za-zÀ-ž]+( [A-Za-zÀ-ž]+)+$/.test(SENDER.name), 'two words, letters only: ' + SENDER.name);
+});
+Deno.test('normalizePhone: Polish numbers become exactly 9 digits, anything else is refused with the number shown', () => {
+  for (const x of ['608180946', '+48 608 180 946', '0048608180946', '48608180946', '0608180946', '608-180-946']) eq(normalizePhone(x, 'PL'), '608180946', x);
+  for (const x of ['6081809461', '60818094']) { try { normalizePhone(x, 'PL'); throw new Error('should refuse ' + x); } catch (e) { ok(/9 digits/.test((e as Error).message) && (e as Error).message.includes(x), (e as Error).message); } }
+  eq(normalizePhone('', 'PL'), undefined, 'empty is left out'); eq(normalizePhone(undefined, 'PL'), undefined, 'missing is left out');
+  eq(normalizePhone('+49 30 1234567', 'DE'), '49301234567', 'other countries: digits only');
+});
+Deno.test('buildPackage refuses a receiver name without a surname, saying what to fix', () => {
+  try { buildPackage({ ...order, ship_name: 'Jan' }, [{ weight_g: 1000, length_cm: 10, width_cm: 10, height_cm: 10 }]); throw new Error('should refuse'); } catch (e) { ok(/first name and a surname/.test((e as Error).message) && (e as Error).message.includes('"Jan"'), (e as Error).message); }
+});
+Deno.test('parseQuotes never offers pickup-point or locker services, and says why', () => {
+  const q = parseQuotes({ services_prices: [
+    { service_id: 1, service: 'inpost', available: true, pricing: { price_net: 8, price_gross: 9.84, tax: 23 }, shipment_type: 'package', delivery_type: 'locker' },
+    { service_id: 2, service: 'orlen', available: true, pricing: { price_net: 7, price_gross: 8.61, tax: 23 }, shipment_type: 'package', delivery_type: 'door' },
+    { service_id: 3, service: 'dpd', available: true, pricing: { price_net: 15, price_gross: 18.45, tax: 23 }, shipment_type: 'package', delivery_type: 'door' },
+    { service_id: 4, service: 'gls', available: true, pricing: { price_net: 12, price_gross: 14.76, tax: 23 }, shipment_type: 'package', delivery_type: 'pickup point' }] });
+  eq(q.filter((x) => x.available).map((x) => x.service_id), [3], 'only the door delivery is offered');
+  ok(q.filter((x) => !x.available).every((x) => /pickup point or locker/.test(x.reason ?? '')), 'reason given');
 });

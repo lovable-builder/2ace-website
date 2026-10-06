@@ -3,7 +3,7 @@
 
 // Where parcels leave from: Box 17 in BOXZONE Puchały I (rental agreement of 28.09.2026, handover from 01.01.2027). Change it here.
 export const SENDER = {
-  name: '2ACE Warehouse',
+  name: 'Warehouse Team', // Furgonetka accepts letters only here (no digits), and wants first name + surname style
   company: '2ACE sp. z o.o. Box 17',
   street: 'Żwirowa 66',
   postcode: '05-090',
@@ -28,6 +28,24 @@ export type ParcelRow = { weight_g: number; length_cm: number | string; width_cm
 const clean = (v: unknown) => { const t = String(v ?? '').trim(); return t === '' ? undefined : t; };
 const compact = <T extends Record<string, unknown>>(o: T) => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined)) as Partial<T>;
 
+// Phone as Furgonetka wants it. Poland: exactly 9 digits, so +48 / 0048 / 48 / a leading 0 are removed. Other countries: digits only.
+export function normalizePhone(raw: unknown, country = 'PL'): string | undefined {
+  let d = String(raw ?? '').replace(/[^0-9]/g, ''); if (!d) return undefined;
+  if (d.startsWith('00')) d = d.slice(2);
+  if (String(country).toUpperCase() === 'PL') {
+    if (d.length === 11 && d.startsWith('48')) d = d.slice(2);
+    else if (d.length === 10 && d.startsWith('0')) d = d.slice(1);
+    if (d.length !== 9) throw new Error(`The receiver's phone number must be 9 digits for Poland (it is "${String(raw).trim()}"). Correct it on the order.`);
+  }
+  return d;
+}
+// Furgonetka refuses a receiver without both a first name and a surname.
+function receiverName(name: unknown): string | undefined {
+  const n = clean(name); if (!n) return undefined;
+  if (n.split(/\s+/).length < 2) throw new Error(`The receiver's name needs a first name and a surname (it is "${n}"). Correct it on the order.`);
+  return n;
+}
+
 // The shipment as Furgonetka wants it. Sizes go to whole centimetres rounded UP, weight in kilograms.
 export function buildPackage(o: OrderShip, parcels: ParcelRow[], serviceId?: number, sender = SENDER) {
   if (!parcels.length) throw new Error('This order has no parcels recorded');
@@ -35,10 +53,10 @@ export function buildPackage(o: OrderShip, parcels: ParcelRow[], serviceId?: num
     service_id: serviceId,
     pickup: { ...sender },
     receiver: compact({
-      name: clean(o.ship_name), company: clean(o.ship_company),
+      name: receiverName(o.ship_name), company: clean(o.ship_company),
       street: [clean(o.ship_line1), clean(o.ship_line2)].filter(Boolean).join(' '),
       postcode: clean(o.ship_postal), city: clean(o.ship_city), country_code: String(o.ship_country).toUpperCase(),
-      email: clean(o.ship_email), phone: clean(o.ship_phone),
+      email: clean(o.ship_email), phone: normalizePhone(o.ship_phone, String(o.ship_country)),
     }),
     user_reference_number: o.ref,
     parcels: parcels.map((p) => ({
@@ -63,7 +81,10 @@ export function parseQuotes(raw: unknown): Quote[] {
     const net = num(pricing.price_net), gross = num(pricing.price_gross);
     const carrier = String(q.service ?? '');
     const kind = [q.shipment_type, q.delivery_type].map((x) => String(x ?? '')).filter(Boolean).join(', ');
-    const available = q.available === true && gross > 0;
+    // Pickup-point and locker services need a point chosen by the receiver, which we do not collect yet: never offer them.
+    const needsPoint = carrier.toLowerCase() === 'orlen' || /point|locker|paczkomat|machine|pickup|punkt|kiosk|pudo|parcel_?shop/i.test(kind);
+    if (needsPoint && !errs.length) errs.push('Delivers to a pickup point or locker, which is not supported yet');
+    const available = q.available === true && gross > 0 && !needsPoint;
     return { service_id: num(q.service_id), carrier, name: [carrier.toUpperCase(), kind].filter(Boolean).join(' · '), available, reason: available ? undefined : (errs.join('; ') || 'Not available for this parcel'), cost_net: net, cost_gross: gross, tax: num(pricing.tax) || (net > 0 ? Math.round((gross / net - 1) * 100) : 23) } as Quote;
   });
   return out.sort((a, b) => Number(b.available) - Number(a.available) || a.cost_net - b.cost_net);
