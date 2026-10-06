@@ -17,7 +17,7 @@ ok('every contents link points at a real section', [...d.querySelectorAll('#tocl
 const src = fs.readFileSync(ROOT + '/supabase/functions/_shared/helpContent.ts', 'utf8');
 const STAFF = JSON.parse(/STAFF_GUIDE = (".*?");\n/s.exec(src)[1]), OWNER = JSON.parse(/OWNER_GUIDE = (".*?");\n/s.exec(src)[1]);
 const sd = new JSDOM(STAFF, { runScripts: 'dangerously' }); await wait(100);
-ok('staff guide has 17 sections with a working contents list', sd.window.document.querySelectorAll('article section').length === 17 && sd.window.document.querySelectorAll('#toclinks a').length === 17);
+ok('staff guide has 18 sections with a working contents list', sd.window.document.querySelectorAll('article section').length === 18 && sd.window.document.querySelectorAll('#toclinks a').length === 18);
 ok('staff guide covers roles, receiving and approvals', /Roles and signing in/.test(STAFF) && /Receive a delivery/.test(STAFF) && /Approvals/.test(STAFF));
 ok('staff guide does not carry the owner setup section', !/HOSTINGER_API_TOKEN|supabase db push/.test(STAFF));
 const od = new JSDOM(OWNER, { runScripts: 'dangerously' }); await wait(100);

@@ -2,7 +2,7 @@ import { ROOT } from '../lib/root.mjs';
 import { JSDOM } from 'jsdom'; import fs from 'node:fs';
 let pass = 0, fail = 0; const ok = (n, c, x = '') => { c ? pass++ : fail++; console.log((c ? 'PASS ' : 'FAIL ') + n + (c || !x ? '' : ' -> ' + x)); };
 const root = ROOT;
-const pub = ['/', '/platform', '/about', '/help', '/terms', '/privacy', '/news', '/news/open-a-company-in-poland-pesel-trusted-profile', '/news/eu-3-euro-customs-duty-small-parcels', '/news/eu-packaging-regulation-ppwr-epr-online-sellers', '/news/selling-electronics-in-the-eu-ce-rohs-weee-checklist'];
+const pub = ['/', '/platform', '/about', '/book', '/help', '/terms', '/privacy', '/news', '/news/open-a-company-in-poland-pesel-trusted-profile', '/news/eu-3-euro-customs-duty-small-parcels', '/news/eu-packaging-regulation-ppwr-epr-online-sellers', '/news/selling-electronics-in-the-eu-ce-rohs-weee-checklist'];
 const seen = { title: new Set(), desc: new Set(), img: new Set() };
 for (const p of pub) {
   const html = await (await fetch('http://localhost:8000' + p, { redirect: 'follow' })).text(); const d = new JSDOM(html).window.document;

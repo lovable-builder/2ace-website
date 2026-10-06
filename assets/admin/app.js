@@ -22,8 +22,8 @@ async function api(action, payload) {
 
 const WH_READ = [['approvals', 'Approvals'], ['orders', 'Orders'], ['inbound', 'Inbound'], ['stock', 'Stock'], ['products', 'Products'], ['discrepancies', 'Discrepancies']];
 const NAV = {
-  admin: [['', 'Overview'], ['customers', 'Customers'], ['requests', 'Requests'], ['domains', 'Domains'], ...WH_READ, ['locations', 'Locations'], ['shipping', 'Shipping'], ['staff', 'Staff'], ['audit', 'Audit log'], ['help', 'Help'], ['/scan', 'Scan app ↗']],
-  support: [['', 'Overview'], ['customers', 'Customers'], ['requests', 'Requests'], ['domains', 'Domains'], ...WH_READ, ['audit', 'Audit log'], ['help', 'Help']],
+  admin: [['', 'Overview'], ['customers', 'Customers'], ['requests', 'Requests'], ['appointments', 'Appointments'], ['domains', 'Domains'], ...WH_READ, ['locations', 'Locations'], ['shipping', 'Shipping'], ['staff', 'Staff'], ['audit', 'Audit log'], ['help', 'Help'], ['/scan', 'Scan app ↗']],
+  support: [['', 'Overview'], ['customers', 'Customers'], ['requests', 'Requests'], ['appointments', 'Appointments'], ['domains', 'Domains'], ...WH_READ, ['audit', 'Audit log'], ['help', 'Help']],
   warehouse: [['', 'Overview'], ...WH_READ, ['locations', 'Locations'], ['help', 'Help'], ['/scan', 'Scan app ↗']],
 };
 const screen = (children) => clear(app).append(el('div', { class: 'center' }, el('div', { class: 'auth-card' }, children)));

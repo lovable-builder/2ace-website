@@ -10,6 +10,8 @@
     <tr><td>Change a customer's status</td><td class="y">Yes</td><td class="no">No</td><td class="no">No</td></tr>
     <tr><td>Customer invoices (view, email to owner)</td><td class="y">Yes</td><td class="y">Yes</td><td class="no">No</td></tr>
     <tr><td>Requests inbox</td><td class="y">Yes</td><td class="y">Yes</td><td class="no">No</td></tr>
+    <tr><td>Appointments (booked calls: link, cancel, close)</td><td class="y">Yes</td><td class="y">Yes</td><td class="no">No</td></tr>
+    <tr><td>Booking settings (hours, languages, emails)</td><td class="y">Yes</td><td class="no">No</td><td class="no">No</td></tr>
     <tr><td>Domain queue</td><td class="y">Yes</td><td class="y">Yes</td><td class="no">No</td></tr>
     <tr><td>Staff management</td><td class="y">Yes</td><td class="no">No</td><td class="no">No</td></tr>
     <tr><td>Audit log</td><td class="y">Yes</td><td class="y">Yes</td><td class="no">No</td></tr>
@@ -388,3 +390,34 @@
   </table></div>
   <div class="ex"><b>Example: Tuesday</b><p>08:30 two new requests, one asks for a quote, one is a billing question. 09:15 the DSV truck with IN-000012 arrives. 10:20 receiving is closed with two discrepancies and the customer is emailed. 10:40 the good mugs are already on Acme's shelf, ready to order. 14:00 Anna asks to change a unit count on a booked delivery and Marta approves it.</p></div>
 </section>
+
+<section id="s-appointments">
+  <h2>18. Booked calls (Appointments)</h2>
+  <p class="lead">Anyone, customer or guest, can book a call at <code>2ace.pl/book</code> in English, Chinese or Arabic. Admin and Support manage the bookings under <span class="ui">Appointments</span>.</p>
+  <h3>What happens when someone books</h3>
+  <ul>
+    <li>The customer gets an email in the language they chose, with the time in their own time zone, a calendar file, an "add to Google Calendar" link and a link to move or cancel.</li>
+    <li>The people set for that language, and <code>hello@2ace.pl</code>, get an email with the name, contact details, topic and the time in <i>their</i> time zone and the customer's. If the meeting link is not set yet, the email says so.</li>
+    <li>24 hours and 1 hour before, the customer and the team get a reminder. A booking made less than 24 hours ahead skips the 24 hour reminder.</li>
+  </ul>
+  <h3>Send the meeting link</h3>
+  <ol class="steps">
+    <li>Open <span class="ui">Appointments</span> and click the booking. The list shows a red <span class="pill bad">no link</span> for calls without a link.</li>
+    <li>Paste the Google Meet, Zoom or Teams link (it must start with <code>https://</code>).</li>
+    <li>Click <span class="ui">Save and email the link</span> to send it to the customer at once, in their language, or <span class="ui">Save link</span> to keep it for the reminders. A link saved before a reminder is included in that reminder.</li>
+  </ol>
+  <p>An admin can also set a <b>default meeting link</b> per language under <span class="ui">Booking settings</span>. Every new booking in that language then gets it automatically.</p>
+  <h3>Other actions</h3>
+  <div class="tw"><table>
+    <tr><th>Button</th><th>What it does</th></tr>
+    <tr><td><span class="ui">Resend confirmation</span></td><td>Emails the confirmation and calendar file again.</td></tr>
+    <tr><td><span class="ui">Cancel this booking</span></td><td>Asks for a reason, frees the time, and emails the customer and the team. Customers can also cancel or move their own booking from the email link.</td></tr>
+    <tr><td><span class="ui">Mark as held</span> / <span class="ui">No show</span></td><td>Closes a meeting after it started. Meetings that are over but not closed show <span class="pill warn">needs closing</span>.</td></tr>
+    <tr><td>Internal notes</td><td>Only staff see them.</td></tr>
+  </table></div>
+  <h3>Opening hours and languages (admin)</h3>
+  <p>Under <span class="ui">Booking settings</span> each meeting language has its own block: <b>Open for booking</b>, the <b>time zone</b> of the person taking the calls (for example Asia/Shanghai or Europe/Warsaw), who is <b>emailed</b>, the call length, a break between calls, minimum notice, how far ahead people can book, and the opening times per weekday written like <code>10:00-14:00, 15:00-18:00</code> (empty = closed). A language stays closed, and hidden from the booking page, until you switch it on with at least one opening time and one email address.</p>
+  <div class="ex"><b>Example</b><p>The Chinese-language calls are taken from Shanghai on Monday and Wednesday, 10:00 to 12:00 local time. In <span class="ui">Booking settings → Chinese</span> the admin sets the time zone <code>Asia/Shanghai</code>, Monday <code>10:00-12:00</code>, Wednesday <code>10:00-12:00</code>, adds the partner's email and ticks <span class="ui">Open for booking</span>. A visitor in Warsaw sees those slots as 04:00 to 06:00 and a visitor in Shanghai sees 10:00 to 12:00. Li Wei books Monday 10:00 Shanghai time; the partner gets the email, pastes a Zoom link into the booking and clicks <span class="ui">Save and email the link</span>.</p></div>
+  <div class="note"><b>Good to know</b><p>The top of the page says whether reminders are running. If it says they are not, ask the owner to check the reminder job (owner guide). Nobody can book a time that is outside the opening hours, inside the minimum notice, or already taken.</p></div>
+</section>
+

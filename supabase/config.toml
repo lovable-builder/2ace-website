@@ -369,3 +369,9 @@ verify_jwt = true
 
 [functions.customer-shipping]
 verify_jwt = true
+
+[functions.booking]
+verify_jwt = false
+
+[functions.booking-reminders]
+verify_jwt = false

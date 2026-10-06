@@ -1,0 +1,47 @@
+// Words on the booking page, in English, Chinese and Arabic. Arabic is shown right to left (set on <html> by book.js).
+export const LOCALE = { en: 'en-GB', zh: 'zh-CN', ar: 'ar-EG-u-nu-latn' };
+export const NATIVE = { en: 'English', zh: '中文', ar: 'العربية' };
+export const I18N = {
+  en: {
+    pageTitle: 'Book a call | 2ACE', h1: 'Book a call with 2ACE', lead: 'Pick the language you would like to talk in, then a time that suits you. We confirm by email with a calendar invitation and a meeting link.',
+    noAccount: 'No account needed. Customers and guests can both book.', stepLang: '1. Meeting language', stepTime: '2. Choose a day and time', stepYou: '3. Your details',
+    meetIn: (n) => `Meet in ${n}`, minutes: (m) => `${m} minutes`, tz: 'Times are shown in your time zone', loading: 'Loading…', noSlots: 'There are no free times in this language right now. Please try another language, or write to hello@2ace.pl.',
+    closed: 'Online booking is not open yet. Please write to hello@2ace.pl and we will arrange a time with you.', pickDay: 'Day', pickTime: 'Time', selected: 'Your time',
+    name: 'Your name', email: 'Email', phone: 'Phone (optional)', company: 'Company (optional)', topic: 'What would you like to talk about? (optional)', topicPh: 'For example: storage for 20 m² and shipping to Germany',
+    submit: 'Confirm booking', working: 'Booking…', privacy: 'We use your details only to arrange this call.', privacyLink: 'Privacy policy',
+    doneTitle: 'You are booked', doneText: (when) => `Your call is confirmed for ${when}.`, emailed: (e) => `We sent a confirmation to ${e}, with a calendar invitation. Check your spam folder if you do not see it.`, notEmailed: 'Your booking is saved, but the confirmation email could not be sent. Please keep this page or the link below.',
+    addGoogle: 'Add to Google Calendar', ics: 'Download calendar file', manage: 'Change or cancel this booking', ref: 'Reference', link: 'Meeting link', join: 'Join the meeting', noLink: 'We will email you the meeting link before the call.',
+    taken: 'That time was just taken. Please choose another.', errName: 'Please enter your name', errEmail: 'Please enter a valid email address', errTime: 'Please choose a day and time', error: 'Something went wrong. Please try again, or write to hello@2ace.pl.',
+    mTitle: 'Your booking', mCancelled: 'This booking was cancelled.', mPast: 'This meeting has already taken place or started.', mNotFound: 'We could not find this booking. Check the link in your email.',
+    reschedule: 'Choose another time', move: 'Move to this time', cancel: 'Cancel this booking', cancelAsk: 'Cancel this booking?', cancelWhy: 'Reason (optional)', cancelYes: 'Yes, cancel it', keep: 'Keep it', moved: 'Your booking was moved. A new confirmation is on its way.', cancelledDone: 'Your booking was cancelled.', bookAgain: 'Book a new time', back: 'Back',
+    language: 'Language', home: 'Home',
+  },
+  zh: {
+    pageTitle: '预约通话 | 2ACE', h1: '预约与 2ACE 通话', lead: '请选择您想使用的交流语言，再选一个合适的时间。我们会通过邮件确认，并附上日历邀请和会议链接。',
+    noAccount: '无需注册账号，客户和访客都可以预约。', stepLang: '1. 会议语言', stepTime: '2. 选择日期和时间', stepYou: '3. 您的信息',
+    meetIn: (n) => `使用${n}交流`, minutes: (m) => `${m} 分钟`, tz: '显示的是您所在时区的时间', loading: '加载中…', noSlots: '该语言目前没有可预约的时间。请换一种语言，或发邮件至 hello@2ace.pl。',
+    closed: '在线预约暂未开放。请发邮件至 hello@2ace.pl，我们会与您另约时间。', pickDay: '日期', pickTime: '时间', selected: '您选择的时间',
+    name: '您的姓名', email: '邮箱', phone: '电话（选填）', company: '公司（选填）', topic: '您想谈什么？（选填）', topicPh: '例如：20 平方米仓储，以及发往德国的配送',
+    submit: '确认预约', working: '预约中…', privacy: '我们仅将您的信息用于安排这次通话。', privacyLink: '隐私政策',
+    doneTitle: '预约成功', doneText: (when) => `您的通话已确认：${when}。`, emailed: (e) => `我们已向 ${e} 发送确认邮件，并附日历邀请。如未收到，请查看垃圾邮件。`, notEmailed: '您的预约已保存，但确认邮件未能发送。请保留本页面或下方链接。',
+    addGoogle: '添加到 Google 日历', ics: '下载日历文件', manage: '更改或取消此预约', ref: '预约编号', link: '会议链接', join: '加入会议', noLink: '我们会在通话前通过邮件把会议链接发给您。',
+    taken: '该时间刚被预约，请选择其他时间。', errName: '请填写您的姓名', errEmail: '请填写有效的邮箱地址', errTime: '请选择日期和时间', error: '出了点问题。请重试，或发邮件至 hello@2ace.pl。',
+    mTitle: '您的预约', mCancelled: '此预约已取消。', mPast: '此会议已经开始或已结束。', mNotFound: '找不到此预约，请检查邮件中的链接。',
+    reschedule: '选择其他时间', move: '改到此时间', cancel: '取消此预约', cancelAsk: '确定取消此预约？', cancelWhy: '原因（选填）', cancelYes: '是，取消', keep: '保留', moved: '您的预约已更改，新的确认邮件即将发出。', cancelledDone: '您的预约已取消。', bookAgain: '重新预约', back: '返回',
+    language: '语言', home: '首页',
+  },
+  ar: {
+    pageTitle: 'احجز مكالمة | 2ACE', h1: 'احجز مكالمة مع 2ACE', lead: 'اختر اللغة التي تفضل التحدث بها، ثم الوقت المناسب لك. سنؤكد الحجز بالبريد الإلكتروني مع دعوة تقويم ورابط الاجتماع.',
+    noAccount: 'لا حاجة إلى حساب. يمكن للعملاء والزوار الحجز.', stepLang: '1. لغة الاجتماع', stepTime: '2. اختر اليوم والوقت', stepYou: '3. بياناتك',
+    meetIn: (n) => `الاجتماع باللغة ${n}`, minutes: (m) => `${m} دقيقة`, tz: 'الأوقات معروضة بحسب منطقتك الزمنية', loading: 'جارٍ التحميل…', noSlots: 'لا توجد أوقات متاحة بهذه اللغة حالياً. جرّب لغة أخرى أو راسلنا على hello@2ace.pl.',
+    closed: 'الحجز عبر الإنترنت غير متاح بعد. راسلنا على hello@2ace.pl وسنرتب معك موعداً.', pickDay: 'اليوم', pickTime: 'الوقت', selected: 'الموعد الذي اخترته',
+    name: 'اسمك', email: 'البريد الإلكتروني', phone: 'الهاتف (اختياري)', company: 'الشركة (اختياري)', topic: 'ما الذي تود مناقشته؟ (اختياري)', topicPh: 'مثال: تخزين 20 متراً مربعاً والشحن إلى ألمانيا',
+    submit: 'تأكيد الحجز', working: 'جارٍ الحجز…', privacy: 'نستخدم بياناتك فقط لترتيب هذه المكالمة.', privacyLink: 'سياسة الخصوصية',
+    doneTitle: 'تم الحجز', doneText: (when) => `تم تأكيد مكالمتك: ${when}.`, emailed: (e) => `أرسلنا تأكيداً إلى ${e} مع دعوة تقويم. تحقق من البريد غير الهام إن لم تجده.`, notEmailed: 'تم حفظ حجزك، لكن تعذر إرسال رسالة التأكيد. احتفظ بهذه الصفحة أو بالرابط أدناه.',
+    addGoogle: 'أضف إلى تقويم Google', ics: 'تنزيل ملف التقويم', manage: 'تغيير هذا الحجز أو إلغاؤه', ref: 'رقم الحجز', link: 'رابط الاجتماع', join: 'انضم إلى الاجتماع', noLink: 'سنرسل لك رابط الاجتماع بالبريد الإلكتروني قبل الموعد.',
+    taken: 'تم حجز هذا الوقت للتو. يرجى اختيار وقت آخر.', errName: 'يرجى إدخال اسمك', errEmail: 'يرجى إدخال بريد إلكتروني صحيح', errTime: 'يرجى اختيار اليوم والوقت', error: 'حدث خطأ. حاول مرة أخرى أو راسلنا على hello@2ace.pl.',
+    mTitle: 'حجزك', mCancelled: 'تم إلغاء هذا الحجز.', mPast: 'بدأ هذا الاجتماع أو انتهى بالفعل.', mNotFound: 'لم نعثر على هذا الحجز. تحقق من الرابط في بريدك.',
+    reschedule: 'اختر وقتاً آخر', move: 'انقل إلى هذا الوقت', cancel: 'إلغاء هذا الحجز', cancelAsk: 'هل تريد إلغاء هذا الحجز؟', cancelWhy: 'السبب (اختياري)', cancelYes: 'نعم، ألغِه', keep: 'إبقاؤه', moved: 'تم نقل حجزك. رسالة تأكيد جديدة في الطريق.', cancelledDone: 'تم إلغاء حجزك.', bookAgain: 'احجز موعداً جديداً', back: 'رجوع',
+    language: 'اللغة', home: 'الرئيسية',
+  },
+};

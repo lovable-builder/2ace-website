@@ -3,14 +3,15 @@ const FROM = Deno.env.get('EMAIL_FROM') ?? '2ACE <onboarding@resend.dev>';
 
 export const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
 
-export async function sendEmail(o: { to: string | string[]; subject: string; html: string; replyTo?: string }) {
+export type Attachment = { filename: string; content: string };   // content is base64
+export async function sendEmail(o: { to: string | string[]; subject: string; html: string; replyTo?: string; attachments?: Attachment[] }) {
   const key = Deno.env.get('RESEND_API_KEY');
   if (!key) { console.log('email skipped (no RESEND_API_KEY):', o.subject); return false; }
   try {
     const r = await fetch('https://api.resend.com/emails', {
       method: 'POST',
       headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ from: FROM, to: o.to, subject: o.subject, html: o.html, reply_to: o.replyTo }),
+      body: JSON.stringify({ from: FROM, to: o.to, subject: o.subject, html: o.html, reply_to: o.replyTo, ...(o.attachments?.length ? { attachments: o.attachments } : {}) }),
     });
     if (!r.ok) { console.error('resend error', r.status, await r.text()); return false; }
     return true;

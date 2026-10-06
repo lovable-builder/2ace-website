@@ -6,6 +6,8 @@ import Stripe from 'npm:stripe';
 import { STAFF_GUIDE, OWNER_GUIDE } from '../_shared/helpContent.ts';
 import { notifyHeld } from '../_shared/orderNotice.ts';
 import { Furgonetka, FurgonetkaError, OrderPending, configFromEnv, fieldErrors, type TokenStore } from '../_shared/furgonetka.ts';
+import { loadAppt, mailCustomer, mailHosts } from '../_shared/bookingOps.ts';
+import { isLang, isValidTz, validateWindows } from '../_shared/booking.ts';
 import { buyLabel, ShipError } from '../_shared/shipBuy.ts';
 import { autoLabel } from '../_shared/autoLabel.ts';
 import { buildPackage, parseQuotes, markupFor, customerNet, customerGross, spendCheck, settingNum, carriersFrom, warsawDayStart, extractTracking, DEFAULT_MARKUP_PERCENT, DEFAULT_MAX_LABEL_PLN, DEFAULT_DAILY_CAP_PLN, type OrderShip, type ParcelRow } from '../_shared/shipping.ts';
@@ -135,6 +137,74 @@ const actions: Record<string, { roles?: StaffRole[]; run: (s: StaffCtx, b: Recor
     const patch = (b.patch ?? {}) as Record<string, unknown>;
     const { error } = await userClient(s.token).rpc('set_org_shipping', { p_org: b.org_id, p_patch: patch });
     if (error) throw new Bad(error.message);
+    return { ok: true };
+  } },
+
+  // ---------- booked calls (Appointments) ----------
+  // Settings per meeting language: opening hours, time zone, who is notified, the default meeting link. Admin only.
+  'booking.saveSettings': { roles: ['admin'], run: async (s, b) => {
+    if (!isLang(b.lang)) throw new Bad('Unknown language');
+    const tz = text(b.tz, 60); if (!isValidTz(tz)) throw new Bad('Unknown time zone. Use a name like Europe/Warsaw or Asia/Shanghai.');
+    let windows; try { windows = validateWindows(b.windows ?? []); } catch (e) { throw new Bad((e as Error).message); }
+    const emails = (Array.isArray(b.host_emails) ? b.host_emails : []).map((x) => text(x, 200).toLowerCase()).filter(Boolean);
+    if (emails.some((x) => !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(x)) || emails.length > 6) throw new Bad('Check the email addresses (up to 6)');
+    const link = text(b.default_link, 500) || null; if (link && !/^https:\/\/[^\s]{4,}$/.test(link)) throw new Bad('The meeting link must start with https://');
+    const num = (v: unknown, lo: number, hi: number, name: string) => { const n = Number(v); if (!Number.isInteger(n) || n < lo || n > hi) throw new Bad(`${name} must be a whole number from ${lo} to ${hi}`); return n; };
+    const row = { enabled: b.enabled === true, tz, host_emails: emails, windows, slot_minutes: num(b.slot_minutes, 15, 120, 'Call length'), buffer_minutes: num(b.buffer_minutes, 0, 120, 'Break between calls'),
+      notice_hours: num(b.notice_hours, 0, 720, 'Minimum notice'), horizon_days: num(b.horizon_days, 1, 120, 'How far ahead'), default_link: link, updated_at: new Date().toISOString(), updated_by: s.user.id };
+    if (row.enabled && (!windows.length || !emails.length)) throw new Bad('To switch a language on, add at least one opening time and one email address that gets the booking.');
+    const { data: before } = await admin.from('booking_settings').select('*').eq('lang', b.lang).maybeSingle();
+    const { error } = await admin.from('booking_settings').update(row).eq('lang', b.lang);
+    if (error) throw new Bad(error.message);
+    await audit(s, 'booking.settings', 'booking_settings', String(b.lang), null, before, row);
+    return { ok: true };
+  } },
+  // Set, change or remove the meeting link of one booking, and optionally email it to the customer right away.
+  'appt.setLink': { roles: ['admin', 'support'], run: async (s, b) => {
+    if (!isUuid(b.id)) throw new Bad('Invalid booking');
+    const a = await loadAppt({ id: b.id }); if (!a) throw new Bad('Booking not found', 404);
+    if (a.status !== 'confirmed') throw new Bad('Only a confirmed booking can have its link changed');
+    const link = text(b.link, 500) || null; if (link && !/^https:\/\/[^\s]{4,}$/.test(link)) throw new Bad('The meeting link must start with https://');
+    if (b.send === true && !link) throw new Bad('Add the link first, then send it');
+    const { error } = await admin.from('appointments').update({ meeting_link: link }).eq('id', a.id); if (error) throw new Bad(error.message);
+    await audit(s, 'appointment.link', 'appointments', a.id, null, { link: a.meeting_link }, { link, sent: b.send === true });
+    let emailed = false;
+    if (b.send === true) { emailed = await mailCustomer('link', { ...a, meeting_link: link }); if (emailed) await admin.from('appointments').update({ link_sent_at: new Date().toISOString() }).eq('id', a.id); else throw new Bad('The link was saved, but the email could not be sent. Check the email settings, then try again.', 502); }
+    return { ok: true, emailed };
+  } },
+  'appt.resend': { roles: ['admin', 'support'], run: async (s, b) => {
+    if (!isUuid(b.id)) throw new Bad('Invalid booking');
+    const a = await loadAppt({ id: b.id }); if (!a) throw new Bad('Booking not found', 404);
+    if (a.status !== 'confirmed') throw new Bad('Only a confirmed booking can be resent');
+    if (!(await mailCustomer('confirmed', a))) throw new Bad('The email could not be sent. Check the email settings.', 502);
+    await admin.from('appointments').update({ confirmation_sent_at: new Date().toISOString() }).eq('id', a.id);
+    await audit(s, 'appointment.resend', 'appointments', a.id, null, null, null);
+    return { ok: true };
+  } },
+  'appt.cancel': { roles: ['admin', 'support'], run: async (s, b) => {
+    if (!isUuid(b.id)) throw new Bad('Invalid booking');
+    const a = await loadAppt({ id: b.id }); if (!a) throw new Bad('Booking not found', 404);
+    const reason = text(b.reason, 500);
+    const { error } = await admin.rpc('booking_cancel', { p_token: a.manage_token, p_by: 'staff', p_reason: reason }); if (error) throw new Bad(error.message);
+    await audit(s, 'appointment.cancel', 'appointments', a.id, null, { status: a.status }, { status: 'cancelled' }, reason || null);
+    const n = await loadAppt({ id: a.id }); if (n) { await mailCustomer('cancelled', n); await mailHosts('cancelled', n); }
+    return { ok: true };
+  } },
+  'appt.status': { roles: ['admin', 'support'], run: async (s, b) => {
+    if (!isUuid(b.id)) throw new Bad('Invalid booking');
+    if (!['completed', 'no_show'].includes(String(b.status))) throw new Bad('Choose completed or no show');
+    const a = await loadAppt({ id: b.id }); if (!a) throw new Bad('Booking not found', 404);
+    if (a.status !== 'confirmed') throw new Bad('Only a confirmed booking can be closed');
+    if (Date.parse(a.starts_at) > Date.now()) throw new Bad('This meeting has not started yet. Cancel it instead.');
+    const { error } = await admin.from('appointments').update({ status: b.status }).eq('id', a.id); if (error) throw new Bad(error.message);
+    await audit(s, 'appointment.' + b.status, 'appointments', a.id, null, { status: a.status }, { status: b.status });
+    return { ok: true };
+  } },
+  'appt.notes': { roles: ['admin', 'support'], run: async (s, b) => {
+    if (!isUuid(b.id)) throw new Bad('Invalid booking');
+    const notes = text(b.notes, 4000) || null;
+    const { error } = await admin.from('appointments').update({ staff_notes: notes }).eq('id', b.id); if (error) throw new Bad(error.message);
+    await audit(s, 'appointment.notes', 'appointments', String(b.id), null, null, { length: notes?.length ?? 0 });
     return { ok: true };
   } },
 

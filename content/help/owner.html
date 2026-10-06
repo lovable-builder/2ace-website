@@ -8,7 +8,17 @@
     <li><b>Server functions</b>: <code>supabase functions deploy &lt;names&gt; --use-api --project-ref &lt;project&gt;</code> publishes changed functions.</li>
   </ul>
   <p>Before you deploy, run the test suites: <code>cd tests &amp;&amp; bash run.sh</code> (once, <code>npm install</code> inside <code>tests/</code>). Every suite must say ok. Server functions have their own tests: <code>deno test supabase/functions/_shared/</code>.</p>
-  <p>The server functions are <code>admin-api</code>, <code>change-plan</code>, <code>create-checkout</code>, <code>change-request</code>, <code>customer-shipping</code> (customers' own labels), <code>stripe-webhook</code>, <code>request-help</code>, <code>lead</code> and the domain and invoice functions. When a feature stops working after an update, deploy the ones named in the instructions.</p>
+  <p>The server functions are <code>admin-api</code>, <code>change-plan</code>, <code>create-checkout</code>, <code>change-request</code>, <code>customer-shipping</code> (customers' own labels), <code>booking</code> and <code>booking-reminders</code> (booked calls), <code>stripe-webhook</code>, <code>request-help</code>, <code>lead</code> and the domain and invoice functions. When a feature stops working after an update, deploy the ones named in the instructions.</p>
+
+  <h3>Booked calls: first-time setup</h3>
+  <ol class="steps">
+    <li>Run <code>supabase db push --yes</code>. This creates the booking tables and, when the project allows it, schedules a job every 10 minutes that sends reminders (Supabase <code>pg_cron</code> and <code>pg_net</code>, both free).</li>
+    <li>Deploy the functions: <code>supabase functions deploy booking booking-reminders admin-api --use-api --project-ref &lt;project&gt;</code>.</li>
+    <li>Sign in to the admin panel, open <span class="ui">Appointments → Booking settings</span> and open each language you want: time zone, who is emailed, opening times. Nothing is bookable until you do.</li>
+    <li>Book a test call at <code>2ace.pl/book</code> with your own email. You should get the confirmation with a calendar file, and the team inbox gets the booking. Cancel it from the link in the email.</li>
+    <li>Look at the top of <span class="ui">Appointments</span>: it should say <b>Reminders are running</b> within 10 minutes. If it says they are not, see below.</li>
+  </ol>
+  <p>Emails need <code>RESEND_API_KEY</code> and a verified sender (see the settings table). <code>SITE_URL</code> is used for the links in the emails. The booking page needs no account, so anyone can use it; each email address can hold at most 3 upcoming bookings, and a hidden field catches simple bots.</p>
   <h3>Settings that must exist</h3>
   <div class="tw"><table>
     <tr><th>Setting</th><th>What it does</th></tr>
@@ -43,6 +53,9 @@
     <tr><td>Buying a label says it is switched off or over a limit.</td><td>Those are the settings <code>SHIPPING_ENABLED</code>, <code>SHIPPING_MAX_LABEL_PLN</code> and <code>SHIPPING_DAILY_CAP_PLN</code>. Each refusal says which one it is.</td></tr>
     <tr><td>I cannot find a customer's Shipping and fulfilment settings.</td><td>They are inside the customer's page: <span class="ui">Customers</span>, click the company's row, choose a reason, then scroll below the Plan box. The <span class="ui">Shipping</span> item in the left menu is only the Furgonetka connection test. Only admins see <span class="ui">Edit</span>. Hard-refresh if the box is missing.</td></tr>
     <tr><td>A customer cannot add their own label.</td><td>Check that their plan includes fulfilment (or an admin set the mode override), that the order is not shipped or cancelled, that the person is an owner, operations or staff member, and that the <code>customer-shipping</code> function is deployed.</td></tr>
+    <tr><td>The booking page says "not open yet".</td><td>No meeting language is switched on. Open <span class="ui">Appointments → Booking settings</span>, tick <span class="ui">Open for booking</span> and give each language opening times and an email address.</td></tr>
+    <tr><td>Appointments says "Reminders are not running".</td><td>The database job has not run in the last 30 minutes. Check that the migration ran (<code>supabase db push --yes</code>) and that the functions are deployed. In the Supabase dashboard, <span class="ui">Database → Extensions</span> must show <code>pg_cron</code> and <code>pg_net</code> enabled; enable them and run the push again. You can also call the <code>booking-reminders</code> function by hand; it only sends what is due.</td></tr>
+    <tr><td>A booked customer got no email.</td><td>The booking is saved either way. Check <code>RESEND_API_KEY</code> and the verified sender, then use <span class="ui">Resend confirmation</span> on the booking.</td></tr>
     <tr><td>A staff member cannot see a screen.</td><td>Check their role. Admin and Support also need the two-step code.</td></tr>
   </table></div>
   <div class="ex"><b>Example</b><p>You add a new feature with Claude and it asks you to run the database step. You run <code>supabase db push --yes</code>, then deploy the functions it names, then tell it to "commit and push". After about a minute you hard-refresh the admin panel and the new screen is there.</p></div>

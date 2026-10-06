@@ -31,7 +31,7 @@ const head = (title, desc, extraHead = '') => `<!DOCTYPE html>\n<html lang="en">
 const HELP_DESC = 'Step-by-step guide to your 2ACE account: build a plan, add products, book a delivery, read inventory, change your plan and get a domain, with examples.';
 const pub = head('Help and user guide | 2ACE', HELP_DESC, iconTags() + socialTags({ title: 'Help and user guide | 2ACE', desc: HELP_DESC, url: '/help' })) + `
 <body>
-<header class="top"><a class="brand" href="/">2ACE<small>Help</small></a><nav class="sitenav"><a href="/news">News</a><a href="/platform">Build your plan</a><a href="/login">Log in</a></nav></header>
+<header class="top"><a class="brand" href="/">2ACE<small>Help</small></a><nav class="sitenav"><a href="/about">About</a><a href="/book">Book a call</a><a href="/news">News</a><a href="/platform">Build your plan</a><a href="/login">Log in</a></nav></header>
 <div class="wrap">
 <div class="hero"><h1>How to use your 2ACE account, with an example for every step.</h1>
 <p>From creating your account to booking a delivery and reading your stock. The examples follow one made-up company, Acme Home Sp. z o.o., so you can see each step with real numbers. Stuck on something? Write to <a href="mailto:hello@2ace.pl">hello@2ace.pl</a> or call <a href="tel:+48608180946">+48 608 180 946</a>.</p>
