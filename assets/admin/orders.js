@@ -29,7 +29,7 @@ export async function render(ctx, root, params) {
 
   const create = () => modal('New order for a customer', (body, done) => {
     const o = orgSelect(orgs, '', 'Choose a customer'); const err = el('p', { class: 'err' });
-    const f = { ref: el('input', { placeholder: 'Their order number (optional)' }), name: el('input', { placeholder: 'Recipient name' }), email: el('input', { type: 'email', placeholder: 'Email (optional)' }), phone: el('input', { placeholder: 'Phone (optional)' }),
+    const f = { ref: el('input', { placeholder: 'Their order number (optional)' }), name: el('input', { placeholder: 'First name and surname' }), email: el('input', { type: 'email', placeholder: 'Email (optional)' }), phone: el('input', { placeholder: 'Phone, 9 digits (required)' }),
       line1: el('input', { placeholder: 'Street and number' }), postal: el('input', { placeholder: 'Postal code' }), city: el('input', { placeholder: 'City' }), country: el('input', { maxlength: '2', value: 'PL', placeholder: 'PL', style: 'width:70px' }) };
     const lines = el('div'), note = el('div'); let prods = [];
     const addLine = () => { const sel = el('select', {}, el('option', { value: '', text: 'Product' }), prods.map((p) => el('option', { value: p.id, text: p.sku + ' - ' + p.name }))); const q = el('input', { type: 'number', min: '1', value: '1', 'aria-label': 'Units', style: 'width:90px' }); const row = el('div', { class: 'row line' }, sel, q, el('button', { class: 'btn ghost tiny', text: 'Remove', onclick: () => row.remove() })); lines.append(row); };

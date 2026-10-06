@@ -172,6 +172,25 @@ ok('customers cannot use the staff re-check', !!(await call(ua, 'aal1', 'select 
 const acts = (await one(`select distinct action from public.audit_log where action like 'order.%'`)).map((x) => x.action);
 for (const a of ['order.create', 'order.allocate', 'order.cancel']) ok('audit row written for ' + a, acts.includes(a));
 ok('final invariants hold: reserved within on hand, equal to active allocations', (await one('select count(*)::int n from public.stock_levels where reserved > on_hand or reserved < 0'))[0].n === 0 && (await one(`select coalesce(sum(reserved),0)::int n from public.stock_levels`))[0].n === (await one(`select coalesce(sum(qty),0)::int n from public.allocations where status='reserved'`))[0].n);
+
+// ---- an order must carry what the shipping label needs ----
+{
+  const bad = async (patch, re, name) => { const r = await order(ua, 'aal1', orgA, 'BAD-' + name, [{ product_id: S1, qty: 1 }], { ...ship, ...patch }); ok('refused: ' + name, !!r.err && re.test(String(r.err.message ?? r.err)), JSON.stringify(r.err)); };
+  await bad({ name: 'Jan' }, /first name and surname/, 'a name without a surname');
+  await bad({ name: 'Jan 2ACE' }, /first name and surname/, 'a name with digits');
+  await bad({ phone: '' }, /phone number is required/, 'no phone');
+  await bad({ phone: '6081809461' }, /9 digits/, 'a Polish phone with 10 digits');
+  await bad({ phone: '12345' }, /9 digits/, 'a Polish phone that is too short');
+  await bad({ postal: '0001' }, /look like 00-001/, 'a bad Polish postal code');
+  await bad({ line1: 'Prosta' }, /house number/, 'a Polish street without a number');
+  await bad({ line1: '' }, /street address is required/, 'no street');
+  await bad({ country: 'DE', phone: '12' }, /7 to 15 digits/, 'a foreign phone that is too short');
+  const chk = async (sh) => (await call(ua, 'aal1', `select public.wms_check_ship($1::jsonb) r`, [JSON.stringify({ ...ship, ...sh })])).rows?.[0]?.r;
+  const forms = ['608180946', '+48 608 180 946', '0048608180946', '48608180946', '0608180946', '608-180-946'];
+  for (const f of forms) ok('phone ' + f + ' is stored as 608180946', (await chk({ phone: f }))?.phone === '608180946');
+  ok('a five-digit Polish postal code gets its dash, and a Polish name with accents is accepted', (await chk({ postal: '05090', name: 'Zażółć Gęślą-Jaźń' }))?.postal === '05-090' && (await chk({ name: 'Łukasz Żółć' }))?.name === 'Łukasz Żółć');
+  ok('a German order with a plain phone and no house number rule still passes', (await chk({ country: 'DE', phone: '+49 30 1234567', postal: '10115', line1: 'Hauptstrasse' }))?.phone === '4930 1234567'.replace(' ', ''));
+}
 await db.exec('rollback');
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
