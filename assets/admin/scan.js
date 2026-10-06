@@ -163,15 +163,19 @@ async function pickList() {
   shell('Pick', home, todo.length ? el('div', { class: 'list' }, todo.map((o) => el('button', { class: 'row', onclick: () => pickOrder(o.id) }, el('b', { text: o.ref }), el('span', { text: orgName(o.org_id) + ' · ' + o.ship_city + ' ' + o.ship_country }), el('small', { text: o.allocations.filter((a) => a.status === 'reserved').length + ' lines to pick' + (o.status === 'picking' ? ' · started' : '') })))) : el('p', { class: 'muted', text: 'Nothing to pick right now.' }));
 }
 async function pickOrder(id, stage = 'bin') {
-  const [{ data: o }, { data: al }] = await Promise.all([
+  // allocations links to locations twice (the bin it comes from and the packing station), so the bin is named explicitly: locations!location_id
+  const [{ data: o }, { data: al, error: ae }] = await Promise.all([
     sb.from('orders').select('id, org_id, ref, status').eq('id', id).maybeSingle(),
-    sb.from('allocations').select('id, qty, status, product_id, location_id, locations(code), products(sku, name, photo_paths)').eq('order_id', id),
+    sb.from('allocations').select('id, qty, status, product_id, location_id, locations!location_id(code), products(sku, name, photo_paths)').eq('order_id', id),
   ]);
   if (!o) return pickList();
+  if (ae) return shell(o.ref, pickList, el('p', { class: 'err', text: 'Could not load the lines of this order: ' + ae.message }));
   const lines = (al || []).filter((a) => a.status !== 'released').sort((a, b) => a.locations.code.localeCompare(b.locations.code));
   const cur = lines.find((a) => a.status === 'reserved');
   const done = lines.filter((a) => a.status === 'picked').length;
   const progress = el('div', { class: 'list' }, lines.map((a) => el('div', { class: 'row static' + (a.status === 'picked' ? ' done' : a === cur ? ' now' : '') }, el('b', { text: a.locations.code + ' · ' + a.products.sku }), el('span', { text: a.products.name }), el('small', { text: a.qty + ' × ' + (a.status === 'picked' ? 'picked' : a === cur ? 'next' : 'waiting') }))));
+  if (!lines.length) return shell(o.ref, pickList, el('div', { class: 'card' }, el('b', { text: 'Nothing to pick' }), el('div', { text: 'This order has no stock reserved, so there is nothing to pick. Check it in the admin panel under Orders.' })));
+  if (!cur && o.status !== 'picking') return shell(o.ref, pickList, el('div', { class: 'card' }, el('b', { text: 'Nothing left to pick here' }), el('div', { text: 'This order is "' + o.status + '". Check it in the admin panel under Orders.' })));
   if (!cur) {
     return shell(o.ref, pickList, el('div', { class: 'card' }, el('b', { text: 'All picked' }), el('div', { text: 'Take the items to the packing station.' }), el('button', { class: 'btn big', text: 'Pack this order', onclick: () => packOrder(id) })), progress);
   }
@@ -208,6 +212,7 @@ async function packOrder(id, counts = {}, parcels = [{ kg: '', l: '', w: '', h: 
   ]);
   if (!o) return packList();
   if (o.status === 'packed') { say('This order is already packed'); return packList(); }
+  if (o.status !== 'picking') { say('This order is ' + (o.status === 'allocated' ? 'reserved, not picked yet' : o.status) + '. Pick it first (Pick on the home screen).', true); return packList(); }
   const lines = ln || [], got = (l) => counts[l.product_id] || 0, allIn = lines.length > 0 && lines.every((l) => got(l) >= l.qty);
   const again = (c = counts, p = parcels) => packOrder(id, c, p);
   const checklist = el('div', { class: 'list' }, lines.map((l) => el('div', { class: 'row static' + (got(l) >= l.qty ? ' done' : '') }, el('b', { text: l.products.sku }), el('span', { text: l.products.name }), el('small', { text: got(l) + ' / ' + l.qty + ' scanned' }),

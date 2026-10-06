@@ -11,7 +11,7 @@ const DB = { products: [{ id: 'p1', photo_paths: ['o1/p1/a.jpg'] }], staff_users
   inbound_lines: [{ booking_id: 'b1', product_id: 'p1', expected_qty: 10, products: { sku: 'SKU-1', name: 'Blue mug' } }],
   receipt_lines: [{ booking_id: 'b1', product_id: 'p1', qty: 4, condition: 'good' }],
   stock_levels: [{ org_id: 'o1', product_id: 'p1', location_id: 'l1', lot: '', on_hand: 6, reserved: 0, locations: { code: 'R1', kind: 'receiving' } }] };
-const mkQuery = (table) => { const f = []; let one = false; const q = new Proxy({}, { get(_, k) { if (k === 'then') return (res) => { const r = (DB[table] || []).filter((row) => f.every((fn) => fn(row))); return res({ data: one ? (r[0] ?? null) : r, error: null }); }; return (...a) => { if (k === 'eq') f.push((row) => row[a[0]] === a[1]); else if (k === 'in') f.push((row) => a[1].includes(row[a[0]])); else if (k === 'maybeSingle') one = true; return q; }; } }); return q; };
+const mkQuery = (table) => { const f = []; let one = false; const q = new Proxy({}, { get(_, k) { if (k === 'then') return (res) => { const r = (DB[table] || []).filter((row) => f.every((fn) => fn(row))); if (DB.__err && DB.__err[table]) return res({ data: null, error: { message: DB.__err[table] } }); return res({ data: one ? (r[0] ?? null) : r, error: null }); }; return (...a) => { if (k === 'eq') f.push((row) => row[a[0]] === a[1]); else if (k === 'in') f.push((row) => a[1].includes(row[a[0]])); else if (k === 'maybeSingle') one = true; return q; }; } }); return q; };
 const rpcs = [];
 const uploads = []; const fetches = []; globalThis.fetch = async (u, o) => { const b = JSON.parse(o.body); fetches.push([String(u), b]); if (b.action === 'shipping.auto' && globalThis.__auto) return globalThis.__auto(b); return { ok: true, json: async () => ({}) }; };
 const sb = { storage: { from: () => ({ createSignedUrl: async (p) => ({ data: { signedUrl: 'https://x/' + p } }), upload: async (p, b, o) => { uploads.push(p); return { error: null }; } }) }, auth: { getSession: async () => ({ data: { session: { user: { id: 'u' }, access_token: 'tok' } } }) }, from: mkQuery,
@@ -131,6 +131,26 @@ DB.__rpc.pack_order = () => ({ __error: 'Not everything has been picked yet' });
 await toHome(); await click('Pack'); await click('ORD-000002'); await scan('590'); await scan('590'); await scan('600'); { const f = [...document.querySelectorAll('input[type=number]')]; f[0].value = '1'; f.forEach((i) => i.dispatchEvent(new window.Event('input'))); } await click('Finish packing'); await tick(60);
 ok('if packing itself fails, no label is ever requested', !fetches.some(([, b]) => b.action === 'shipping.auto') && /Not everything has been picked yet/.test(text()));
 globalThis.__auto = null;
+
+// ---------- the pick screen must never claim "All picked" when it cannot know ----------
+{
+  const base = { org_id: 'o1', ship_name: 'Jan', ship_line1: 'a', ship_postal: '1', ship_city: 'Warszawa', ship_country: 'PL', created_at: '2026-10-05T10:00:00Z' };
+  const saveO = DB.orders, saveA = DB.allocations;
+  const open = async (order, allocs, err) => {
+    DB.orders = [{ ...base, id: 'px', ref: 'ORD-000077', status: order, allocations: [{ status: 'reserved' }] }]; DB.allocations = allocs.map((a) => ({ order_id: 'px', id: 'al' + a.status, qty: 1, product_id: 'p1', location_id: 'l2', locations: { code: 'A-01-01' }, products: { sku: 'MUG', name: 'Mug', photo_paths: [] }, ...a }));
+    DB.__err = err ? { allocations: err } : null; await toHome(); await click('Pick'); await click('ORD-000077');
+  };
+  await open('allocated', [{ status: 'reserved' }], 'Could not embed because more than one relationship was found for allocations and locations');
+  ok('if the lines cannot be loaded the real reason is shown, not "All picked"', /Could not load the lines of this order: Could not embed/.test(text()) && !/All picked/.test(text()) && !document.querySelector('button.big'), text().slice(0, 200));
+  await open('allocated', [], null); ok('an order with no reserved lines says there is nothing to pick, with no Pack button', /Nothing to pick/.test(text()) && !/All picked/.test(text()) && !/Pack this order/.test(text()));
+  await open('allocated', [{ status: 'picked' }], null); ok('an order that is still "reserved" but has no line to pick does not offer packing either', /Nothing left to pick here/.test(text()) && !/Pack this order/.test(text()));
+  await open('picking', [{ status: 'picked' }], null); ok('a picking order with everything picked still offers packing', /All picked/.test(text()) && !!document.querySelector('button.big'));
+  // packing an order that has not been picked is refused kindly, whatever route got there
+  DB.orders = [{ ...base, id: 'px', ref: 'ORD-000077', status: 'picking', allocations: [{ status: 'picked' }] }]; DB.__err = null;
+  await toHome(); await click('Pack'); DB.orders = [{ ...base, id: 'px', ref: 'ORD-000077', status: 'allocated', allocations: [{ status: 'picked' }] }]; await click('ORD-000077'); await tick(60);
+  ok('opening the pack screen for an order that was never picked says to pick it first and goes back to the list', /reserved, not picked yet\. Pick it first/.test(text()) && !document.querySelector('input.scan') && !!document.querySelector('.msg.bad'), text().slice(0, 200));
+  DB.orders = saveO; DB.allocations = saveA; DB.__err = null;
+}
 
 // ---------- receiving says where the goods went ----------
 await toHome(); DB.__rpc = { receive_line: () => ({ condition: 'good', receipt_id: 'rl9', location: 'ACME-01' }) };

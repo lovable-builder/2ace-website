@@ -56,7 +56,7 @@ async function detail(ctx, root, id) {
   if (!o) return clear(root).append(el('p', { class: 'err', text: 'Order not found.' }), el('button', { class: 'btn ghost', onclick: () => ctx.go('orders'), text: 'Back' }));
   const [ln, al, cr, pc, sh, ol] = await Promise.all([
     ctx.sb.from('order_lines').select('id, qty, products(sku, name)').eq('order_id', id),
-    ctx.sb.from('allocations').select('order_line_id, qty, status, lot, locations(code)').eq('order_id', id),
+    ctx.sb.from('allocations').select('order_line_id, qty, status, lot, locations!location_id(code)').eq('order_id', id),
     ctx.sb.from('change_requests').select('summary, status').eq('entity_id', id).eq('status', 'pending'),
     ctx.sb.from('parcels').select('seq, weight_g, length_cm, width_cm, height_cm, packed_at').eq('order_id', id).order('seq'),
     ctx.sb.from('shipments').select('*').eq('order_id', id).order('created_at', { ascending: false }),
