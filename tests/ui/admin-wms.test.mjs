@@ -430,4 +430,48 @@ DB.__api = {};
 // ---- overview ----
 DB.requests = []; DB.domain_orders = []; DB.organizations = [];
 await mount('home', 'warehouse'); ok('warehouse overview shows 4 warehouse cards', document.querySelectorAll('.stat').length === 7 && /Orders on hold/.test(text()) && /Changes to approve/.test(text()) && /Units to put away/.test(text()) && /10/.test(text()));
+// ---- fixing delivery details that would not pass the shipping label ----
+{
+  const baseRpc = sb.rpc; DB.__problems = [];
+  sb.rpc = async (n, a) => { if (n === 'order_ship_problems') { rpcs.push([n, a]); return { data: DB.__problems, error: null }; } if (n === 'update_order_ship') { rpcs.push([n, a]); return rpcFail ? { data: null, error: { message: rpcFail } } : { data: { id: a.p_order, ref: 'ORD-000050' }, error: null }; } return baseRpc(n, a); };
+  const mkO = (over) => ({ id: 'fx1', org_id: 'o1', ref: 'ORD-000050', external_ref: null, channel: 'manual', status: 'packed', hold_reason: null, ship_name: 'Jan', ship_company: null, ship_line1: 'Prosta', ship_line2: null, ship_postal: '0001', ship_city: 'Warszawa', ship_country: 'PL', ship_email: null, ship_phone: '6081809461', created_at: '2026-10-05T10:00:00Z', allocated_at: null, notes: null, details_requested_at: null, details_request_note: null, ...over });
+  DB.orders = [mkO()]; DB.order_lines = []; DB.allocations = []; DB.parcels = [{ order_id: 'fx1', seq: 1, weight_g: 500, length_cm: 10, width_cm: 10, height_cm: 10, packed_at: '2026-10-05T14:00:00Z' }]; DB.change_requests = []; DB.shipments = []; DB.own_labels = [];
+  DB.__problems = ['The recipient name "Jan" must be a first name and a surname, letters only.', 'The recipient phone "6081809461" must be a Polish number with 9 digits.', 'The street address needs the house number.'];
+  await mount('orders', 'warehouse', ['fx1']);
+  ok('details that would fail the label are listed on the order, in plain words', /will not pass the shipping label/.test(text()) && /first name and a surname/.test(text()) && /9 digits/.test(text()) && /house number/.test(text()), text().slice(0, 400));
+  ok('staff can edit them or ask the customer', [...root().querySelectorAll('button')].some((b) => b.textContent === 'Edit details') && [...root().querySelectorAll('button')].some((b) => b.textContent === 'Ask the customer to correct it'));
+  // edit
+  [...root().querySelectorAll('button')].find((b) => b.textContent === 'Edit details').click(); await tick(40);
+  { const m = document.querySelector('.modal'); const inputs = [...m.querySelectorAll('input')]; ok('the edit form starts with the current details', inputs.some((i) => i.value === 'Jan') && inputs.some((i) => i.value === '6081809461') && inputs.some((i) => i.value === '0001'));
+    const byPh = (ph) => inputs.find((i) => i.placeholder === ph); set(byPh('First name and surname'), 'Jan Kowalski'); set(byPh('9 digits for Poland'), '608 180 946'); set(byPh('Street and house number'), 'Prosta 12'); set(byPh('00-001'), '00-001');
+    rpcs.length = 0; [...m.querySelectorAll('button')].find((b) => b.textContent === 'Save').click(); await tick(60); }
+  const up = rpcs.find(([n]) => n === 'update_order_ship');
+  ok('saving sends the order and every field to the database', up && up[1].p_order === 'fx1' && up[1].p_ship.name === 'Jan Kowalski' && up[1].p_ship.phone === '608 180 946' && up[1].p_ship.line1 === 'Prosta 12' && up[1].p_ship.postal === '00-001' && up[1].p_ship.city === 'Warszawa' && up[1].p_ship.country === 'PL', JSON.stringify(up));
+  // a refusal from the database is shown in the form
+  await mount('orders', 'warehouse', ['fx1']); [...root().querySelectorAll('button')].find((b) => b.textContent === 'Edit details').click(); await tick(40);
+  rpcFail = 'The recipient phone must be a Polish number with 9 digits, for example 608 180 946'; [...document.querySelector('.modal').querySelectorAll('button')].find((b) => b.textContent === 'Save').click(); await tick(60);
+  ok('a refusal is shown inside the form and nothing closes', /Polish number with 9 digits/.test(document.querySelector('.modal')?.textContent ?? '')); rpcFail = null; document.querySelector('.modal .x').click(); await tick();
+  // ask the customer
+  await mount('orders', 'warehouse', ['fx1']); [...root().querySelectorAll('button')].find((b) => b.textContent === 'Ask the customer to correct it').click(); await tick(40);
+  { const m = document.querySelector('.modal'); const ta = m.querySelector('textarea'); ok('the message is prefilled with every problem', /first name and a surname/.test(ta.value) && /9 digits/.test(ta.value) && /house number/.test(ta.value));
+    ta.value = ta.value + '\nThank you!'; DB.__api = { 'order.requestDetails': { ok: true, to: 'anna@acme.pl' } }; apis.length = 0; [...m.querySelectorAll('button')].find((b) => b.textContent === 'Send email').click(); await tick(60); }
+  ok('sending calls the server with the order and the message', apis[0]?.[0] === 'order.requestDetails' && apis[0][1].order_id === 'fx1' && /Thank you!/.test(apis[0][1].message) && /first name and a surname/.test(apis[0][1].message), JSON.stringify(apis));
+  // after asking
+  DB.orders = [mkO({ details_requested_at: '2026-10-06T10:00:00Z', details_request_note: 'Please send the full name' })]; await mount('orders', 'warehouse', ['fx1']);
+  ok('once asked, the order says when and what, and offers to ask again', /We asked the customer for a correction/.test(text()) && /Please send the full name/.test(text()) && [...root().querySelectorAll('button')].some((b) => b.textContent === 'Ask the customer again'));
+  // a failed label with no field problems still offers the way out
+  DB.__problems = []; DB.orders = [mkO({ ship_name: 'Jan Kowalski', ship_phone: '608180946', ship_postal: '00-001', ship_line1: 'Prosta 12' })]; DB.shipments = [{ id: 's1', order_id: 'fx1', org_id: 'o1', status: 'failed', error: 'Furgonetka rejected the shipment: /receiver/postcode: wrong for this city', created_at: '2026-10-06T09:00:00Z' }];
+  await mount('orders', 'warehouse', ['fx1']); ok('a failed label attempt shows the carrier\'s reason next to the details, with the same two actions', /The last label attempt failed/.test(text()) && /wrong for this city/.test(text()) && [...root().querySelectorAll('button')].some((b) => b.textContent === 'Edit details'));
+  [...root().querySelectorAll('button')].find((b) => b.textContent === 'Ask the customer to correct it').click(); await tick(40);
+  ok('the message for a failed attempt quotes the carrier\'s reason', /did not accept the delivery details/.test(document.querySelector('.modal textarea').value) && /wrong for this city/.test(document.querySelector('.modal textarea').value)); document.querySelector('.modal .x').click(); await tick();
+  // clean details: no warning, still editable
+  DB.shipments = []; await mount('orders', 'warehouse', ['fx1']); ok('good details show no warning', !/will not pass/.test(text()) && !/last label attempt failed/.test(text()));
+  // locked: label bought / shipped / support / customer-owned label irrelevant
+  DB.__problems = ['The street address needs the house number.']; DB.shipments = [{ id: 's2', order_id: 'fx1', org_id: 'o1', status: 'purchased', carrier: 'dpd', service_name: 'DPD', tracking_numbers: ['W1'], cost_net: 10, cost_gross: 12.3, bill_net: 13, bill_gross: 16, markup_percent: 30, created_at: '2026-10-06T09:00:00Z' }];
+  await mount('orders', 'warehouse', ['fx1']); ok('once a label is bought the details are locked, with the reason', !/Edit details/.test(text()) && /already bought for these details/.test(text()));
+  DB.shipments = []; DB.orders = [mkO({ status: 'shipped' })]; await mount('orders', 'warehouse', ['fx1']); ok('a shipped order cannot be edited', !/Edit details/.test(text()) && !/will not pass/.test(text()));
+  DB.orders = [mkO()]; await mount('orders', 'support', ['fx1']); ok('support sees the problems but has no buttons to change anything', /will not pass the shipping label/.test(text()) && !/Edit details/.test(text()) && !/Ask the customer/.test(text()));
+  sb.rpc = baseRpc;
+}
+
 console.log(`\n${pass} passed, ${fail} failed`); process.exit(fail ? 1 : 0);

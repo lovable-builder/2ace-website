@@ -73,6 +73,10 @@ global.fetch = async (url, o) => { calls.push([url, o && typeof o.body === 'stri
   let vo = c.renderVals();
   ok('orders list shows reference, recipient and plain status', vo.orderRows.length === 3 && vo.orderRows[0].status === 'Reserved, waiting to be picked' && /Your reference SHOP-1/.test(vo.orderRows[0].their) && /Jan Nowak, Warszawa PL/.test(vo.orderRows[0].who) && /MUG-BLUE × 2/.test(vo.orderRows[0].items));
   ok('a held order explains the shortage', vo.orderRows[1].status === 'On hold, not enough stock' && vo.orderRows[1].reasonDisplay === 'block' && /need 7, available 6/.test(vo.orderRows[1].reason) && vo.orderRows[1].color === '#8A5A10');
+  ok('an order with no correction request shows no correction banner', vo.orderRows.every((r) => r.askDisplay === 'none' && r.ask === ''));
+  ORDERS[0].details_request_note = 'The recipient phone must be a Polish number with 9 digits.'; ORDERS[2].details_request_note = 'old note on a picking order'; await c.whLoad(); vo = c.renderVals();
+  ok('a correction request is shown to the customer on that order, so they know what to fix', vo.orderRows[0].askDisplay === 'block' && /9 digits/.test(vo.orderRows[0].ask) && vo.orderRows[1].askDisplay === 'none');
+  ORDERS[0].status = 'shipped'; await c.whLoad(); vo = c.renderVals(); ok('the banner disappears once the order has shipped', vo.orderRows[0].askDisplay === 'none'); ORDERS[0].status = 'allocated'; delete ORDERS[0].details_request_note; delete ORDERS[2].details_request_note; await c.whLoad(); vo = c.renderVals();
   ok('cancellation can be requested only before picking starts', vo.orderRows[0].cancelDisplay === 'inline-block' && vo.orderRows[1].cancelDisplay === 'inline-block' && vo.orderRows[2].cancelDisplay === 'none');
   c.state = Object.assign({}, c.state, { whChanges: { o1: { id: 'c1', status: 'pending', summary: 'Cancel order ORD-000001' } } }); vo = c.renderVals();
   ok('a pending cancellation is shown and hides the button', vo.orderRows[0].pendDisplay === 'block' && vo.orderRows[0].cancelDisplay === 'none');
@@ -97,16 +101,16 @@ global.fetch = async (url, o) => { calls.push([url, o && typeof o.body === 'stri
   c.state = Object.assign({}, c.state, { oOpen: true, oLines: [{ pid: 'p1', qty: 1 }] }); fail_ = 'The recipient postal code is required'; await c.oSubmit(); await settle(); fail_ = null;
   ok('a database refusal is shown on the form', /postal code is required/.test(c.state.oErr) && c.state.oBusy === false);
   // CSV
-  const csv = 'order_ref,name,address,postal,city,country,sku,qty\nA1,"Nowak, Jan",Prosta 1,00-001,Warszawa,PL,MUG-BLUE,2\nA1,"Nowak, Jan",Prosta 1,00-001,Warszawa,PL,MUG-RED,1\nA2,Anna,"Str ""Main"" 5",10115,Berlin,DE,MUG-BLUE,4\n';
+  const csv = 'order_ref,name,phone,address,postal,city,country,sku,qty\nA1,"Nowak, Jan",608180946,Prosta 1,00-001,Warszawa,PL,MUG-BLUE,2\nA1,"Nowak, Jan",608180946,Prosta 1,00-001,Warszawa,PL,MUG-RED,1\nA2,Anna,030123456,"Str ""Main"" 5",10115,Berlin,DE,MUG-BLUE,4\n';
   let od = c.csvToOrders(csv);
   ok('csv rows with the same order_ref become one order with several lines', od.length === 2 && od[0].lines.length === 2 && od[0].external_ref === 'A1' && od[1].lines[0].qty === 4);
   ok('quoted commas and quotes inside fields are kept', od[0].ship.name === 'Nowak, Jan' && od[1].ship.line1 === 'Str "Main" 5');
   od = c.csvToOrders(csv.replace(/,/g, ';').replace('"Nowak; Jan"', 'Nowak Jan').replace(/"Nowak; Jan"/g, 'Nowak Jan').replace('"Str ""Main"" 5"', 'Main 5'));
   ok('semicolon files (Excel in Poland) work too', od.length === 2 && od[0].ship.city === 'Warszawa');
   ok('a Windows byte-order mark and CRLF line ends are handled', c.csvToOrders('﻿' + csv.replace(/\n/g, '\r\n')).length === 2);
-  ok('repeated SKU rows on one order are added together', c.csvToOrders('order_ref,name,address,postal,city,country,sku,qty\nB,N,A,1,C,PL,X,2\nB,N,A,1,C,PL,X,3\n')[0].lines[0].qty === 5);
-  let msg = ''; try { c.csvToOrders('order_ref,name\nA,B\n'); } catch (e) { msg = e.message; } ok('missing columns are named', /Missing columns: address, postal, city, country, sku, qty/.test(msg), msg);
-  msg = ''; try { c.csvToOrders('order_ref,name,address,postal,city,country,sku,qty\n,N,A,1,C,PL,X,2\n'); } catch (e) { msg = e.message; } ok('a row without order_ref is refused with its row number', /Row 2 has no order_ref/.test(msg), msg);
+  ok('repeated SKU rows on one order are added together', c.csvToOrders('order_ref,name,phone,address,postal,city,country,sku,qty\nB,N,1,A,1,C,PL,X,2\nB,N,1,A,1,C,PL,X,3\n')[0].lines[0].qty === 5);
+  let msg = ''; try { c.csvToOrders('order_ref,name\nA,B\n'); } catch (e) { msg = e.message; } ok('missing columns are named', /Missing columns: phone, address, postal, city, country, sku, qty/.test(msg), msg);
+  msg = ''; try { c.csvToOrders('order_ref,name,phone,address,postal,city,country,sku,qty\n,N,1,A,1,C,PL,X,2\n'); } catch (e) { msg = e.message; } ok('a row without order_ref is refused with its row number', /Row 2 has no order_ref/.test(msg), msg);
   msg = ''; try { c.csvToOrders('order_ref\n'); } catch (e) { msg = e.message; } ok('a file with only a header is refused', /no rows/.test(msg));
   await c.csvPick({ size: 100, text: async () => csv }); ok('picking a file shows how many orders are ready', c.state.csvOrders.length === 2 && /2 orders with 3 lines/.test(c.state.csvInfo), c.state.csvInfo);
   await c.csvPick({ size: 5000000, text: async () => csv }); ok('a file over 2 MB is refused', /too big/.test(c.state.csvErr) && c.state.csvOrders === null);

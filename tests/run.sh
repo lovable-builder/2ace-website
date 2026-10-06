@@ -20,7 +20,7 @@ run() {
   printf '%s\n' "$out" | grep -qE "^[0-9]+ passed, [1-9][0-9]* failed" && bad=1
   printf '%s\n' "$line" | grep -qE "errors at end: [1-9]" && bad=1
   [ -z "$line" ] && bad=1
-  [ "$code" -ne 0 ] && [ -z "$(printf '%s\n' "$line" | grep -E 'passed|errors at end')" ] && bad=1
+  [ "$code" -ne 0 ] && bad=1   # a suite that crashes part-way can still print an early "N passed" line: any non-zero exit is a failure
   TOTAL=$((TOTAL+1)); [ "$bad" -eq 1 ] && FAILED=$((FAILED+1))
   printf '%-34s %s %s\n' "$f" "$([ $bad -eq 1 ] && echo FAIL || echo ok)" "${line:-(no summary line)}"
   [ "$bad" -eq 1 ] && printf '%s\n' "$out" | grep -E "^FAIL|Error|error:" | head -8 | sed 's/^/      /'

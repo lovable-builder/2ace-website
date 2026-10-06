@@ -208,6 +208,31 @@ const actions: Record<string, { roles?: StaffRole[]; run: (s: StaffCtx, b: Recor
     return { ok: true };
   } },
 
+  // ---------- ask the customer to correct an order ----------
+  // Emails the owner of the customer account what is wrong with the delivery details, so the label can be made. Nothing is charged.
+  'order.requestDetails': { roles: ['admin', 'warehouse'], run: async (s, b) => {
+    if (!isUuid(b.order_id)) throw new Bad('Invalid order');
+    const message = text(b.message, 1500); if (message.length < 5) throw new Bad('Say what needs to be corrected');
+    const { data: o } = await admin.from('orders').select(ORDER_COLS).eq('id', b.order_id).maybeSingle();
+    if (!o) throw new Bad('Order not found', 404);
+    if (['shipped', 'cancelled'].includes(o.status)) throw new Bad('This order is ' + o.status);
+    const owner = await ownerOf(o.org_id as string);
+    if (!owner?.email) throw new Bad('This customer has no owner email on file. Write to them from the Requests screen instead.');
+    const rows: [string, string][] = [['Name', o.ship_name], ['Company', o.ship_company ?? ''], ['Address', [o.ship_line1, o.ship_line2].filter(Boolean).join(', ')], ['Postal code and city', `${o.ship_postal} ${o.ship_city}`], ['Country', o.ship_country], ['Phone', o.ship_phone ?? ''], ['Email', o.ship_email ?? '']].filter(([, v]) => v) as [string, string][];
+    const table = `<table style="border-collapse:collapse;margin:8px 0 14px">${rows.map(([k, v]) => `<tr><td style="padding:4px 14px 4px 0;color:#666">${esc(k)}</td><td style="padding:4px 0"><b>${esc(String(v))}</b></td></tr>`).join('')}</table>`;
+    const html = layout(`Please correct the details of order ${o.ref}`, `<p>Hello${owner.name ? ' ' + esc(owner.name.split(/\s+/)[0]) : ''},</p>
+<p>We cannot create the shipping label for order <b>${esc(String(o.ref))}</b> yet, because the delivery details need a correction:</p>
+<p style="white-space:pre-wrap;background:#F5F4F1;border-left:4px solid #E39A2B;padding:10px 14px">${esc(message)}</p>
+<p>The details we have now:</p>${table}
+<p><b>What to do:</b> reply to this email with the corrected details. We will update the order and create the label. Your goods stay reserved, and nothing is charged for this.</p>
+<p style="font-size:14px">You can follow the order under <a href="${SITE}/platform" style="color:#A8701A">Orders</a> in your account.</p>`);
+    const sent = await sendEmail({ to: owner.email, replyTo: TEAM_INBOX, subject: `Action needed: order ${o.ref} needs a correction | 2ACE`, html });
+    if (!sent) throw new Bad('The email could not be sent. Check the email settings (RESEND_API_KEY), then try again.', 502);
+    const { error } = await userClient(s.token).rpc('mark_details_requested', { p_order: b.order_id, p_note: message });
+    if (error) throw new Bad(error.message);
+    return { ok: true, to: owner.email };
+  } },
+
   // ---------- shipping labels ----------
   // Prices for a packed order from the main carriers. Free: nothing is created or charged. The customer price includes our markup.
   'shipping.quote': { roles: ['admin', 'warehouse'], run: async (_s, b) => {

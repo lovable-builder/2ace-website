@@ -267,6 +267,15 @@
   <h3>Cancelling</h3>
   <p>Staff cancel directly with <span class="ui">Cancel order</span>: the reservations are released and held orders get another go. A customer's cancellation arrives under <span class="ui">Approvals</span> and is applied when you approve it. An order that is already being picked cannot be cancelled here.</p>
   <div class="rule"><b>Rules</b><p>Support can see orders but not change them. A customer's own order number is unique per customer, so importing the same file twice never duplicates orders.</p></div>
+
+  <h3>Delivery details that will not pass the label</h3>
+  <p>Open an order and look at the <span class="ui">Ship to</span> card. If the name, phone, postal code or street would be refused by the carrier, a red box lists every problem in plain words (for example "The recipient phone must be a Polish number with 9 digits"). The same box shows the carrier's reason when a label attempt failed.</p>
+  <ol class="steps">
+    <li>Click <span class="ui">Edit details</span> to correct them yourself. The same rules apply as for a new order, and a refusal is shown inside the form. Phone, postal code and country are tidied automatically.</li>
+    <li>Or click <span class="ui">Ask the customer to correct it</span>. The text is filled in from the problems; change it if you like and click <span class="ui">Send email</span>. The owner of the customer account gets an email with the problem and the current details, and the order shows the same note in their <span class="ui">Orders</span> tab.</li>
+    <li>When they reply, click <span class="ui">Edit details</span> and save. That clears their note. Then create the label again.</li>
+  </ol>
+  <p>You can edit until a label is bought; once it is, the details are locked because the label would no longer match. Nothing is charged for a failed attempt. Admin and Warehouse can edit and ask; Support can only see the problems.</p>
 </section>
 
 <section id="s-pickpack">
@@ -342,7 +351,7 @@
   </ul>
   <h3>When something goes wrong</h3>
   <ul>
-    <li><b>"Furgonetka rejected the shipment: …"</b> The address or parcel data is not accepted (often a missing phone or a wrong postal code). Nothing was charged. New orders cannot be created without a first name and surname, a 9-digit Polish phone, a house number and a valid postal code, so this only happens with older orders: ask the customer to cancel and re-create it.</li>
+    <li><b>"Furgonetka rejected the shipment: …"</b> The address or parcel data is not accepted (often a missing phone or a wrong postal code). Nothing was charged. New orders cannot be created without a first name and surname, a 9-digit Polish phone, a house number and a valid postal code, so this mostly happens with older orders. Open the order: the <span class="ui">Ship to</span> card lists what is wrong. Click <span class="ui">Edit details</span> to fix it yourself, or <span class="ui">Ask the customer to correct it</span> (see section 13).</li>
     <li><b>"Waiting to be checked":</b> Furgonetka did not confirm in time. It may have been charged, so <b>do not buy again</b>. Press <span class="ui">Check the label order</span>: it records the label if it was bought, or closes the attempt if it was not.</li>
     <li><b>Goods no longer at the packing station:</b> someone moved them. Put them back before buying.</li>
   </ul>

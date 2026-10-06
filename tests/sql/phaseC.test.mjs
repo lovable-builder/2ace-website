@@ -191,6 +191,41 @@ ok('final invariants hold: reserved within on hand, equal to active allocations'
   ok('a five-digit Polish postal code gets its dash, and a Polish name with accents is accepted', (await chk({ postal: '05090', name: 'Zażółć Gęślą-Jaźń' }))?.postal === '05-090' && (await chk({ name: 'Łukasz Żółć' }))?.name === 'Łukasz Żółć');
   ok('a German order with a plain phone and no house number rule still passes', (await chk({ country: 'DE', phone: '+49 30 1234567', postal: '10115', line1: 'Hauptstrasse' }))?.phone === '4930 1234567'.replace(' ', ''));
 }
+
+// ---- fixing an order that would not pass the shipping label ----
+{
+  const mkOrder = async (ext) => (await order(ua, 'aal1', orgA, ext, [{ product_id: S1, qty: 1 }])).rows[0].r.id;
+  const OE = await mkOrder('FIX-1');
+  await db.query(`update public.orders set ship_name='Jan', ship_phone='6081809461', ship_postal='0001', ship_line1='Prosta' where id=$1`, [OE]);   // an old order made before the rules existed
+  const probsRes = await W(`select public.order_ship_problems($1) p`, [OE]); const probs = probsRes.rows?.[0]?.p ?? [];
+  ok('every problem with the stored details is listed, in plain words', probs.length === 4 && probs.some((x) => /first name and a surname/.test(x) && x.includes('"Jan"')) && probs.some((x) => /9 digits/.test(x) && x.includes('6081809461')) && probs.some((x) => /00-001/.test(x)) && probs.some((x) => /house number/.test(x)), JSON.stringify(probsRes));
+  ok('support may look at the problems, a customer may not', (await call(support, 'aal2', `select public.order_ship_problems($1) p`, [OE])).rows?.[0]?.p?.length === 4 && !!(await call(ua, 'aal1', `select public.order_ship_problems($1)`, [OE])).err);
+  const good = { name: 'Jan Kowalski', company: 'Acme', email: 'jan@example.pl', phone: '+48 608 180 946', line1: 'Prosta 12', line2: '', postal: '00001'.slice(0, 2) + '-001', city: 'Warszawa', country: 'pl' };
+  ok('a customer cannot edit an order through the database, nor can support', !!(await call(ua, 'aal1', `select public.update_order_ship($1,$2::jsonb)`, [OE, JSON.stringify(good)])).err && !!(await call(support, 'aal2', `select public.update_order_ship($1,$2::jsonb)`, [OE, JSON.stringify(good)])).err);
+  ok('the same rules apply as for a new order: a bad name, phone or postal code is refused and nothing changes', /first name and surname/.test((await W(`select public.update_order_ship($1,$2::jsonb)`, [OE, JSON.stringify({ ...good, name: 'Jan' })])).err ?? '') && /9 digits/.test((await W(`select public.update_order_ship($1,$2::jsonb)`, [OE, JSON.stringify({ ...good, phone: '123' })])).err ?? '')
+    && /city is required/.test((await W(`select public.update_order_ship($1,$2::jsonb)`, [OE, JSON.stringify({ ...good, city: '' })])).err ?? '') && (await one(`select ship_name from public.orders where id=$1`, [OE]))[0].ship_name === 'Jan');
+  // ask the customer, then fix
+  ok('asking the customer is recorded on the order, with who and when', !(await W(`select public.mark_details_requested($1,'Please send the full name and a 9-digit phone')`, [OE])).err && (await one(`select details_request_note n, details_requested_at is not null a, details_requested_by is not null b from public.orders where id=$1`, [OE]))[0].n === 'Please send the full name and a 9-digit phone');
+  ok('the customer can read why we asked, but cannot change it', (await call(ua, 'aal1', `select details_request_note n from public.orders where id=$1`, [OE])).rows?.[0]?.n?.startsWith('Please send') && !(await call(ua, 'aal1', `update public.orders set details_request_note='x' where id=$1 returning id`, [OE])).rows?.length);
+  ok('a customer cannot mark requests either', !!(await call(ua, 'aal1', `select public.mark_details_requested($1,'x')`, [OE])).err);
+  const fixed = await W(`select public.update_order_ship($1,$2::jsonb) r`, [OE, JSON.stringify(good)]);
+  const row = (await one(`select ship_name, ship_phone, ship_postal, ship_country, ship_company, ship_email, details_requested_at, details_request_note from public.orders where id=$1`, [OE]))[0];
+  ok('warehouse staff can correct the details; phone, postal code and country are stored cleaned', !!fixed.rows && row.ship_name === 'Jan Kowalski' && row.ship_phone === '608180946' && row.ship_postal === '00-001' && row.ship_country === 'PL' && row.ship_company === 'Acme' && row.ship_email === 'jan@example.pl');
+  ok('saving the corrected details clears the request, and the problems list is now empty', row.details_requested_at === null && row.details_request_note === null && (await W(`select public.order_ship_problems($1) p`, [OE])).rows[0].p.length === 0);
+  const aud = (await one(`select action from public.audit_log where entity_id=$1 order by id`, [OE])).map((x) => x.action);
+  ok('both steps are in the audit log', aud.includes('order.request_details') && aud.includes('order.edit_ship'), JSON.stringify(aud));
+  // when a label is already bought, or the order is over, the details are locked
+  await db.query(`update public.orders set status='packed' where id=$1`, [OE]);
+  await db.query(`insert into public.shipments (order_id, org_id, status, env, service_id, cost_net, cost_gross, markup_percent, bill_net, bill_gross) values ($1,$2,'purchased','sandbox',1,10,12.3,30,13,16)`, [OE, orgA]);
+  ok('once a label is bought the details cannot be changed (the label would no longer match)', /label has already been bought/.test((await W(`select public.update_order_ship($1,$2::jsonb)`, [OE, JSON.stringify(good)])).err ?? ''));
+  await db.query(`update public.shipments set status='failed' where order_id=$1`, [OE]);
+  ok('a failed label attempt does not lock them', !!(await W(`select public.update_order_ship($1,$2::jsonb) r`, [OE, JSON.stringify({ ...good, city: 'Kraków' })])).rows);
+  await db.query(`update public.orders set status='shipped' where id=$1`, [OE]);
+  ok('a shipped order cannot be edited or asked about', /shipped/.test((await W(`select public.update_order_ship($1,$2::jsonb)`, [OE, JSON.stringify(good)])).err ?? '') && /shipped/.test((await W(`select public.mark_details_requested($1,'x')`, [OE])).err ?? ''));
+  ok('anonymous visitors cannot call any of them', !!(await asAnon(`select public.update_order_ship('${OE}','{}'::jsonb)`)).err && !!(await asAnon(`select public.order_ship_problems('${OE}')`)).err);
+  const lst = (await one(`select public.wms_ship_problems('{"name":"Li Wei","line1":"Hauptstrasse","postal":"10115","city":"Berlin","country":"DE","phone":"+49 30 1234567"}'::jsonb) p`))[0].p;
+  ok('a good German address has no problems, and the house number rule is only for Poland', Array.isArray(lst) && lst.length === 0);
+}
 await db.exec('rollback');
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

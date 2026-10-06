@@ -61,7 +61,7 @@ async function autoLabel(orderId) {
     if (!r.ok) return { text: '. No label created automatically: ' + (out.error || 'something went wrong') + '. Create it from the admin panel.', bad: true };
     if (out.status === 'bought') return { text: '. Label bought: ' + out.service + (out.shipment && out.shipment.tracking_numbers && out.shipment.tracking_numbers.length ? ', tracking ' + out.shipment.tracking_numbers.join(', ') : '') + '. Print it from the admin panel.', bad: false };
     if (out.status === 'skipped') return { text: out.reason === 'off' ? '. Ready for its label' : '. ' + out.message, bad: false };
-    return { text: '. No label created automatically: ' + (out.message || 'a person needs to check') + ' Create it from the admin panel.', bad: true };
+    return { text: '. No label created automatically: ' + (out.message || 'a person needs to check') + ' Create it from the admin panel.' + (/rejected|receiver|recipient|phone|postal|post code|street|name/i.test(out.message || '') ? ' If the delivery details are wrong, you can edit them there or ask the customer to correct them.' : ''), bad: true };
   } catch { return { text: '. No label created automatically (no connection). Create it from the admin panel.', bad: true }; }
 }
 

@@ -54,13 +54,14 @@ async function detail(ctx, root, id) {
   const orgs = await loadOrgs(ctx);
   const o = (await ctx.sb.from('orders').select('*').eq('id', id).maybeSingle()).data;
   if (!o) return clear(root).append(el('p', { class: 'err', text: 'Order not found.' }), el('button', { class: 'btn ghost', onclick: () => ctx.go('orders'), text: 'Back' }));
-  const [ln, al, cr, pc, sh, ol] = await Promise.all([
+  const [ln, al, cr, pc, sh, ol, pr] = await Promise.all([
     ctx.sb.from('order_lines').select('id, qty, products(sku, name)').eq('order_id', id),
     ctx.sb.from('allocations').select('order_line_id, qty, status, lot, locations!location_id(code)').eq('order_id', id),
     ctx.sb.from('change_requests').select('summary, status').eq('entity_id', id).eq('status', 'pending'),
     ctx.sb.from('parcels').select('seq, weight_g, length_cm, width_cm, height_cm, packed_at').eq('order_id', id).order('seq'),
     ctx.sb.from('shipments').select('*').eq('order_id', id).order('created_at', { ascending: false }),
     ctx.sb.from('own_labels').select('*').eq('order_id', id).is('voided_at', null).maybeSingle(),
+    ctx.sb.rpc('order_ship_problems', { p_order: id }),
   ]);
   const act = canAct(ctx), reload = () => detail(ctx, root, id);
   const where = (lineId) => (al.data || []).filter((a) => a.order_line_id === lineId && a.status !== 'released').map((a) => `${a.locations.code} × ${a.qty} (${a.status === 'picked' ? 'picked' : 'to pick'})`).join(', ') || '-';
@@ -75,11 +76,52 @@ async function detail(ctx, root, id) {
     o.status === 'held' && el('div', { class: 'rule' }, el('b', { text: 'On hold' }), el('p', { text: o.hold_reason || 'Not enough stock.' }), el('p', { class: 'muted', text: 'Nothing is reserved. It reserves itself when stock is put away in a bin, or use "Try to reserve now". If a picker reported a problem, return the picked items from the packing station to the shelf and count the bin first.' })),
     el('div', { class: 'cols' },
       el('section', { class: 'card' }, el('h2', { text: 'Order' }), kv([['Customer', orgName(orgs, o.org_id)], ['Their reference', o.external_ref], ['Channel', o.channel], ['Created', fmtDate(o.created_at)], ['Reserved', o.allocated_at ? fmtDate(o.allocated_at) : null], ['Notes', o.notes]])),
-      el('section', { class: 'card' }, el('h2', { text: 'Ship to' }), kv([['Name', o.ship_name], ['Company', o.ship_company], ['Address', [o.ship_line1, o.ship_line2].filter(Boolean).join(', ')], ['Postal code and city', `${o.ship_postal} ${o.ship_city}`], ['Country', o.ship_country], ['Email', o.ship_email], ['Phone', o.ship_phone]]))),
+      shipToCard(ctx, o, (pr && pr.data) || [], (sh.data || []), act, reload)),
     el('section', { class: 'card' }, el('h2', { text: 'Items' }), table([{ label: 'Product', render: (l) => `${l.products.sku} - ${l.products.name}` }, { label: 'Units', render: (l) => String(l.qty) }, { label: 'Reserved at', render: (l) => where(l.id) }], ln.data || [])),
     (pc.data || []).length > 0 && el('section', { class: 'card' }, el('h2', { text: 'Parcels' }), table([{ label: '#', render: (p) => String(p.seq) }, { label: 'Weight', render: (p) => (p.weight_g / 1000).toLocaleString('en-GB', { minimumFractionDigits: 1, maximumFractionDigits: 3 }) + ' kg' }, { label: 'Size', render: (p) => `${Number(p.length_cm)} × ${Number(p.width_cm)} × ${Number(p.height_cm)} cm` }, { label: 'Packed', render: (p) => fmtDate(p.packed_at) }], pc.data)),
     shippingCard(ctx, o, sh.data || [], act, reload, ol.data || null));
 }
+
+
+// The delivery details, with what is wrong with them for a shipping label, a way to correct them, and a way to ask the customer.
+const EDITABLE = ['new', 'held', 'allocated', 'picking', 'packed'];
+function shipToCard(ctx, o, problems, shipments, act, reload) {
+  const live = shipments.find((s) => s.status === 'purchased' || s.status === 'buying'), last = shipments[0];
+  const editable = act && EDITABLE.includes(o.status) && !live;
+  const card = el('section', { class: 'card' }, el('h2', { text: 'Ship to' }), kv([['Name', o.ship_name], ['Company', o.ship_company], ['Address', [o.ship_line1, o.ship_line2].filter(Boolean).join(', ')], ['Postal code and city', `${o.ship_postal} ${o.ship_city}`], ['Country', o.ship_country], ['Email', o.ship_email], ['Phone', o.ship_phone]]));
+  const failed = last && last.status === 'failed' && last.error && !live ? last.error : '';
+  if (EDITABLE.includes(o.status) && !live && (problems.length || failed)) {
+    card.append(el('div', { class: 'rule' }, el('b', { text: problems.length ? 'These details will not pass the shipping label' : 'The last label attempt failed' }),
+      problems.length ? el('ul', {}, problems.map((m) => el('li', { text: m }))) : null, failed && !problems.length ? el('p', { text: failed }) : null));
+  }
+  if (live) card.append(el('p', { class: 'muted', text: 'A label is already bought for these details, so they cannot be changed here.' }));
+  if (o.details_requested_at && EDITABLE.includes(o.status)) card.append(el('p', { class: 'muted', text: 'We asked the customer for a correction on ' + fmtDate(o.details_requested_at) + (o.details_request_note ? ': "' + o.details_request_note.slice(0, 160) + (o.details_request_note.length > 160 ? '…' : '') + '"' : '') }));
+  if (editable) card.append(el('div', { class: 'row' }, el('button', { class: 'btn tiny', text: 'Edit details', onclick: () => editShip(ctx, o, reload) }),
+    el('button', { class: 'btn tiny ghost', text: o.details_requested_at ? 'Ask the customer again' : 'Ask the customer to correct it', onclick: () => askCustomer(ctx, o, problems, failed, reload) })));
+  return card;
+}
+
+const editShip = (ctx, o, reload) => modal('Edit the delivery details of ' + o.ref, (body, done) => {
+  const f = { name: el('input', { value: o.ship_name || '', placeholder: 'First name and surname' }), company: el('input', { value: o.ship_company || '' }), email: el('input', { type: 'email', value: o.ship_email || '' }), phone: el('input', { value: o.ship_phone || '', placeholder: '9 digits for Poland' }),
+    line1: el('input', { value: o.ship_line1 || '', placeholder: 'Street and house number' }), line2: el('input', { value: o.ship_line2 || '' }), postal: el('input', { value: o.ship_postal || '', placeholder: '00-001' }), city: el('input', { value: o.ship_city || '' }), country: el('input', { value: o.ship_country || 'PL', maxlength: '2', style: 'width:70px' }) };
+  const err = el('p', { class: 'err' });
+  const save = el('button', { class: 'btn', text: 'Save', onclick: () => guarded(save, err, async () => {
+    await rpc(ctx, 'update_order_ship', { p_order: o.id, p_ship: Object.fromEntries(Object.entries(f).map(([k, v]) => [k, v.value])) });
+    toast('Details saved'); done(true);
+  }) });
+  body.append(el('p', { class: 'muted', text: 'The same rules as a new order: first name and surname, a 9-digit Polish phone, the house number, a valid postal code. Customers can see this order, so only correct what is wrong.' }),
+    field('Recipient (first name and surname)', f.name), field('Company', f.company), el('div', { class: 'row' }, field('Email', f.email), field('Phone', f.phone)), field('Street and house number', f.line1), field('Second address line', f.line2),
+    el('div', { class: 'row' }, field('Postal code', f.postal), field('City', f.city), field('Country', f.country)), err, el('div', { class: 'row end' }, el('button', { class: 'btn ghost', onclick: () => done(null), text: 'Cancel' }), save));
+}).then((ok) => { if (ok) reload(); });
+
+const askCustomer = (ctx, o, problems, failed, reload) => modal('Ask the customer to correct ' + o.ref, (body, done) => {
+  const first = problems.length ? problems.join('\n') : failed ? 'The carrier did not accept the delivery details: ' + failed : '';
+  const msg = el('textarea', { rows: '6', 'aria-label': 'What to correct', placeholder: 'What needs to be corrected, in plain words' }); msg.value = first;
+  const err = el('p', { class: 'err' });
+  const send = el('button', { class: 'btn', text: 'Send email', onclick: () => guarded(send, err, async () => { const r = await ctx.api('order.requestDetails', { order_id: o.id, message: msg.value }); toast('Emailed to ' + r.to); done(true); }) });
+  body.append(el('p', { class: 'muted', text: 'The owner of the customer account gets an email with this text and the current details. They reply with the correction, you click Edit details, and the label can be made. Nothing is charged.' }),
+    field('What to correct', msg), err, el('div', { class: 'row end' }, el('button', { class: 'btn ghost', onclick: () => done(null), text: 'Cancel' }), send));
+}).then((ok) => { if (ok) reload(); });
 
 const pln = (n) => Number(n).toFixed(2).replace('.', ',') + ' zł';
 

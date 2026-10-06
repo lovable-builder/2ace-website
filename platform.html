@@ -915,6 +915,7 @@
                     <span style="color: rgba(11,12,14,0.65); font-size: 14px;">{{ o.who }} · {{ o.when }} {{ o.their }}</span>
                     <span style="color: rgba(11,12,14,0.65); font-size: 13px;">{{ o.items }}</span>
                     <span style="display: {{ o.reasonDisplay }}; font-size: 14px; color: #8A5A10;">{{ o.reason }}</span>
+                    <span style="display: {{ o.askDisplay }}; font-size: 14px; color: #B4442E; white-space: pre-wrap;">We need a correction before we can ship this order: {{ o.ask }} Please reply to our email, or write to hello@2ace.pl.</span>
                     <span style="display: {{ o.pendDisplay }}; font-size: 14px; color: #8A5A10;">Waiting for approval: {{ o.pendText }} <button onClick="{{ o.onCancelReq }}" style="border: 0; background: none; cursor: pointer; text-decoration: underline; color: #0B0C0E; font-size: 14px;">Cancel request</button></span>
                     <span style="display: {{ o.rejDisplay }}; font-size: 14px; color: #B4442E;">Last request declined: {{ o.rejText }}</span>
                     <div style="margin-top: 6px;"><button onClick="{{ o.onCancel }}" style="cursor: pointer; min-height: 38px; padding: 8px 14px; border: 1px solid rgba(11,12,14,0.3); border-radius: 3px; background: transparent; color: #0B0C0E; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; display: {{ o.cancelDisplay }}; color: #B4442E; border-color: #B4442E;">Request cancellation</button> <button onClick="{{ o.onShip }}" style="display: {{ o.shipDisplay }}; cursor: pointer; min-height: 38px; padding: 8px 14px; border: 1px solid #0B0C0E; border-radius: 3px; background: transparent; color: #0B0C0E; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;">{{ o.shipLabel }}</button></div>
@@ -1247,7 +1248,9 @@ class Component extends DCLogic {
         this.whGet('discrepancies?select=booking_id,kind,expected_qty,received_qty,products(sku)&order=created_at'),
         this.whGet('receipt_lines?select=booking_id,photo_paths&condition=eq.damaged'),
         this.whGet('change_requests?select=id,entity_id,summary,status,decision_note&order=requested_at.desc&limit=200'),
-        this.whGet('orders?select=id,ref,external_ref,status,label_source,hold_reason,ship_name,ship_city,ship_country,created_at,shipped_at,order_lines(qty,products(sku,name))&order=created_at.desc&limit=100')
+        // the correction note needs the latest database update; until it is applied, load the orders without it so the list never breaks
+        this.whGet('orders?select=id,ref,external_ref,status,label_source,hold_reason,details_request_note,ship_name,ship_city,ship_country,created_at,shipped_at,order_lines(qty,products(sku,name))&order=created_at.desc&limit=100')
+          .catch(() => this.whGet('orders?select=id,ref,external_ref,status,label_source,hold_reason,ship_name,ship_city,ship_country,created_at,shipped_at,order_lines(qty,products(sku,name))&order=created_at.desc&limit=100'))
       ]);
       const changes = {}; chg.forEach((c) => { if (!changes[c.entity_id] && (c.status === 'pending' || c.status === 'rejected')) changes[c.entity_id] = c; else if (!changes[c.entity_id]) changes[c.entity_id] = { status: 'done' }; });
       const map = {}; codes.forEach((c) => { (map[c.product_id] = map[c.product_id] || []).push(c.barcode); });
@@ -1889,7 +1892,7 @@ class Component extends DCLogic {
       orderRows: s.whOrders.map((o) => { const ch = s.whChanges[o.id] || {}; const cancellable = ['new', 'held', 'allocated'].includes(o.status) && ch.status !== 'pending'; return { ref: o.ref, their: o.external_ref ? 'Your reference ' + o.external_ref : '', who: o.ship_name + ', ' + o.ship_city + ' ' + o.ship_country, items: (o.order_lines || []).map((l) => l.products.sku + ' × ' + l.qty).join(', '),
         when: new Date(o.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }),
         status: { new: 'Received', held: 'On hold, not enough stock', allocated: 'Reserved, waiting to be picked', picking: 'Being picked', packed: 'Packed', shipped: 'Shipped', cancelled: 'Cancelled' }[o.status] || o.status,
-        color: o.status === 'held' ? '#8A5A10' : o.status === 'cancelled' ? 'rgba(11,12,14,0.5)' : '#2F7D55', reason: o.status === 'held' ? (o.hold_reason || '') : '', reasonDisplay: o.status === 'held' ? 'block' : 'none',
+        color: o.status === 'held' ? '#8A5A10' : o.status === 'cancelled' ? 'rgba(11,12,14,0.5)' : '#2F7D55', reason: o.status === 'held' ? (o.hold_reason || '') : '', reasonDisplay: o.status === 'held' ? 'block' : 'none', ask: o.details_request_note || '', askDisplay: o.details_request_note && ['new', 'held', 'allocated', 'picking', 'packed'].includes(o.status) ? 'block' : 'none',
         cancelDisplay: cancellable ? 'inline-block' : 'none', onCancel: () => this.oCancel(o),
         pendDisplay: ch.status === 'pending' ? 'block' : 'none', pendText: ch.summary || '', onCancelReq: () => this.whCancelRequest(ch.id), rejDisplay: ch.status === 'rejected' ? 'block' : 'none', rejText: ch.decision_note || 'Declined',
         ...(() => {
