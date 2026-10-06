@@ -20,7 +20,9 @@ export async function render(ctx, root) {
     ctx.sb.from('booking_settings').select('*'),
     ctx.sb.from('booking_runs').select('ran_at, sent').eq('key', 'reminders').maybeSingle(),
   ]);
-  if (ap.error) return clear(root).append(el('h1', { text: 'Appointments' }), el('p', { class: 'err', text: ap.error.message }));
+  const missing = [ap.error, st.error, run.error].find((e) => e && /schema cache|does not exist|relation/i.test(e.message));
+  if (missing) return clear(root).append(el('h1', { text: 'Appointments' }), el('div', { class: 'rule' }, el('b', { text: 'The booking tables are missing from the database' }), el('p', { text: 'The latest database update has not been applied yet, so nothing can be booked. Run this in Terminal from the website folder, then refresh this page:' }), el('pre', { text: "SUPABASE_DB_PASSWORD='your-password' supabase db push --yes" }), el('p', { class: 'muted', text: missing.message })));
+  if (ap.error || st.error || run.error) return clear(root).append(el('h1', { text: 'Appointments' }), el('p', { class: 'err', text: (ap.error || st.error || run.error).message }));
   const all = ap.data || [], settings = st.data || [];
   const isAdmin = ctx.me.role === 'admin';
   let tab = 'upcoming';

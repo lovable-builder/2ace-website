@@ -61,4 +61,10 @@ await render(ctx('support'), root()); await tick();
 ok('support sees the bookings but not the settings', /APT-000001/.test(text()) && !/Booking settings/.test(text()));
 DB.booking_runs = null; DB.booking_settings = []; await render(ctx(), root()); await tick();
 ok('with no reminder run and no open language the page says so plainly', /Reminders are not running/.test(text()) && /has not run yet/.test(text()) && /No meeting language is open yet/.test(text()));
+// ---- the database update was never applied ----
+{ const mk = (msg) => ({ from: () => { const q = new Proxy({}, { get(_, k) { if (k === 'then') return (res) => res({ data: null, error: { message: msg } }); return () => q; } }); return q; } });
+  await render({ ...ctx(), sb: mk("Could not find the table 'public.appointments' in the schema cache") }, root()); await tick();
+  ok('missing tables are said plainly, with the command to run, and the page does not hang on Loading', /booking tables are missing/.test(text()) && /supabase db push --yes/.test(text()) && !/Loading…/.test(text()), text().slice(0, 300));
+  await render({ ...ctx(), sb: mk('permission denied for table appointments') }, root()); await tick();
+  ok('any other database error is shown as it is', /permission denied/.test(text()) && !/Loading…/.test(text())); }
 console.log(`\n${pass} passed, ${fail} failed`); process.exit(fail ? 1 : 0);

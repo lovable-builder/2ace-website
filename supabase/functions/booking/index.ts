@@ -29,7 +29,8 @@ const rpcFail = (e: { message: string }): never => { throw new Bad(e.message, /j
 const actions: Record<string, (b: Record<string, unknown>) => Promise<unknown>> = {
   // Which languages can be booked right now, with the length of a call. Nothing private (no emails, no links).
   config: async () => {
-    const { data } = await admin.from('booking_settings').select('lang, enabled, windows, slot_minutes, tz');
+    const { data, error } = await admin.from('booking_settings').select('lang, enabled, windows, slot_minutes, tz');
+    if (error) { console.error('booking config', error.message); throw new Bad('Online booking is being set up. Please write to hello@2ace.pl.', 503); }
     return { languages: (data ?? []).filter((r) => r.enabled && Array.isArray(r.windows) && r.windows.length).map((r) => ({ lang: r.lang, minutes: r.slot_minutes })) };
   },
   slots: async (b) => {
