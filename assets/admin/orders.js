@@ -128,6 +128,17 @@ function shippingCard(ctx, o, shipments, act, reload, own) {
   card.append(el('p', { class: 'muted', text: 'Prices come from the carriers for these parcels. Getting prices is free; nothing is bought until you press Buy.' }));
   if (!act) return card.append(el('p', { class: 'muted', text: 'Only warehouse staff and admins can buy labels.' })), card;
   const quoteBtn = el('button', { class: 'btn', text: 'Get shipping prices' });
+  // One click: the cheapest carrier that takes the parcel, within the usual limits (what happens by itself after packing when automatic labels are on).
+  const autoBtn = el('button', { class: 'btn ghost', text: 'Create the cheapest label', title: 'Buys the cheapest carrier that can take this parcel, within the limits' });
+  autoBtn.onclick = async () => {
+    autoBtn.disabled = true; err.textContent = '';
+    try {
+      const r = await ctx.api('shipping.auto', { order_id: o.id });
+      if (r.status === 'bought') { toast('Label bought: ' + r.service); reload(); return; }
+      if (r.status === 'skipped' && r.reason === 'off') { err.textContent = 'Automatic labels are switched off (SHIPPING_AUTO_LABEL). Use "Get shipping prices" instead, or ask an admin to switch it on.'; }
+      else err.textContent = r.message || 'It could not create a label.';
+    } catch (e) { err.textContent = e.message; } finally { autoBtn.disabled = false; }
+  };
   const buy = async (q, r, btn) => {
     const over = q.cost_gross > r.max_label;
     const msg = `${q.name}. We pay ${pln(q.cost_net)} + VAT (${pln(q.cost_gross)}). The customer is charged ${pln(q.bill_net)} + VAT (${r.markup_percent}% markup).` + (r.env === 'sandbox' ? ' This is the test environment: nothing real is charged.' : ' This spends real money from the Furgonetka balance.') + (over ? ` This is above the usual limit of ${pln(r.max_label)} per label.` : '');
@@ -148,6 +159,6 @@ function shippingCard(ctx, o, shipments, act, reload, own) {
         { label: 'Customer pays (net)', render: (q) => (q.available ? pln(q.bill_net) : '-') },
         { label: '', render: (q) => (q.available ? el('button', { class: 'btn tiny', text: 'Buy label', onclick: (e) => buy(q, r, e.currentTarget) }) : '') }], r.quotes));
   });
-  card.append(el('div', { class: 'row' }, quoteBtn), err, out);
+  card.append(el('div', { class: 'row' }, quoteBtn, autoBtn), err, out);
   return card;
 }

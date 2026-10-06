@@ -7,6 +7,7 @@ import { STAFF_GUIDE, OWNER_GUIDE } from '../_shared/helpContent.ts';
 import { notifyHeld } from '../_shared/orderNotice.ts';
 import { Furgonetka, FurgonetkaError, OrderPending, configFromEnv, fieldErrors, type TokenStore } from '../_shared/furgonetka.ts';
 import { buyLabel, ShipError } from '../_shared/shipBuy.ts';
+import { autoLabel } from '../_shared/autoLabel.ts';
 import { buildPackage, parseQuotes, markupFor, customerNet, customerGross, spendCheck, settingNum, carriersFrom, warsawDayStart, extractTracking, DEFAULT_MARKUP_PERCENT, DEFAULT_MAX_LABEL_PLN, DEFAULT_DAILY_CAP_PLN, type OrderShip, type ParcelRow } from '../_shared/shipping.ts';
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!);
@@ -86,6 +87,27 @@ async function finishShipment(s: StaffCtx, shipmentId: string, packageId: string
   throw new Bad(last);
 }
 
+// Buys one label for a packed order through the tested purchase flow. Throws ShipError (or Bad when the order is not ready).
+async function buyService(s: StaffCtx, orderId: unknown, serviceId: number, confirmOverLimit: boolean) {
+  const { order, parcels } = await packedOrder(orderId);
+  const api = shippingApi(), db = userClient(s.token), pct = await orgMarkup(order.org_id);
+  return await buyLabel({
+      env: api.env, api,
+      settings: { enabled: env('SHIPPING_ENABLED') === 'true', maxLabel: settingNum(env, 'SHIPPING_MAX_LABEL_PLN', DEFAULT_MAX_LABEL_PLN, 0), dailyCap: settingNum(env, 'SHIPPING_DAILY_CAP_PLN', DEFAULT_DAILY_CAP_PLN, 0), markupPct: pct },
+      spentToday: () => spentToday(api.env),
+      begin: async (a) => {
+        const { data, error } = await db.rpc('begin_shipment', { p_order: order.id, p_env: api.env, p_service_id: a.serviceId, p_carrier: a.quote.carrier, p_service_name: a.quote.name, p_cost_net: a.quote.cost_net, p_cost_gross: a.quote.cost_gross, p_tax: a.quote.tax, p_markup: a.markupPct });
+        if (error) throw new Error(error.message);
+        return data as { id: string; order_uuid: string };
+      },
+      fail: async (id, m) => { const { error } = await db.rpc('fail_shipment', { p_id: id, p_error: m }); if (error) throw new Error(error.message); },
+      savePackageId: async (id, pkg) => { await admin.from('shipments').update({ provider_package_id: pkg }).eq('id', id); },
+      finish: (id, pkg, tr) => finishShipment(s, id, pkg, tr),
+      alert: shippingAlert,
+      audit: (action, id, payload) => audit(s, action, 'shipments', id, order.org_id, null, payload),
+    }, { order, parcels, serviceId, role: s.role, confirmOverLimit });
+}
+
 const actions: Record<string, { roles?: StaffRole[]; run: (s: StaffCtx, b: Record<string, unknown>) => Promise<unknown> }> = {
   me: { run: async (s) => ({ id: s.user.id, role: s.role, email: s.user.email }) },
 
@@ -134,25 +156,24 @@ const actions: Record<string, { roles?: StaffRole[]; run: (s: StaffCtx, b: Recor
   'shipping.buy': { roles: ['admin', 'warehouse'], run: async (s, b) => {
     const serviceId = Number(b.service_id);
     if (!Number.isInteger(serviceId) || serviceId <= 0) throw new Bad('Choose a carrier service');
+    try { return await buyService(s, b.order_id, serviceId, b.confirm_over_limit === true); }
+    catch (e) { if (e instanceof ShipError) throw new Bad(e.message, e.status); throw e; }
+  } },
+
+  // Automatic label for a packed order: the cheapest carrier that takes it, within the same limits. Needs SHIPPING_AUTO_LABEL=true.
+  // Called by the scan page right after packing, and by a button on the order. It never overrides a limit.
+  'shipping.auto': { roles: ['admin', 'warehouse'], run: async (s, b) => {
     const { order, parcels } = await packedOrder(b.order_id);
-    const api = shippingApi(), db = userClient(s.token), pct = await orgMarkup(order.org_id);
-    try {
-      return await buyLabel({
-        env: api.env, api,
-        settings: { enabled: env('SHIPPING_ENABLED') === 'true', maxLabel: settingNum(env, 'SHIPPING_MAX_LABEL_PLN', DEFAULT_MAX_LABEL_PLN, 0), dailyCap: settingNum(env, 'SHIPPING_DAILY_CAP_PLN', DEFAULT_DAILY_CAP_PLN, 0), markupPct: pct },
-        spentToday: () => spentToday(api.env),
-        begin: async (a) => {
-          const { data, error } = await db.rpc('begin_shipment', { p_order: order.id, p_env: api.env, p_service_id: a.serviceId, p_carrier: a.quote.carrier, p_service_name: a.quote.name, p_cost_net: a.quote.cost_net, p_cost_gross: a.quote.cost_gross, p_tax: a.quote.tax, p_markup: a.markupPct });
-          if (error) throw new Error(error.message);
-          return data as { id: string; order_uuid: string };
-        },
-        fail: async (id, m) => { const { error } = await db.rpc('fail_shipment', { p_id: id, p_error: m }); if (error) throw new Error(error.message); },
-        savePackageId: async (id, pkg) => { await admin.from('shipments').update({ provider_package_id: pkg }).eq('id', id); },
-        finish: (id, pkg, tr) => finishShipment(s, id, pkg, tr),
-        alert: shippingAlert,
-        audit: (action, id, payload) => audit(s, action, 'shipments', id, order.org_id, null, payload),
-      }, { order, parcels, serviceId, role: s.role, confirmOverLimit: b.confirm_over_limit === true });
-    } catch (e) { if (e instanceof ShipError) throw new Bad(e.message, e.status); throw e; }
+    const api = shippingApi();
+    const result = await autoLabel({
+      enabled: env('SHIPPING_AUTO_LABEL') === 'true',
+      hasOwnLabel: async () => !!(await admin.from('own_labels').select('id').eq('order_id', order.id).is('voided_at', null).maybeSingle()).data,
+      hasActiveShipment: async () => !!(await admin.from('shipments').select('id').eq('order_id', order.id).in('status', ['buying', 'purchased']).limit(1).maybeSingle()).data,
+      candidates: async () => { try { return parseQuotes(await api.quote(buildPackage(order, parcels), { carriers: carriersFrom(env) })); } catch (e) { return shippingFail(e); } },
+      buy: (serviceId) => buyService(s, order.id, serviceId, false),
+    });
+    await audit(s, 'shipping.auto', 'orders', order.id, order.org_id, null, { order: order.ref, status: result.status, ...('reason' in result ? { reason: result.reason } : {}), ...('tried' in result ? { tried: result.tried } : {}) });
+    return result;
   } },
 
   // Asks Furgonetka what happened to an order whose answer never arrived (or whose record failed), and finishes or closes it.

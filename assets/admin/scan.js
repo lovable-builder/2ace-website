@@ -52,6 +52,19 @@ async function productPhoto(productId) {
 }
 
 // Tell the customer (and our inbox) about the differences, once. A failure here never undoes the receiving.
+// After packing, ask the server to buy the cheapest label (only if an admin switched automatic labels on). Never blocks packing: whatever happens, the order is packed.
+async function autoLabel(orderId) {
+  try {
+    const { data } = await sb.auth.getSession();
+    const r = await fetch(SUPABASE_URL + '/functions/v1/admin-api', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: ANON, Authorization: 'Bearer ' + data.session.access_token }, body: JSON.stringify({ action: 'shipping.auto', order_id: orderId }) });
+    const out = await r.json().catch(() => ({}));
+    if (!r.ok) return { text: '. No label created automatically: ' + (out.error || 'something went wrong') + '. Create it from the admin panel.', bad: true };
+    if (out.status === 'bought') return { text: '. Label bought: ' + out.service + (out.shipment && out.shipment.tracking_numbers && out.shipment.tracking_numbers.length ? ', tracking ' + out.shipment.tracking_numbers.join(', ') : '') + '. Print it from the admin panel.', bad: false };
+    if (out.status === 'skipped') return { text: out.reason === 'off' ? '. Ready for its label' : '. ' + out.message, bad: false };
+    return { text: '. No label created automatically: ' + (out.message || 'a person needs to check') + ' Create it from the admin panel.', bad: true };
+  } catch { return { text: '. No label created automatically (no connection). Create it from the admin panel.', bad: true }; }
+}
+
 async function notify(bookingId) {
   try {
     const { data } = await sb.auth.getSession();
@@ -211,7 +224,14 @@ async function packOrder(id, counts = {}, parcels = [{ kg: '', l: '', w: '', h: 
   });
   const finish = el('button', { class: 'btn big', text: 'Finish packing', onclick: async () => {
     const list = parcels.map((p) => ({ weight_g: Math.round(Number(p.kg) * 1000), length_cm: Number(p.l), width_cm: Number(p.w), height_cm: Number(p.h) }));
-    finish.disabled = true; try { const r = await rpc('pack_order', { p_order: id, p_parcels: list }); say(o.ref + ' packed in ' + r.parcels + ' parcel' + (r.parcels === 1 ? '' : 's') + '. Ready for its label'); packList(); } catch (e) { finish.disabled = false; say(e.message, true); } } });
+    finish.disabled = true;
+    try {
+      const r = await rpc('pack_order', { p_order: id, p_parcels: list });
+      const packed = o.ref + ' packed in ' + r.parcels + ' parcel' + (r.parcels === 1 ? '' : 's');
+      say(packed + '. Creating the label…');
+      const a = await autoLabel(id);
+      say(packed + a.text, a.bad); packList();
+    } catch (e) { finish.disabled = false; say(e.message, true); } } });
   shell(o.ref, () => again({}, parcels), to, el('div', { class: 'card' }, el('b', { text: 'Everything is in' }), el('small', { class: 'muted', text: 'Weigh and measure each parcel.' })), ...fields, el('button', { class: 'btn ghost', text: 'Add another parcel', onclick: () => again(counts, parcels.concat([{ kg: '', l: '', w: '', h: '' }])) }), finish);
 }
 

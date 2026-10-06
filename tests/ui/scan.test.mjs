@@ -13,7 +13,7 @@ const DB = { products: [{ id: 'p1', photo_paths: ['o1/p1/a.jpg'] }], staff_users
   stock_levels: [{ org_id: 'o1', product_id: 'p1', location_id: 'l1', lot: '', on_hand: 6, reserved: 0, locations: { code: 'R1', kind: 'receiving' } }] };
 const mkQuery = (table) => { const f = []; let one = false; const q = new Proxy({}, { get(_, k) { if (k === 'then') return (res) => { const r = (DB[table] || []).filter((row) => f.every((fn) => fn(row))); return res({ data: one ? (r[0] ?? null) : r, error: null }); }; return (...a) => { if (k === 'eq') f.push((row) => row[a[0]] === a[1]); else if (k === 'in') f.push((row) => a[1].includes(row[a[0]])); else if (k === 'maybeSingle') one = true; return q; }; } }); return q; };
 const rpcs = [];
-const uploads = []; const fetches = []; globalThis.fetch = async (u, o) => { fetches.push([String(u), JSON.parse(o.body)]); return { ok: true }; };
+const uploads = []; const fetches = []; globalThis.fetch = async (u, o) => { const b = JSON.parse(o.body); fetches.push([String(u), b]); if (b.action === 'shipping.auto' && globalThis.__auto) return globalThis.__auto(b); return { ok: true, json: async () => ({}) }; };
 const sb = { storage: { from: () => ({ createSignedUrl: async (p) => ({ data: { signedUrl: 'https://x/' + p } }), upload: async (p, b, o) => { uploads.push(p); return { error: null }; } }) }, auth: { getSession: async () => ({ data: { session: { user: { id: 'u' }, access_token: 'tok' } } }) }, from: mkQuery,
   rpc: async (n, a) => { rpcs.push([n, a]); const hook = (DB.__rpc || {})[n]; if (hook) { const r = hook(a); return r && r.__error ? { data: null, error: { message: r.__error } } : { data: r, error: null }; } if (n === 'wms_orgs') return { data: [{ id: 'o1', name: 'Acme' }], error: null };
     if (n === 'wms_lookup') { if (a.p_code === '590') return { data: { type: 'product', id: 'p1', org_id: 'o1', sku: 'SKU-1', name: 'Blue mug', ambiguous: false }, error: null }; if (a.p_code === 'A-01-01') return { data: { type: 'location', id: 'l2', code: 'A-01-01', kind: 'bin' }, error: null }; return { data: { type: 'none' }, error: null }; }
@@ -102,6 +102,35 @@ DB.__rpc.pack_order = () => ({ __error: 'Parcel 1: enter a weight between 1 g an
 await toHome(); await click('Pack'); await click('ORD-000002');
 { await scan('590'); await scan('590'); await scan('600'); const f = [...document.querySelectorAll('input[type=number]')]; f[0].value = '0'; f.forEach((i) => i.dispatchEvent(new window.Event('input'))); await click('Finish packing'); }
 ok('a server refusal is shown and the screen stays on the parcel form', /enter a weight between 1 g and 70 kg/.test(text()) && /Parcel 1/.test(text()));
+
+// ---------- automatic label right after packing ----------
+const packOne = async () => {
+  DB.__rpc.pack_order = (a) => ({ parcels: a.p_parcels.length, replayed: false }); rpcs.length = 0; fetches.length = 0;
+  await toHome(); await click('Pack'); await click('ORD-000002');
+  await scan('590'); await scan('590'); await scan('600');
+  const f = [...document.querySelectorAll('input[type=number]')]; f[0].value = '1.2'; f[1].value = '20'; f[2].value = '15'; f[3].value = '10'; f.forEach((i) => i.dispatchEvent(new window.Event('input')));
+  await click('Finish packing'); await tick(80);
+};
+const reply = (status, body) => () => ({ ok: status < 400, json: async () => body });
+globalThis.__auto = reply(200, { status: 'skipped', reason: 'off', message: 'Automatic labels are switched off.' });
+await packOne();
+ok('packing asks the server for an automatic label, for that order', fetches.some(([u, b]) => /admin-api$/.test(u) && b.action === 'shipping.auto' && b.order_id === 'od2') && rpcs.some(([n]) => n === 'pack_order'));
+ok('with automatic labels off the screen says what it always said', /ORD-000002 packed in 3 parcel|ORD-000002 packed in 1 parcel/.test(text()) && /Ready for its label/.test(text()) && !/No label created/.test(text()), text().slice(0, 200));
+globalThis.__auto = reply(200, { status: 'bought', service: 'DPD · package', shipment: { carrier: 'dpd', tracking_numbers: ['WB123', 'WB124'], cost_gross: 15.38 } });
+await packOne(); ok('when a label was bought it says which carrier, the tracking, and where to print it', /Label bought: DPD · package, tracking WB123, WB124\. Print it from the admin panel/.test(text()) && !document.querySelector('.msg.bad'), text().slice(0, 250));
+globalThis.__auto = reply(200, { status: 'needs_person', message: 'This label costs 95,00 zł, above the 80,00 zł limit per label. An admin has to confirm it.', tried: ['DPD'] });
+await packOne(); ok('when a limit stops it the order is still packed, the reason is shown as a warning, and staff are told what to do', /packed in/.test(text()) && /No label created automatically: This label costs 95,00 zł/.test(text()) && /Create it from the admin panel/.test(text()) && !!document.querySelector('.msg.bad'), text().slice(0, 300));
+globalThis.__auto = reply(200, { status: 'skipped', reason: 'own_label', message: "The customer provided their own label, so none is bought." });
+await packOne(); ok('an order with the customer\'s own label says so and shows no warning', /customer provided their own label/.test(text()) && !document.querySelector('.msg.bad'));
+globalThis.__auto = reply(403, { error: 'Buying labels is switched off. An admin turns it on with the server setting SHIPPING_ENABLED=true.' });
+await packOne(); ok('a refusal from the server is shown, and the order is still packed', /packed in/.test(text()) && /No label created automatically: Buying labels is switched off/.test(text()) && !!document.querySelector('.msg.bad'));
+globalThis.__auto = () => { throw new Error('offline'); };
+await packOne(); ok('no connection: the order is still packed and the message says to use the admin panel', /packed in/.test(text()) && /no connection/.test(text()) && !!document.querySelector('.msg.bad'));
+globalThis.__auto = reply(200, { status: 'bought', service: 'X', shipment: {} });
+DB.__rpc.pack_order = () => ({ __error: 'Not everything has been picked yet' }); fetches.length = 0;
+await toHome(); await click('Pack'); await click('ORD-000002'); await scan('590'); await scan('590'); await scan('600'); { const f = [...document.querySelectorAll('input[type=number]')]; f[0].value = '1'; f.forEach((i) => i.dispatchEvent(new window.Event('input'))); } await click('Finish packing'); await tick(60);
+ok('if packing itself fails, no label is ever requested', !fetches.some(([, b]) => b.action === 'shipping.auto') && /Not everything has been picked yet/.test(text()));
+globalThis.__auto = null;
 
 // ---------- receiving says where the goods went ----------
 await toHome(); DB.__rpc = { receive_line: () => ({ condition: 'good', receipt_id: 'rl9', location: 'ACME-01' }) };

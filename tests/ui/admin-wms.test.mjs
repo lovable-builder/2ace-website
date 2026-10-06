@@ -409,6 +409,24 @@ DB.own_labels = [{ ...ownLabel(), order_id: 'od3', storage_path: null }]; await 
 ok('an order that is not packed yet cannot be marked shipped, and says why', /can be marked shipped once the order is packed/.test(text()) && !btn('Mark shipped'));
 DB.own_labels = [];
 
+// ---- "Create the cheapest label": the same automation, on demand ----
+DB.own_labels = []; DB.shipments = [];
+await mount('orders', 'warehouse', ['od4']);
+ok('a packed order with no label offers the one-click cheapest label next to the price list', !!btn('Create the cheapest label') && !!btn('Get shipping prices'));
+await mount('orders', 'support', ['od4']); ok('support has neither', !btn('Create the cheapest label'));
+DB.__api = { 'shipping.auto': { status: 'bought', service: 'DPD · package', shipment: { carrier: 'dpd', tracking_numbers: ['WB1'] } } };
+await mount('orders', 'warehouse', ['od4']); apis.length = 0; btn('Create the cheapest label').click(); await tick(80);
+ok('it asks the server for that order and confirms the purchase', apis.some(([a, p]) => a === 'shipping.auto' && p.order_id === 'od4') && /Label bought: DPD · package/.test(document.body.textContent));
+DB.__api = { 'shipping.auto': { status: 'skipped', reason: 'off', message: 'Automatic labels are switched off.' } };
+await mount('orders', 'warehouse', ['od4']); btn('Create the cheapest label').click(); await tick(80);
+ok('when the switch is off it says exactly which setting and what to do instead, with no purchase', /SHIPPING_AUTO_LABEL/.test(text()) && /Get shipping prices/.test(text()) && !/Label bought/.test(document.body.textContent));
+DB.__api = { 'shipping.auto': { status: 'needs_person', message: 'This label costs 95,00 zł, above the 80,00 zł limit per label. An admin has to confirm it.', tried: ['DPD'] } };
+await mount('orders', 'warehouse', ['od4']); btn('Create the cheapest label').click(); await tick(80);
+ok('when a limit stops it the reason is shown and the button works again', /above the 80,00 zł limit/.test(text()) && !btn('Create the cheapest label').disabled);
+DB.__api = { 'shipping.auto': new Error('Only a packed order can be shipped (this one is picking)') };
+await mount('orders', 'warehouse', ['od4']); btn('Create the cheapest label').click(); await tick(80); ok('a server error is shown', /Only a packed order/.test(text()));
+DB.__api = {};
+
 // ---- overview ----
 DB.requests = []; DB.domain_orders = []; DB.organizations = [];
 await mount('home', 'warehouse'); ok('warehouse overview shows 4 warehouse cards', document.querySelectorAll('.stat').length === 7 && /Orders on hold/.test(text()) && /Changes to approve/.test(text()) && /Units to put away/.test(text()) && /10/.test(text()));

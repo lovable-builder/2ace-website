@@ -302,6 +302,16 @@
     <li>Click <span class="ui">Download label</span> and print it. Stick it on the parcel.</li>
   </ol>
   <div class="ex"><b>Example</b><p>ORD-000001 is one parcel of 1,8 kg. DPD costs us 12,50 zł net, so the customer is charged 16,25 zł net plus VAT. InPost shows "not available: Parcel too heavy". Marta buys the DPD label, prints it and hands the parcel to the courier.</p></div>
+  <h3>Automatic labels</h3>
+  <p>When an admin has switched automatic labels on, you do not buy the label yourself: after you tap <span class="ui">Finish packing</span> on the scan page the system buys the cheapest carrier that can take the parcel. The screen then says one of these:</p>
+  <ul>
+    <li><b>"Label bought: DPD…, tracking …. Print it from the admin panel."</b> Open the order in <span class="ui">Orders</span> and click <span class="ui">Download label</span>. The order is already marked shipped.</li>
+    <li><b>"Ready for its label"</b> (nothing else): automatic labels are off. Use <span class="ui">Get shipping prices</span> in the admin as before.</li>
+    <li><b>"No label created automatically: …"</b> in red: the packing is saved, but the label stopped (for example the label is above the limit or the balance is low). Read the reason, then use <span class="ui">Get shipping prices</span> or <span class="ui">Create the cheapest label</span> on the order.</li>
+    <li>If the customer brought their own label, nothing is bought and the screen says so.</li>
+  </ul>
+  <p>It tries up to three of the cheapest carriers if one refuses the parcel before any charge. It never buys twice: if a carrier does not confirm in time, it stops and an alert goes to the team.</p>
+  <div class="ex"><b>Example</b><p>Marta weighs ORD-000021 at 1,2 kg, 30 × 20 × 15 cm, and taps Finish packing. A few seconds later the phone says "Label bought: DPD · package, tracking WB123". She goes to her computer, opens the order, clicks Download label, prints and sticks it.</p></div>
   <h3>When the customer brought their own label</h3>
   <p>If the customer added their own label, the order's <span class="ui">Shipping label</span> card shows it instead of prices: carrier, tracking numbers, the file and "Charged: Nothing".</p>
   <ol class="steps">
