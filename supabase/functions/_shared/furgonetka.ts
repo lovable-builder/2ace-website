@@ -78,7 +78,7 @@ export class Furgonetka {
       const cached = await this.store.get(this.key());
       r = await send((await this.requestToken(cached?.refresh_token)).access_token);
     }
-    if (!r.ok) throw new FurgonetkaError(r.status, await safeJson(r));
+    if (!r.ok) { const payload = await safeJson(r); throw new FurgonetkaError(r.status, payload, explain(payload)); }
     return opts.raw ? r : await safeJson(r);
   }
 
@@ -158,6 +158,15 @@ export function fieldErrors(payload: unknown): string[] {
     const o = e as { path?: string; message?: string; code?: string };
     return [o.path, o.message ?? o.code].filter(Boolean).join(': ');
   }).filter(Boolean);
+}
+
+// Furgonetka's own explanation of a refusal, in one short line (a 409 on its own tells nobody anything). Never contains our credentials: it is only what they sent back.
+export function explain(payload: unknown): string {
+  const p = payload as Record<string, unknown> | null;
+  if (!p || typeof p !== 'object') return '';
+  const pick = ['message', 'title', 'detail', 'error_description', 'error'].map((k) => p[k]).find((v) => typeof v === 'string' && v.trim()) as string | undefined;
+  const raw = typeof p._raw === 'string' ? p._raw.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() : '';
+  return String(pick ?? raw ?? '').slice(0, 240);
 }
 
 async function safeJson(r: Response): Promise<unknown> {

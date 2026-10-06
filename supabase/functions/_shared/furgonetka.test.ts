@@ -122,3 +122,12 @@ Deno.test('label: the file bytes, or null while Furgonetka has none (204)', asyn
 Deno.test('fieldErrors reads strings and objects and ignores everything else', () => {
   eq(fieldErrors({ errors: ['a', { path: '/x', message: 'bad' }, { code: 'c' }] }), ['a', '/x: bad', 'c'], 'mixed'); eq(fieldErrors(null), [], 'null'); eq(fieldErrors({ errors: 'x' }), [], 'not a list');
 });
+
+Deno.test('a refusal carries Furgonetka\'s own explanation, so a bare 409 is never all you see', async () => {
+  for (const [body, status, re] of [[{ message: 'A package with this reference already exists' }, 409, /answered 409: A package with this reference already exists/], [{ error: 'conflict', error_description: 'Order command is already running' }, 409, /answered 409: Order command is already running/], [{ errors: [{ path: '/receiver/point', message: 'You have to select a point' }] }, 400, /answered 400/]] as const) {
+    const { f } = fake((c) => (c.url.endsWith('/oauth/token') ? tokenReply() : json(body, status)));
+    try { await new Furgonetka(cfg, mem(), f, () => 1000).services(); throw new Error('should fail'); } catch (e) { ok(e instanceof FurgonetkaError && re.test((e as Error).message), (e as Error).message); }
+  }
+  const { f } = fake((c) => (c.url.endsWith('/oauth/token') ? tokenReply() : new Response('<html><body><h1>Conflict</h1><p>Try later</p></body></html>', { status: 409 })));
+  try { await new Furgonetka(cfg, mem(), f, () => 1000).services(); throw new Error('should fail'); } catch (e) { ok(/answered 409: Conflict Try later/.test((e as Error).message), (e as Error).message); }
+});
