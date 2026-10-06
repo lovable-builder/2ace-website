@@ -19,6 +19,7 @@
     <tr><td>Pick and pack (scan app)</td><td class="y">Yes</td><td class="no">No</td><td class="y">Yes</td></tr>
     <tr><td>Add stock, Store in bin, Move (Stock screen)</td><td class="y">Yes</td><td class="ro">Read only</td><td class="y">Yes</td></tr>
     <tr><td>A customer's shipping settings (markup, caps, mode)</td><td class="y">Yes (edit)</td><td class="ro">Read only</td><td class="no">No</td></tr>
+    <tr><td>Edit an order's delivery details, ask the customer to correct them</td><td class="y">Yes</td><td class="ro">See the problems only</td><td class="y">Yes</td></tr>
     <tr><td>Mark an order shipped</td><td class="y">Yes</td><td class="no">No</td><td class="y">Yes</td></tr>
     <tr><td>Shipping labels (prices, buy, download)</td><td class="y">Yes</td><td class="ro">Read only</td><td class="y">Yes, over-limit needs an admin</td></tr>
     <tr><td>Approvals (decide)</td><td class="y">Yes</td><td class="ro">Read only</td><td class="y">Yes</td></tr>
@@ -254,6 +255,7 @@
 <section id="s-orders">
   <h2>13. Orders and reserved stock</h2>
   <p class="lead">Customers place orders (by hand or from a CSV file). Each order is reserved as a whole, or held with a reason. You see them under <span class="ui">Orders</span>.</p>
+  <p>An order cannot be created without what the shipping label needs: the recipient's first name and surname, a 9-digit Polish phone (or 7 to 15 digits abroad), the street with the house number, a valid postal code (00-001 in Poland), the city and a two-letter country. The same rules apply in the customer's form, in a CSV file (the <code>phone</code> column is required) and when you create an order for a customer.</p>
   <h3>How reserving works</h3>
   <ul>
     <li>An order reserves stock only if <b>every line</b> can be filled. Otherwise nothing is reserved and the order is <span class="pill bad">on hold</span>, with text such as <i>MUG-BLUE: need 7, available 6</i>. The customer is emailed once.</li>
@@ -318,7 +320,7 @@
     <li>Click <span class="ui">Get shipping prices</span>. This is free. You see each carrier, with its coloured logo badge (DHL, DPD, UPS, FedEx, InPost, GLS, Poczta, Orlen), and <b>what we pay</b> and <b>what the customer pays</b> (our price plus the markup, before VAT). Carriers that cannot take the parcel are listed with the reason.</li>
     <li>Click <span class="ui">Buy label</span> on the one you want and read the question. In the <b>test</b> environment nothing real is charged; in the live one it spends from the Furgonetka balance.</li>
     <li>Confirm. The order becomes <span class="pill ok">shipped</span>, the goods leave the stock, and the card shows the carrier, the tracking numbers and what the customer is charged.</li>
-    <li>Click <span class="ui">Download label</span> and print it. Stick it on the parcel.</li>
+    <li>Click <span class="ui">Download label</span> and print it. Stick it on the parcel. Furgonetka sometimes needs up to a minute to produce the file: if the screen says it is still preparing, nothing is wrong, wait a minute and click again.</li>
   </ol>
   <div class="ex"><b>Example</b><p>ORD-000001 is one parcel of 1,8 kg. DPD costs us 12,50 zł net, so the customer is charged 16,25 zł net plus VAT. InPost shows "not available: Parcel too heavy". Marta buys the DPD label, prints it and hands the parcel to the courier.</p></div>
   <h3>Automatic labels</h3>
@@ -352,10 +354,12 @@
   <h3>When something goes wrong</h3>
   <ul>
     <li><b>"Furgonetka rejected the shipment: …"</b> The address or parcel data is not accepted (often a missing phone or a wrong postal code). Nothing was charged. New orders cannot be created without a first name and surname, a 9-digit Polish phone, a house number and a valid postal code, so this mostly happens with older orders. Open the order: the <span class="ui">Ship to</span> card lists what is wrong. Click <span class="ui">Edit details</span> to fix it yourself, or <span class="ui">Ask the customer to correct it</span> (see section 13).</li>
+    <li><b>"Furgonetka answered 409: The carrier's regulations have changed…"</b> Furgonetka will not create labels until someone accepts its updated carrier terms. An admin logs in to the Furgonetka account the website uses (test: <code>sandbox.furgonetka.pl/konto</code>, live: <code>furgonetka.pl/konto</code>), accepts the new regulations, and you try again. Nothing was charged.</li>
+    <li><b>"Furgonetka did not order it: … An error occurred while communicating with the carrier API"</b> The carrier's own system failed when Furgonetka placed the order. It is common in the test environment. Nothing was charged. Wait a minute and try again, or buy a different carrier. <span class="ui">Create the cheapest label</span> tries the next cheapest carrier by itself.</li>
     <li><b>"Waiting to be checked":</b> Furgonetka did not confirm in time. It may have been charged, so <b>do not buy again</b>. Press <span class="ui">Check the label order</span>: it records the label if it was bought, or closes the attempt if it was not.</li>
     <li><b>Goods no longer at the packing station:</b> someone moved them. Put them back before buying.</li>
   </ul>
-  <div class="rule"><b>Rules</b><p>Only warehouse staff and admins buy labels; support can read them. An order can have one label. Cancelling or refunding a label is done in Furgonetka for now. Delivery to a parcel locker or pickup point is not supported yet; labels are for delivery to the address.</p></div>
+  <div class="rule"><b>Rules</b><p>Only warehouse staff and admins buy labels; support can read them. An order can have one label. Cancelling or refunding a label is done in Furgonetka for now. Delivery to a parcel locker or pickup point is not supported yet, so those services are not offered in the price list; labels are for delivery to the address.</p></div>
 </section>
 
 <section id="s-scan">
@@ -394,6 +398,7 @@
     <tr><td>After receiving</td><td>Warehouse</td><td>Resolve discrepancies. Deal with unexpected goods in <span class="ui">To put away</span>. Use <span class="ui">Add stock</span> for opening stock.</td></tr>
     <tr><td>Orders come in</td><td>Warehouse</td><td>Check the journey strip for orders on hold. Pick and pack on the phone. If automatic labels are on, the label is bought when you finish packing.</td></tr>
     <tr><td>After packing</td><td>Warehouse</td><td>Open the order, click <span class="ui">Download label</span> (or <span class="ui">Open the PDF to print</span> for a customer's own label), print it and stick it on. For own labels, click <span class="ui">Mark shipped</span>.</td></tr>
+    <tr><td>After packing</td><td>Warehouse</td><td>If the label stopped because of the delivery details, open the order, click <span class="ui">Edit details</span> or <span class="ui">Ask the customer to correct it</span>, then create the label again.</td></tr>
     <tr><td>Through the day</td><td>Warehouse or admin</td><td>Approve or decline customer change requests.</td></tr>
     <tr><td>End of day</td><td>Admin</td><td>Check the audit log for anything unusual. Check <span class="ui">To put away</span> for unexpected goods that still need a decision.</td></tr>
   </table></div>

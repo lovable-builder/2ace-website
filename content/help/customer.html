@@ -181,6 +181,7 @@
   <p>We reserve an order only when <b>every</b> line can be filled. If one line is short, nothing is reserved, the order goes <span class="pill bad">On hold</span> with the reason, and we email you. It is reserved automatically when more stock arrives on our shelves, oldest orders first. Stock that is still in our receiving area, or in quarantine, cannot be sold yet.</p>
   <div class="ex"><b>Example</b><p>Anna orders MUG-BLUE × 7 and MUG-RED × 1, but only 6 blue mugs are on the shelf. The order is on hold: <i>MUG-BLUE: need 7, available 6</i>. The red mug is not reserved either. When her next delivery is received, the order is reserved by itself.</p></div>
   <h3>Import many orders from a CSV file</h3>
+  <p>Every order needs what the courier's label needs. The file must have these columns: <code>order_ref</code>, <code>name</code> (first name and surname), <code>phone</code> (9 digits for Poland), <code>address</code> (street with the house number), <code>postal</code>, <code>city</code>, <code>country</code>, <code>sku</code> and <code>qty</code>. An order with a missing or wrong detail is refused with the reason, and the other orders in the file still import.</p>
   <ol class="steps">
     <li>Click <span class="ui">Import CSV</span> and <span class="ui">Download the template</span>.</li>
     <li>Fill one row per product. Rows with the same <code>order_ref</code> become one order. Match products by <code>sku</code>. Excel files saved with semicolons work too.</li>
@@ -207,6 +208,7 @@
   <h2>8. Ship your orders</h2>
   <p class="lead">Every order leaves with a shipping label. There are two ways to get it: we choose and buy it when we pack your order, or you give us your own.</p>
   <h3>The normal way: we do it</h3>
+  <p>If a label cannot be created because of the delivery details (for example a phone number that is too short), we email you what to correct and show the same note on the order. Reply with the correct details and we fix the order. Nothing is charged for a failed attempt.</p>
   <p>On <b>Fulfilment</b> you do nothing. When our team has packed your order they weigh and measure the parcel, and we choose the carrier and create the label. Your order then shows <span class="pill ok">Shipped</span>. This is also what happens to any order for which you did not add a label.</p>
   <h3>Or use your own label</h3>
   <p>If you already have a label for an order (from Allegro, InPost, Amazon or your own carrier contract), give it to us. We print it, put it on the parcel and hand it to the courier. We do not charge for shipping when you bring the label.</p>
