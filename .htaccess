@@ -15,7 +15,7 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^app(/.*)?$ /app/index.html [L]
 # Switch-over: when the new app has been checked on the live backend, uncomment the next line. /platform (and the
 # ?checkout= / ?domain= / ?view= links Stripe and the emails use) then opens the new app; platform.html stays for rollback.
-# RewriteRule ^platform(\.html)?$ /app/ [R=302,L,QSA]
+RewriteRule ^platform(\.html)?$ /app/ [R=302,L,QSA]
 RewriteCond %{THE_REQUEST} \s/+index(\.html)?[\s?] [NC]
 RewriteRule ^ / [R=301,L]
 RewriteCond %{THE_REQUEST} \s/+([^\s?]+?)\.html[\s?] [NC]
