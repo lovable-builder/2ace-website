@@ -1454,7 +1454,7 @@ class Component extends DCLogic {
     const [caps, info] = await Promise.all([this.csCall({ action: 'capabilities' }), this.csCall({ action: 'status', order_id: id })]);
     if (this.state.shOpen !== id) return;
     const l = info.own_label;
-    this.setState({ shCaps: caps, shInfo: info, shBusy: false, shCarrier: l ? l.carrier || '' : this.state.shCarrier, shTracking: l ? (l.tracking_numbers || []).join(', ') : this.state.shTracking });
+    this.setState({ shCaps: caps, shInfo: info, shBusy: false, shErr: !info.bought_label && !l && info.last_failed ? 'The last attempt failed and nothing was charged: ' + info.last_failed : this.state.shErr, shCarrier: l ? l.carrier || '' : this.state.shCarrier, shTracking: l ? (l.tracking_numbers || []).join(', ') : this.state.shTracking });
     // Buying here is offered: start the parcel form from the sizes of the products on the order (only a suggestion).
     if (caps.buy_label && !info.bought_label && !info.own_label && this.state.shKg === '') {
       try { const sg = await this.csCall({ action: 'suggest', order_id: id }); if (this.state.shOpen === id && this.state.shKg === '') { const p = sg.parcel || {}; this.setState({ shKg: p.weight_kg == null ? '' : String(p.weight_kg).replace('.', ','), shL: p.length_cm == null ? '' : String(p.length_cm), shW: p.width_cm == null ? '' : String(p.width_cm), shH: p.height_cm == null ? '' : String(p.height_cm), shSuggestNote: sg.note || '' }); } } catch (e) { /* the customer can type the parcel */ }
@@ -1495,8 +1495,8 @@ class Component extends DCLogic {
     const s = this.state, id = s.rtSel; if (!id || s.rtQuoting || s.rtPBusy) return;
     if (![s.rtKg, s.rtL, s.rtW, s.rtH].every((v) => String(v).trim() !== '')) return this.setState({ rtPErr: 'Enter the weight and the three sizes of the parcel.', rtPNote: '' });
     this.setState({ rtQuoting: true, rtPErr: '', rtPNote: '', rtOffers: [], rtOffersNote: '' });
-    try { const r = await this.csCall({ action: 'return.quote', return_id: id, parcels: this.rtParcel() }); const ok = (r.offers || []).filter((q) => q.available), n = (r.offers || []).length - ok.length;
-      this.setState({ rtQuoting: false, rtOffers: ok, rtOffersNote: ok.length ? (n ? n + ' other carrier' + (n === 1 ? '' : 's') + ' cannot take this parcel.' : '') : 'No carrier can take this parcel. Check the weight and sizes.' }); }
+    try { const r = await this.csCall({ action: 'return.quote', return_id: id, parcels: this.rtParcel() }); const o = this.offersNote(r);
+      this.setState({ rtQuoting: false, rtOffers: o.ok, rtOffersNote: o.note.trim() }); }
     catch (e) { this.setState({ rtQuoting: false, rtPErr: String(e.message || e) }); }
   }
   async rtBuyOffer(q) {
@@ -1521,14 +1521,20 @@ class Component extends DCLogic {
   shParcel() {
     const s = this.state; return [{ weight_kg: s.shKg, length_cm: s.shL, width_cm: s.shW, height_cm: s.shH }];
   }
+  offersNote(r) {
+    const all = r.offers || [], ok = all.filter((q) => q.available), bad = all.filter((q) => !q.available);
+    const off = r.enabled === false ? 'Buying labels is switched off right now, so prices are for comparison only. ' : '';
+    const no = bad.length ? 'Not available: ' + bad.map((q) => (q.name || q.carrier) + ' (' + q.reason + ')').join('; ') + '.' : '';
+    return { ok, note: off + (ok.length ? no : 'No carrier can take this parcel. ' + no) };
+  }
   async shQuote() {
     const s = this.state, id = s.shOpen; if (!id || s.shQuoting || s.shBusy) return;
     if (![s.shKg, s.shL, s.shW, s.shH].every((v) => String(v).trim() !== '')) { this.setState({ shErr: 'Enter the weight and the three sizes of the parcel.', shNote: '' }); return; }
     this.setState({ shQuoting: true, shErr: '', shNote: '', shOffers: [], shOffersNote: '' });
     try {
       const r = await this.csCall({ action: 'quote', order_id: id, parcels: this.shParcel() });
-      const ok = (r.offers || []).filter((q) => q.available), n = (r.offers || []).length - ok.length;
-      this.setState({ shQuoting: false, shOffers: ok, shOffersNote: ok.length ? (n ? n + ' other carrier' + (n === 1 ? '' : 's') + ' cannot take this parcel.' : '') : 'No carrier can take this parcel. Check the weight and sizes, or add your own label.' });
+      const o = this.offersNote(r);
+      this.setState({ shQuoting: false, shOffers: o.ok, shOffersNote: o.note.trim() });
     } catch (e) { this.setState({ shQuoting: false, shErr: String(e.message || e) }); }
   }
   async shBuyOffer(q) {

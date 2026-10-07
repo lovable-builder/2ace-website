@@ -40,7 +40,8 @@ export async function status(d: CsDeps, orderId: unknown) {
   const sh = d.shipment ? await d.shipment(o.id) : null;
   // A label we bought for this customer: only what the customer is meant to see (their price, never our cost or markup).
   const bought = sh && (sh.status === 'purchased' || sh.status === 'buying') ? { state: sh.status, carrier: sh.carrier, service: sh.service_name, tracking_numbers: sh.tracking_numbers ?? [], bill_net: Number(sh.bill_net), bill_gross: Number(sh.bill_gross), by: sh.buyer_role, purchased_at: sh.purchased_at } : null;
-  return { order: { id: o.id, ref: o.ref, status: o.status }, label_source: o.label_source, bought_label: bought, own_label: l ? { filename: l.filename, has_file: !!l.storage_path, path: l.storage_path, tracking_numbers: l.tracking_numbers, carrier: l.carrier_name, added_at: l.created_at } : null };
+  const lastFailed = sh && sh.status === 'failed' ? (sh.error && !/balance|limit|budget|daily|switched off|markup/i.test(sh.error) ? sh.error : 'The carrier did not accept this shipment.') : null;
+  return { order: { id: o.id, ref: o.ref, status: o.status }, label_source: o.label_source, bought_label: bought, last_failed: lastFailed, own_label: l ? { filename: l.filename, has_file: !!l.storage_path, path: l.storage_path, tracking_numbers: l.tracking_numbers, carrier: l.carrier_name, added_at: l.created_at } : null };
 }
 
 // The customer uploaded a PDF to their folder (the storage rules already limit where) and now registers it on an order.

@@ -3,6 +3,7 @@
 // pay (carrier price plus the markup, before VAT): never our cost, the markup, our balance or our limits. Dependencies are passed in so every branch is tested without a network.
 import { CsError, CAN_PREPARE_ROLES, capabilities as baseCapabilities, isUuid, type CsDeps } from './customerShipping.ts';
 import { ShipError, buyLabel, type BuyDeps } from './shipBuy.ts';
+import { FurgonetkaError, fieldErrors } from './furgonetka.ts';
 import { buildPackage, parseQuotes, markupFor, customerNet, customerGross, carriersFrom, settingNum, round2, type OrderShip, type ParcelRow } from './shipping.ts';
 
 export const DEFAULT_CUSTOMER_MAX_LABEL_PLN = 60;      // gross cost per label, no override for customers
@@ -97,12 +98,14 @@ export async function quote(d: CsBuyDeps, input: { order_id?: unknown; parcels?:
     return { service_id: q.service_id, carrier: q.carrier, name: q.name, available: q.available && !tooBig, reason: tooBig ? 'Above the limit for a single label' : q.reason,
       bill_net: q.available ? customerNet(q.cost_net, r.markup) : 0, bill_gross: q.available ? customerGross(q.cost_net, r.markup, q.tax) : 0, tax: q.tax };
   });
-  return { env: d.furgonetkaEnv, offers };
+  return { env: d.furgonetkaEnv, enabled: d.getenv('SHIPPING_ENABLED') === 'true', offers };
 }
-function problemText(e: unknown): string {
+// The same explanation the admin sees (Furgonetka's own words and which fields it objects to). It never contains our cost, balance or limits.
+export function problemText(e: unknown): string {
   const m = (e as Error).message || 'The carriers could not price this parcel.';
   if (/not set up|Missing server settings/i.test(m)) return 'Shipping is not available right now. Please contact us.';
-  return /Furgonetka answered \d+/.test(m) ? 'The carriers could not price this parcel right now. Please try again in a moment.' : m;
+  if (e instanceof FurgonetkaError) { const detail = fieldErrors(e.payload); return `${m}${detail.length ? ' (' + detail.slice(0, 4).join('; ') + ')' : ''}`; }
+  return m;
 }
 
 // ---------- the purchase ----------

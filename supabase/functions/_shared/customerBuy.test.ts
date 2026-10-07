@@ -76,7 +76,7 @@ Deno.test('quote: guards come first', async () => {
 });
 Deno.test('quote: a bad receiver name is explained, a carrier failure is calm, setup problems never leak setting names', async () => {
   await refuses(() => quote(rig({ order: { ...order, ship_name: 'Jan' } }).d, { order_id: OID, parcels: PARCELS }), 422, /first name and a surname/);
-  await refuses(() => quote(rig({ api: { quote: async () => { throw new FurgonetkaError(500, {}); } } }).d, { order_id: OID, parcels: PARCELS }), 422, /could not price this parcel right now/);
+  await refuses(() => quote(rig({ api: { quote: async () => { throw new FurgonetkaError(500, {}); } } }).d, { order_id: OID, parcels: PARCELS }), 422, /Furgonetka answered 500/);
   await refuses(() => quote(rig({ api: { quote: async () => { throw new Error('Shipping is not set up yet. Missing server settings: FURGONETKA_PASSWORD'); } } }).d, { order_id: OID, parcels: PARCELS }), 422, /not available right now/);
 });
 Deno.test('buy: the steps run in the safe order, with the customer\'s price and parcels, and the answer has no cost', async () => {

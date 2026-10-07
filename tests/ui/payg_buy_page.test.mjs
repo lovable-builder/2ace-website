@@ -44,7 +44,7 @@ set(dom, field(d, 'Height (cm)'), '30'); btn(d, 'Get prices').click(); await wai
 const q = calls.find((c) => c.action === 'quote');
 ok('prices are asked for exactly the parcel typed (comma decimals allowed)', q && q.order_id === 'a1' && q.parcels.length === 1 && q.parcels[0].weight_kg === '1,75' && q.parcels[0].height_cm === '30', JSON.stringify(q));
 ok('the customer sees each carrier that can take it, with its price before VAT and a Buy button', /DPD · package, door/.test(T(d)) && /13,00 zł \+ VAT/.test(T(d)) && /INPOST · courier/.test(T(d)) && /14,50 zł \+ VAT/.test(T(d)) && [...d.querySelectorAll('button')].filter((b) => b.textContent.trim() === 'Buy').length === 2);
-ok('a carrier that cannot take it is not offered, and the count is said', !/UPS · package/.test(T(d)) && /1 other carrier cannot take this parcel/.test(T(d)));
+ok('a carrier that cannot take it is not offered, and the reason is said', ![...d.querySelectorAll('button')].some((b) => /UPS/.test(b.parentElement.textContent) && b.textContent.trim() === 'Buy') && /Not available: UPS · package \(Above the limit/.test(T(d)));
 ok('no cost or markup appears anywhere on the screen', !/markup|our cost|margin/i.test(T(d)));
 // changing the parcel clears stale prices
 set(dom, field(d, 'Weight (kg)'), '2'); await wait(100); ok('changing the parcel clears the old prices, so a price is never shown for another parcel', ![...d.querySelectorAll('button')].some((b) => b.textContent.trim() === 'Buy'));

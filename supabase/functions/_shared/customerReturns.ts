@@ -1,7 +1,7 @@
 // Returns, from the customer's side: price and buy the return label (the buyer is the sender, our warehouse the receiver), and download it.
 // Same guards, caps and words as outgoing labels (customerBuy.ts); the return itself is announced through the create_return database function.
 import { CsError, isUuid } from './customerShipping.ts';
-import { purchase, ready, cleanParcels, type CsBuyDeps } from './customerBuy.ts';
+import { purchase, ready, problemText, cleanParcels, type CsBuyDeps } from './customerBuy.ts';
 import { buildReturnPackage, parseQuotes, customerNet, customerGross, carriersFrom, type ReturnShip, type ParcelRow } from './shipping.ts';
 
 export type ReturnRow = ReturnShip & { id: string; org_id: string; status: string };
@@ -30,16 +30,13 @@ export async function returnQuote(d: CsReturnDeps, input: { return_id?: unknown;
   const parcels = oneParcel(input.parcels);
   let raw: unknown;
   try { raw = await d.api.quote(buildReturnPackage(r, parcels), { carriers: carriersFrom(d.getenv) } as never); }
-  catch (e) {
-    const m = (e as Error).message || '';
-    throw new CsError(/not set up|Missing server settings/i.test(m) ? 'Shipping is not available right now. Please contact us.' : /Furgonetka answered \d+/.test(m) ? 'The carriers could not price this parcel right now. Please try again in a moment.' : m, 422);
-  }
+  catch (e) { throw new CsError(problemText(e), 422); }
   const offers = parseQuotes(raw).map((q) => {
     const tooBig = q.available && q.cost_gross > rd.maxLabel;
     return { service_id: q.service_id, carrier: q.carrier, name: q.name, available: q.available && !tooBig, reason: tooBig ? 'Above the limit for a single label' : q.reason,
       bill_net: q.available ? customerNet(q.cost_net, rd.markup) : 0, bill_gross: q.available ? customerGross(q.cost_net, rd.markup, q.tax) : 0, tax: q.tax };
   });
-  return { env: d.furgonetkaEnv, offers };
+  return { env: d.furgonetkaEnv, enabled: d.getenv('SHIPPING_ENABLED') === 'true', offers };
 }
 
 export async function returnBuy(d: CsReturnDeps, input: { return_id?: unknown; service_id?: unknown; parcels?: unknown; expected_bill_net?: unknown }) {
