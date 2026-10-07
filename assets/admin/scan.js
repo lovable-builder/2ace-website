@@ -4,8 +4,8 @@ import { uploadPhotos } from './wms.js';
 // Phone / handheld scanner app for the warehouse: receive deliveries and put goods away. A keyboard-wedge scanner types into the
 // big input and presses Enter; on phones the camera button uses the browser's BarcodeDetector where it exists.
 // Every write is a database function that checks the role and is safe to repeat (idempotency key).
-const SUPABASE_URL = 'https://hvbcmilcjragrcezwzlo.supabase.co';
-const ANON = window.__ANON__;
+const SUPABASE_URL = window.ACE_CONFIG.supabaseUrl;
+const ANON = window.ACE_CONFIG.supabaseAnonKey;
 const sb = window.supabase.createClient(SUPABASE_URL, ANON);
 const app = document.getElementById('app');
 const key = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now() + '-' + Math.random().toString(16).slice(2));

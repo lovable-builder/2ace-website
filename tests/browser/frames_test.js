@@ -1,7 +1,7 @@
 const fs = require('fs');
 let pass = 0, fail = 0; const ok = (n, c, x = '') => { c ? pass++ : fail++; console.log((c ? 'PASS ' : 'FAIL ') + n + (c || !x ? '' : ' -> ' + x)); };
 class DCLogic { constructor() { this.props = {}; } setState() {} }
-global.window = { matchMedia: () => ({ matches: false }) }; global.document = { querySelector: () => null, querySelectorAll: () => [] };
+global.window = { ACE_CONFIG: require('../lib/ace-config.cjs'), matchMedia: () => ({ matches: false }) }; global.document = { querySelector: () => null, querySelectorAll: () => [] };
 const loadedUrls = [];
 global.Image = class { set src(v) { loadedUrls.push(v); setTimeout(() => { this.width = 960; this.height = 540; this.onload && this.onload(); }, 0); } };
 const C = new Function('DCLogic', 'StreamableLogic', 'React', fs.readFileSync(require('path').join(__dirname, '..', '.cache', 'index_comp.js'), 'utf8') + '\nreturn Component;')(DCLogic, class {}, {});

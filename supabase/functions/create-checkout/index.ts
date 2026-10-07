@@ -1,4 +1,5 @@
 import Stripe from 'npm:stripe';
+import { withMonitoring, captureException } from '../_shared/monitor.ts';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { corsHeaders, json } from '../_shared/cors.ts';
 import { priceConfig, type PlanConfig } from '../_shared/pricing.ts';
@@ -13,7 +14,7 @@ const DOMAIN_AGREEMENT_VERSION = 'hostinger-domain-registration-2026-10';
 // Only enable once the VAT registration exists in Stripe (otherwise no tax is collected).
 const AUTO_TAX = Deno.env.get('STRIPE_AUTOMATIC_TAX') === 'true';
 
-Deno.serve(async (req) => {
+Deno.serve(withMonitoring('create-checkout', async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders(req) });
   if (req.method !== 'POST') return json(req, { error: 'method' }, 405);
 
@@ -46,7 +47,7 @@ Deno.serve(async (req) => {
     await admin.from('organizations').update({ name: company, country, vat_id: b.vatId ?? null }).eq('id', orgId);
   } else {
     const { data: o, error } = await admin.from('organizations').insert({ name: company, country, vat_id: b.vatId ?? null }).select('id').single();
-    if (error) { console.error(error); return json(req, { error: 'server' }, 500); }
+    if (error) { await captureException(error, { fn: 'create-checkout' }); return json(req, { error: 'server' }, 500); }
     orgId = o.id;
     await admin.from('members').insert({ org_id: orgId, user_id: user.id, role: 'owner' });
   }
@@ -66,7 +67,7 @@ Deno.serve(async (req) => {
   const { data: plan, error: pe } = await admin.from('plans')
     .insert({ org_id: orgId, config: b.config, monthly_pln: priced.monthly, once_pln: priced.once, status: 'checkout' })
     .select('id').single();
-  if (pe) { console.error(pe); return json(req, { error: 'server' }, 500); }
+  if (pe) { await captureException(pe, { fn: 'create-checkout' }); return json(req, { error: 'server' }, 500); }
 
   await admin.from('agreements').insert({
     org_id: orgId, user_id: user.id, signer_name: signName, version: AGREEMENT_VERSION,
@@ -104,4 +105,4 @@ Deno.serve(async (req) => {
   } as Stripe.Checkout.SessionCreateParams);
 
   return json(req, { url: session.url, monthly: priced.monthly, once: priced.once });
-});
+}));

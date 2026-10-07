@@ -2,10 +2,11 @@
 // people taking the call. Called every 10 minutes by the database (pg_cron). Safe to call by anyone: it only sends what is due, once each,
 // and answers with counts. A reminder is marked sent only when the mail provider accepted it, so a failed one is tried again next time.
 import { admin } from '../_shared/auth.ts';
+import { withMonitoring } from '../_shared/monitor.ts';
 import { APPT_COLS, mailCustomer, mailHosts } from '../_shared/bookingOps.ts';
 import type { Appt } from '../_shared/bookingMail.ts';
 
-Deno.serve(async () => {
+Deno.serve(withMonitoring('booking-reminders', async () => {
   const now = Date.now(), iso = (ms: number) => new Date(ms).toISOString();
   let sent = 0, skipped = 0, failed = 0;
   const { data } = await admin.from('appointments').select(APPT_COLS).eq('status', 'confirmed').gt('starts_at', iso(now)).lte('starts_at', iso(now + 25 * 3600000)).order('starts_at').limit(100);
@@ -23,4 +24,4 @@ Deno.serve(async () => {
   }
   await admin.from('booking_runs').upsert({ key: 'reminders', ran_at: iso(now), sent });
   return new Response(JSON.stringify({ ok: true, sent, skipped, failed }), { headers: { 'Content-Type': 'application/json' } });
-});
+}));

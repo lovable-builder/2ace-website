@@ -1,4 +1,5 @@
 import { corsHeaders, json } from '../_shared/cors.ts';
+import { withMonitoring } from '../_shared/monitor.ts';
 import { validName as valid, cleanName, rdapStatus, type DomainStatus } from '../_shared/domain.ts';
 
 // Free .pl availability check against NASK's public RDAP service. The answer is "probably free":
@@ -25,7 +26,7 @@ async function lookup(name: string): Promise<Status> {
   return s;
 }
 
-Deno.serve(async (req) => {
+Deno.serve(withMonitoring('domain-check', async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders(req) });
   if (req.method !== 'POST') return json(req, { error: 'method' }, 405);
   if (limited(req.headers.get('x-forwarded-for')?.split(',')[0] ?? 'x')) return json(req, { error: 'Too many checks. Please wait a minute.' }, 429);
@@ -43,4 +44,4 @@ Deno.serve(async (req) => {
     alternatives = res.filter(([, s]) => s === 'free').map(([c]) => c).slice(0, 3);
   }
   return json(req, { status, name, alternatives });
-});
+}));

@@ -35,7 +35,7 @@ function rig(o: { env?: Record<string, string>; role?: string; mode?: string; or
   };
   return { d, log, rpcs, alerts };
 }
-const refuses = async (f: () => Promise<unknown>, status: number, re: RegExp) => { try { await f(); } catch (e) { ok(e instanceof CsError && e.status === status && re.test(e.message), `expected ${status} ${re}, got ${(e as Error).status ?? ''} ${(e as Error).message}`); return; } throw new Error('should have been refused'); };
+const refuses = async (f: () => Promise<unknown>, status: number, re: RegExp) => { try { await f(); } catch (e) { ok(e instanceof CsError && e.status === status && re.test(e.message), `expected ${status} ${re}, got ${(e as { status?: number }).status ?? ''} ${(e as Error).message}`); return; } throw new Error('should have been refused'); };
 const noMoney = (r: ReturnType<typeof rig>) => { ok(!r.log.includes('order') && !r.log.includes('create'), 'MONEY MOVED OR A SHIPMENT WAS CREATED'); ok(!r.rpcs.some(([n]) => n === 'cs_begin_shipment'), 'a record was started'); };
 
 Deno.test('capabilities: buying is offered only when every switch is on', async () => {

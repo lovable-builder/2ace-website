@@ -1,3 +1,4 @@
+import { ACE_CONFIG } from '../lib/ace-config.mjs';
 import { ROOT } from '../lib/root.mjs';
 import { JSDOM } from 'jsdom';
 const dom = new JSDOM('<!DOCTYPE html><body><div id="app"></div></body>', { url: 'https://2ace.pl/scan' });
@@ -19,7 +20,7 @@ const sb = { storage: { from: () => ({ createSignedUrl: async (p) => ({ data: { 
     if (n === 'wms_lookup') { if (a.p_code === '590') return { data: { type: 'product', id: 'p1', org_id: 'o1', sku: 'SKU-1', name: 'Blue mug', ambiguous: false }, error: null }; if (a.p_code === 'A-01-01') return { data: { type: 'location', id: 'l2', code: 'A-01-01', kind: 'bin' }, error: null }; return { data: { type: 'none' }, error: null }; }
     if (n === 'receive_line') return { data: { condition: a.p_condition, receipt_id: 'rl1' }, error: null }; if (n === 'putaway' && a.p_to === 'bad') return { data: null, error: { message: 'not assigned' } };
     return { data: { discrepancies: DB.__disc ? 1 : 0 }, error: null }; } };
-window.supabase = { createClient: () => sb }; window.__ANON__ = 'anon';
+window.supabase = { createClient: () => sb }; window.ACE_CONFIG = ACE_CONFIG;
 await import('file://' + ROOT + '/assets/admin/scan.js'); await tick();
 const click = async (label) => { [...document.querySelectorAll('button')].find((b) => b.textContent.includes(label)).click(); await tick(); };
 const scan = async (code) => { const i = document.querySelector('input.scan'); i.value = code; i.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Enter' })); await tick(); };

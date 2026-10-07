@@ -1,4 +1,5 @@
 import Stripe from 'npm:stripe';
+import { withMonitoring, captureException } from '../_shared/monitor.ts';
 import { corsHeaders, json } from '../_shared/cors.ts';
 import { admin, caller } from '../_shared/auth.ts';
 import { priceConfig, comparePlans, prorate, storageM2, type PlanConfig } from '../_shared/pricing.ts';
@@ -30,7 +31,7 @@ async function productFor(label: string): Promise<string> {
 // carry no monthly price, so adding or removing them changes the plan without changing the price.
 const sig = (c: PlanConfig) => JSON.stringify([storageM2(c),  !!c.pkgs?.imp, !!c.storeOn, !!c.marketOn, c.tt ?? 'off', c.meta ?? 'off']);
 
-Deno.serve(async (req) => {
+Deno.serve(withMonitoring('change-plan', async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders(req) });
   if (req.method !== 'POST') return json(req, { error: 'method' }, 405);
   const me = await caller(req);
@@ -116,7 +117,7 @@ Deno.serve(async (req) => {
   // Stripe has now been changed (and any upgrade charged). From here on, never leave our record behind Stripe: check the new monthly total,
   // save the plan, and if anything is off say so loudly and tell the team, instead of showing the customer the old price.
   const problem = async (what: string) => {
-    console.error('plan change inconsistent', what);
+    await captureException(new Error('plan change inconsistent: ' + what), { fn: 'change-plan' });
     await sendEmail({ to: TEAM_INBOX, subject: `ACTION NEEDED: plan change for ${me.orgName ?? me.orgId}`,
       html: layout('A plan change needs a manual check', `<p>${esc(me.orgName ?? '')} (${esc(me.orgId!)}) changed plan in Stripe, but: <b>${esc(what)}</b>.</p><p>Stripe subscription ${esc(sub.id)}. Compare the customer's plan in the admin panel with the subscription in Stripe.</p>`) });
     return json(req, { error: 'Your payment went through, but we could not finish saving the new plan. We have been alerted and will fix it today. You do not need to do anything.' }, 500);
@@ -130,4 +131,4 @@ Deno.serve(async (req) => {
   if (e1 || e2 || !np) return await problem(`the plan record could not be saved (${(e1 ?? e2)?.message ?? 'unknown'})`);
   if (needDomain) await createDomainOrder({ orgId: me.orgId, planId: np.id, name: domain, email: me.user.email ?? '', sessionId: null });
   return json(req, { ok: true, ...summary });
-});
+}));

@@ -1,4 +1,5 @@
 import { corsHeaders, json } from '../_shared/cors.ts';
+import { withMonitoring, captureException } from '../_shared/monitor.ts';
 import { admin, caller } from '../_shared/auth.ts';
 import { CsError, attachOwnLabel, removeOwnLabel, status } from '../_shared/customerShipping.ts';
 import { buy, capabilitiesBuy, labelFile, quote, suggest, type CsBuyDeps } from '../_shared/customerBuy.ts';
@@ -19,7 +20,7 @@ const furg = () => new Furgonetka(configFromEnv(env), tokenStore);
 const furgonetkaEnv = (env('FURGONETKA_ENV') === 'production' ? 'production' : 'sandbox') as 'sandbox' | 'production';
 const ORDER_COLS = 'id, org_id, ref, status, label_source, ship_name, ship_company, ship_line1, ship_line2, ship_postal, ship_city, ship_country, ship_email, ship_phone';
 
-Deno.serve(async (req) => {
+Deno.serve(withMonitoring('customer-shipping', async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders(req) });
   if (req.method !== 'POST') return json(req, { error: 'method' }, 405);
   const me = await caller(req);
@@ -97,7 +98,7 @@ Deno.serve(async (req) => {
     }
   } catch (e) {
     if (e instanceof CsError) return json(req, { error: e.message }, e.status);
-    console.error('customer-shipping', (e as Error).message);
+    await captureException(e, { fn: 'customer-shipping', action: String(b.action ?? '') });
     return json(req, { error: 'Something went wrong. Please try again.' }, 500);
   }
-});
+}));
