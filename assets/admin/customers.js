@@ -2,8 +2,8 @@ import { el, clear, table, statusPill, fmtDate, fmtDay, zl, field, kv, askReason
 
 const REASONS = ['Support request', 'Billing check', 'Domain order', 'Onboarding help', 'Data correction', 'Other'];
 // Storage is sold by the square metre. Plans bought earlier per bin (0.3 m²) or pallet (1.2 m²) are shown as their area.
-const planM2 = (c) => (c.m2 != null ? Number(c.m2) : Math.round(Number(c.qty) * (c.storageType === 'shelf' ? 0.3 : 1.2) * 10) / 10);
-const planSummary = (c) => { if (!c) return '-'; const on = [c.pkgs && c.pkgs.ful && 'fulfillment (flat)', c.pkgs && c.pkgs.payg && 'fulfilment as you go', c.pkgs && c.pkgs.ret && 'returns (flat)', c.pkgs && c.pkgs.retp && 'returns as you go', c.pkgs && c.pkgs.imp && 'import', c.storeOn && 'storefront'].filter(Boolean); return `${String(planM2(c)).replace(/\.0$/, '')} m²` + (on.length ? ' + ' + on.join(', ') : ''); };
+const planM2 = (c) => Number(c.m2 || 0);
+const planSummary = (c) => { if (!c) return '-'; const on = [ c.pkgs && c.pkgs.imp && 'import', c.storeOn && 'storefront'].filter(Boolean); return `${String(planM2(c)).replace(/\.0$/, '')} m²` + (on.length ? ' + ' + on.join(', ') : ''); };
 
 export async function render(ctx, root, params) {
   if (params && params[0]) return detail(ctx, root, params[0]);
@@ -59,23 +59,23 @@ async function detail(ctx, root, orgId) {
   const profs = ids.length ? (await sb.from('profiles').select('user_id, full_name, email, phone').in('user_id', ids)).data || [] : [];
   const pmap = Object.fromEntries(profs.map((p) => [p.user_id, p]));
   const active = (plans.data || []).find((p) => p.status === 'active');
-  const ss = shipSet.data || {}, MODE = { full: 'Fulfilment (we do everything)', payg: 'Fulfilment as you go (they prepare labels)', storage: 'Storage only' };
+  const ss = shipSet.data || {}, MODE = { payg: 'Pay as you go (handling fee per order, labels bought by the customer or by us)', storage: 'Storage only' };
   const unbilled = (charges.data || []).reduce((t, c) => t + Number(c.net), 0);
   const editShipping = () => modal('Shipping and fulfilment settings', (body, done) => {
-    const mode = el('select', {}, [['', 'Follow the plan'], ['full', MODE.full], ['payg', MODE.payg], ['storage', MODE.storage]].map(([v, l]) => el('option', { value: v, text: l, ...(v === (ss.fulfil_mode_override || '') ? { selected: true } : {}) })));
+    const mode = el('select', {}, [['', 'Follow the plan'], ['payg', MODE.payg], ['storage', MODE.storage]].map(([v, l]) => el('option', { value: v, text: l, ...(v === (ss.fulfil_mode_override || '') ? { selected: true } : {}) })));
     const num = (v, ph) => el('input', { type: 'number', step: 'any', min: '0', value: v == null ? '' : String(v), placeholder: ph });
     const markup = num(ss.markup_percent, 'Default (30)'), cap = num(ss.exposure_cap_net ?? 300, '300'), daily = num(ss.daily_label_cap ?? 10, '10');
-    const hAdj = el('input', { type: 'number', step: 'any', min: '-100', max: '500', value: String(ss.handling_adjust_percent ?? 0), placeholder: '0' }), hCap = num(ss.handling_cap_per_m2 ?? 350, '350'), rCap = num(ss.return_cap_per_m2 ?? 150, '150');
+    const hAdj = el('input', { type: 'number', step: 'any', min: '-100', max: '500', value: String(ss.handling_adjust_percent ?? 0), placeholder: '0' });
     const live = el('input', { type: 'checkbox', ...(ss.usage_billing_live ? { checked: true } : {}) });
     const buying = el('input', { type: 'checkbox', ...(ss.label_buying_enabled ? { checked: true } : {}) }), err = el('p', { class: 'err' });
     body.append(el('p', { class: 'muted', text: 'The fulfilment mode normally follows the plan. Override it only to test. Markup is added to the carrier price (net) and shown on the customer\'s monthly invoice.' }),
       field('Fulfilment mode', mode), field('Shipping markup % (empty = default)', markup), field('Most unpaid shipping at once (zł, net)', cap), field('Most labels per day', daily),
       el('label', { class: 'field' }, el('span', { text: 'May buy labels themselves' }), buying),
-      el('p', { class: 'muted', text: 'Handling fee (packing) and return fees follow the tariff under Shipping. The monthly total can never pass the ceiling per m² of the customer\'s space.' }),
-      field('Handling fee: discount (-) or surcharge (+) %', hAdj), field('Handling fees: monthly ceiling per m² (zł, net)', hCap), field('Return fees: monthly ceiling per m² (zł, net)', rCap),
+      el('p', { class: 'muted', text: 'Handling fees (packing an order, handling a return) follow the tariff under Shipping.' }),
+      field('Handling fee: discount (-) or surcharge (+) %', hAdj),
       el('label', { class: 'field' }, el('span', { text: 'Live: bill handling and return fees (off = recorded as test, never invoiced)' }), live), err,
       el('div', { class: 'row end' }, el('button', { class: 'btn ghost', onclick: () => done(null), text: 'Cancel' }), el('button', { class: 'btn', text: 'Save', onclick: async () => {
-        try { await ctx.api('org.setShipping', { org_id: orgId, patch: { fulfil_mode_override: mode.value, markup_percent: markup.value, exposure_cap_net: Number(cap.value), daily_label_cap: Number(daily.value), label_buying_enabled: buying.checked, handling_adjust_percent: Number(hAdj.value || 0), handling_cap_per_m2: Number(hCap.value), return_cap_per_m2: Number(rCap.value), usage_billing_live: live.checked } }); done(true); } catch (e) { err.textContent = e.message; } } })));
+        try { await ctx.api('org.setShipping', { org_id: orgId, patch: { fulfil_mode_override: mode.value, markup_percent: markup.value, exposure_cap_net: Number(cap.value), daily_label_cap: Number(daily.value), label_buying_enabled: buying.checked, handling_adjust_percent: Number(hAdj.value || 0), usage_billing_live: live.checked } }); done(true); } catch (e) { err.textContent = e.message; } } })));
   }).then((ok) => { if (ok) { toast('Shipping settings saved'); detail(ctx, root, orgId); } });
 
   const changeStatus = () => modal('Change customer status', (body, done) => {
@@ -100,7 +100,7 @@ async function detail(ctx, root, orgId) {
       (plans.data || []).length > 1 && el('details', {}, el('summary', { text: 'Plan history (' + plans.data.length + ')' }), table([
         { label: 'When', render: (p) => fmtDate(p.created_at) }, { label: 'Plan', render: (p) => planSummary(p.config) }, { label: 'Monthly', render: (p) => zl(p.monthly_pln) }, { label: 'Status', render: (p) => statusPill(p.status) }], plans.data))),
     el('section', { class: 'card' }, el('h2', { text: 'Shipping and fulfilment' }),
-      kv([['Mode', (MODE[modeRes.data] || '-') + (ss.fulfil_mode_override ? ' (set by an admin, not the plan)' : '')], ['Shipping markup', ss.markup_percent == null ? 'Default' : Number(ss.markup_percent) + ' %'], ['May buy labels themselves', ss.label_buying_enabled ? 'Yes' : 'No'], ['Handling fee', (Number(ss.handling_adjust_percent || 0) ? (Number(ss.handling_adjust_percent) > 0 ? '+' : '') + Number(ss.handling_adjust_percent) + ' % on the tariff, ' : 'Standard tariff, ') + 'ceiling ' + zl(ss.handling_cap_per_m2 ?? 350) + ' per m² a month'], ['Return fee ceiling', zl(ss.return_cap_per_m2 ?? 150) + ' per m² a month'], ['Handling and return fees', ss.usage_billing_live ? 'Live (billed)' : 'Test (recorded, never invoiced)'], ['Unpaid shipping cap', zl(ss.exposure_cap_net ?? 300) + ' net'], ['Labels waiting to be invoiced', unbilled ? zl(unbilled) + ' net' : 'None']]),
+      kv([['Mode', (MODE[modeRes.data] || '-') + (ss.fulfil_mode_override ? ' (set by an admin, not the plan)' : '')], ['Shipping markup', ss.markup_percent == null ? 'Default' : Number(ss.markup_percent) + ' %'], ['May buy labels themselves', ss.label_buying_enabled ? 'Yes' : 'No'], ['Handling fee', (Number(ss.handling_adjust_percent || 0) ? (Number(ss.handling_adjust_percent) > 0 ? '+' : '') + Number(ss.handling_adjust_percent) + ' % on the tariff' : 'Standard tariff')], ['Handling and return fees', ss.usage_billing_live ? 'Live (billed)' : 'Test (recorded, never invoiced)'], ['Unpaid shipping cap', zl(ss.exposure_cap_net ?? 300) + ' net'], ['Labels waiting to be invoiced', unbilled ? zl(unbilled) + ' net' : 'None']]),
       ctx.me.role === 'admin' && el('div', { class: 'row' }, el('button', { class: 'btn ghost tiny', onclick: editShipping, text: 'Edit' }))),
     el('section', { class: 'card' }, el('h2', { text: 'Subscription' }), table([
       { label: 'Stripe id', key: 'stripe_subscription_id' }, { label: 'Status', render: (s) => statusPill(s.status) }, { label: 'Renews / ends', render: (s) => fmtDay(s.current_period_end) }], subs.data || [])),

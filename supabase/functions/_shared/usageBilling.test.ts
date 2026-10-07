@@ -24,9 +24,9 @@ Deno.test('the monthly draft invoice gets one line per kind, in grosz, with idem
   eq(r.items.map((i) => [i.amount, i.description, i.idempotencyKey, i.invoice, i.customer, i.currency]), [[3300, 'Shipping labels (2 labels)', 'usage-in_1-0-label', 'in_1', 'cus_1', 'pln'], [1200, 'Handling fees (3 orders)', 'usage-in_1-1-handling', 'in_1', 'cus_1', 'pln']], 'items');
   const again = rig(); await onInvoiceCreated(again.d, cycle); eq(again.items.map((i) => i.idempotencyKey), r.items.map((i) => i.idempotencyKey), 'a retried webhook uses the same keys, so Stripe creates nothing twice');
 });
-Deno.test('a ceiling credit is a negative line with its own wording', async () => {
-  const r = rig({ lines: [L('handling', 10, 400000), L('credit', 1, -50000, 'Monthly ceiling on handling fees: 350 zł per m² x 10 m²')] }); await onInvoiceCreated(r.d, cycle);
-  ok(r.items.some((i) => i.amount === -50000 && /Monthly ceiling on handling fees/.test(String(i.description))), 'credit line'); eq(r.items.length, 2, 'two lines');
+Deno.test('a credit is a negative line with its own wording', async () => {
+  const r = rig({ lines: [L('handling', 10, 400000), L('credit', 1, -50000, 'Credit for a damaged parcel')] }); await onInvoiceCreated(r.d, cycle);
+  ok(r.items.some((i) => i.amount === -50000 && /Credit for a damaged parcel/.test(String(i.description))), 'credit line'); eq(r.items.length, 2, 'two lines');
 });
 Deno.test('only the monthly subscription invoice carries usage: not an upgrade, not a manual invoice, not a finalized one, not when switched off', async () => {
   for (const [name, inv, enabled] of [['upgrade', { ...cycle, billing_reason: 'subscription_update' }, true], ['manual', { ...cycle, billing_reason: 'manual' }, true], ['already final', { ...cycle, status: 'open' }, true], ['no customer', { ...cycle, customer: null }, true], ['first invoice', { ...cycle, billing_reason: 'subscription_create' }, true], ['switched off', cycle, false]] as const) {

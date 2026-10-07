@@ -53,7 +53,7 @@ export async function render(ctx, root) {
       el('div', { class: 'tbl-wrap' }, el('table', { class: 'tbl' }, el('thead', {}, el('tr', {}, ['Class', 'Up to (g)', 'Longest side up to (cm)', 'Packing one order (zł net)', 'Handling one return (zł net)', ''].map((h) => el('th', { text: h })))), body)),
       isAdmin && el('div', { class: 'row' }, el('button', { class: 'btn ghost tiny', text: '+ Add a class', onclick: () => { const l = rows[rows.length - 1] || { max_weight_g: 0, max_side_cm: 0 }; rows.push({ size_class: '', max_weight_g: Number(l.max_weight_g) + 1000, max_side_cm: Number(l.max_side_cm), handling_net: 0, return_net: 0 }); draw(); } })),
       el('div', { class: 'row' }, field('Each further parcel in an order (zł net)', extra), field('Each further parcel in a return (zł net)', rextra)), err, isAdmin && el('div', { class: 'row' }, save),
-      el('p', { class: 'muted small', text: 'Prices exclude VAT. A new tariff applies to orders that ship after you save it. The monthly ceiling per m² is set per customer under Customers.' }));
+      el('p', { class: 'muted small', text: 'Prices exclude VAT. A new tariff applies to orders that ship after you save it. A discount or surcharge for one customer is set under Customers.' }));
   };
   drawTariff();
   clear(root).append(el('h1', { text: 'Shipping' }),

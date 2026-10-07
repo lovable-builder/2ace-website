@@ -1,4 +1,4 @@
-// Usage charges on the customer's monthly invoice. The database decides what is owed (usage_prepare_invoice: ceilings, queueing, idempotent);
+// Usage charges on the customer's monthly invoice. The database decides what is owed (usage_prepare_invoice: queueing, idempotent);
 // this decides how it is written to Stripe. Dependencies are passed in, so every branch is tested without Stripe or a database.
 export type Line = { kind: string; note: string | null; count: number; net_cents: number };
 export interface UsageDeps {
@@ -18,7 +18,7 @@ export const describe = (l: Line): string => ({
   handling: `Handling fees (${plural(l.count, 'order', 'orders')})`,
   return_handling: `Return handling fees (${plural(l.count, 'return', 'returns')})`,
   return_label: `Return labels (${plural(l.count, 'label', 'labels')})`,
-  credit: l.note || 'Monthly ceiling',
+  credit: l.note || 'Credit',
 } as Record<string, string>)[l.kind] ?? `Usage (${l.kind})`;
 
 // Stripe created a draft invoice. For the monthly subscription invoice of a customer with pending usage charges, add them as lines.

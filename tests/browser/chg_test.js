@@ -5,7 +5,7 @@ global.location = { search: '', pathname: '/platform', href: '' }; global.histor
 class DCLogic { constructor(){ this.props = {}; } setState(u){ const n = typeof u === 'function' ? u(this.state) : u; this.state = Object.assign({}, this.state, n); } }
 const Component = new Function('DCLogic', 'StreamableLogic', 'React', fs.readFileSync(require('path').join(__dirname, '..', '.cache', 'comp.js'), 'utf8') + '\nreturn Component;')(DCLogic, class {}, {});
 const c = new Component();
-const cur = { config: { storageType: 'pallet', qty: 12, pkgs: {}, storeOn: false, marketOn: false }, monthly: 4320 };
+const cur = { config: { m2: 14.4, pkgs: {}, storeOn: false, marketOn: false }, monthly: 4320 };
 c.state = Object.assign({}, c.state, { view: 'dash', tab: 'overview', activated: true, curPlan: cur, userEmail: 'a@b.pl' });
 console.log('dash header:', c.renderVals().monthlyFmt);
 c.startChange(); console.log('builder (change mode, nothing changed yet):', c.renderVals().monthlyFmt, '| changeMode', c.state.changeMode);

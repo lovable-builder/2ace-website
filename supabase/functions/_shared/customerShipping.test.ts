@@ -71,7 +71,7 @@ Deno.test('removing a label deletes its file', async () => {
 });
 Deno.test('capabilities say what this customer can do: own labels on full and payg only, buying is off', async () => {
   eq(await capabilities(rig({ modeIs: 'payg' }).deps), { mode: 'payg', can_prepare: true, own_label: true, buy_label: false }, 'payg');
-  eq((await capabilities(rig({ modeIs: 'full' }).deps)).own_label, true, 'full'); eq((await capabilities(rig({ modeIs: 'storage' }).deps)).own_label, false, 'storage only');
+  eq((await capabilities(rig({ modeIs: 'storage' }).deps)).own_label, false, 'storage only');
   eq((await capabilities(rig({ modeIs: 'payg', role: 'finance' }).deps)).own_label, false, 'finance role');
 });
 Deno.test('status returns the label without internals', async () => {

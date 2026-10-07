@@ -99,10 +99,8 @@ const cfg = async (org) => (await one('select * from public.org_shipping_setting
 // ---- the mode of a customer ----
 ok('a customer with no plan is on storage only', await mode(orgA) === 'storage');
 await plan(orgA, { m2: 10, pkgs: { ful: true } }, 'checkout'); ok('a plan still in checkout does not count', await mode(orgA) === 'storage');
-await plan(orgA, { m2: 10, pkgs: { ful: true } }); ok('an active plan with fulfilment is "full"', await mode(orgA) === 'full');
-await plan(orgA, { m2: 10, pkgs: { payg: true } }); ok('the latest active plan wins: fulfilment as you go is "payg"', await mode(orgA) === 'payg');
-await plan(orgA, { m2: 10, pkgs: { ret: true } }); ok('a plan with neither is storage', await mode(orgA) === 'storage');
-await plan(orgB, { storageType: 'pallet', qty: 12, pkgs: { ful: true } }); ok('an old-format plan with fulfilment is "full"', await mode(orgB) === 'full');
+await plan(orgA, { m2: 10, pkgs: {} }); ok('any active plan makes the customer pay as you go: there is nothing else to choose', await mode(orgA) === 'payg');
+await plan(orgB, { storageType: 'pallet', qty: 12, pkgs: {} }); ok('an old-format plan is pay as you go too', await mode(orgB) === 'payg');
 await plan(orgA, { m2: 10, pkgs: { payg: true } });
 // ---- who can read the mode ----
 ok('a member reads their own mode', (await call(ua, 'aal1', 'select public.my_fulfil_mode($1) m', [orgA])).rows?.[0]?.m === 'payg');
@@ -119,23 +117,23 @@ const a1 = await setOrg(admin, 'aal2', orgA, { markup_percent: 25, label_buying_
 ok('an admin changes only the settings they send', !a1.err && (await cfg(orgA)).markup_percent === '25.00' && (await cfg(orgA)).label_buying_enabled === true && Number((await cfg(orgA)).exposure_cap_net) === 300 && (await cfg(orgA)).daily_label_cap === 10 && (await cfg(orgA)).fulfil_mode_override === null, JSON.stringify(a1));
 ok('an unrelated change leaves the earlier ones alone', !(await setOrg(admin, 'aal2', orgA, { exposure_cap_net: 450 })).err && (await cfg(orgA)).markup_percent === '25.00' && Number((await cfg(orgA)).exposure_cap_net) === 450);
 ok('an empty markup goes back to the default', !(await setOrg(admin, 'aal2', orgA, { markup_percent: '' })).err && (await cfg(orgA)).markup_percent === null);
-for (const [label, patch, re] of [['a markup above 500', { markup_percent: 501 }, /./], ['a negative markup', { markup_percent: -1 }, /./], ['an unknown setting', { price: 1 }, /Unknown setting/], ['a bad mode', { fulfil_mode_override: 'everything' }, /Choose full, payg or storage/], ['a huge cap', { exposure_cap_net: 1e9 }, /./], ['not an object', [1], /Nothing to change/]]) ok('settings refuse ' + label, re.test((await setOrg(admin, 'aal2', orgA, patch)).err || ''));
+for (const [label, patch, re] of [['a markup above 500', { markup_percent: 501 }, /./], ['a negative markup', { markup_percent: -1 }, /./], ['an unknown setting', { price: 1 }, /Unknown setting/], ['a bad mode', { fulfil_mode_override: 'everything' }, /Choose payg or storage/], ['a huge cap', { exposure_cap_net: 1e9 }, /./], ['not an object', [1], /Nothing to change/]]) ok('settings refuse ' + label, re.test((await setOrg(admin, 'aal2', orgA, patch)).err || ''));
 ok('an unknown customer is refused', /Customer not found/.test((await setOrg(admin, 'aal2', '00000000-0000-0000-0000-000000000000', { markup_percent: 5 })).err || ''));
 ok('the markup, caps and switches are invisible to the customer (they cannot read the table)', (await as(ua, 'aal1', 'select * from public.org_shipping_settings')).rows.length === 0);
 ok('staff can read them, support included', (await as(support, 'aal2', 'select * from public.org_shipping_settings')).rows.length === 1 && (await as(wh, 'aal1', 'select * from public.org_shipping_settings')).rows.length === 1);
 ok('nobody writes the table directly', !!(await call(admin, 'aal2', `update public.org_shipping_settings set markup_percent = 0`)).err && !!(await call(ua, 'aal1', `insert into public.org_shipping_settings (org_id) values ($1)`, [orgB])).err);
 ok('changes are audited', (await one(`select count(*)::int n from public.audit_log where action='org.shipping_settings'`))[0].n >= 3);
 // ---- the override ----
-await setOrg(admin, 'aal2', orgA, { fulfil_mode_override: 'full' }); ok('the override beats the plan', await mode(orgA) === 'full');
+await setOrg(admin, 'aal2', orgA, { fulfil_mode_override: 'storage' }); ok('the override beats the plan', await mode(orgA) === 'storage');
 await setOrg(admin, 'aal2', orgA, { fulfil_mode_override: '' }); ok('clearing it follows the plan again', await mode(orgA) === 'payg');
 // ---- orders remember the mode they were placed in ----
 await stock(orgA, S1, 30, B1);
 const oP = await order(ua, 'aal1', orgA, 'M-1', [{ product_id: S1, qty: 1 }]);
 ok('an order is stamped with the customer\'s mode when it is placed', (await one('select fulfil_mode from public.orders where id=$1', [oP.rows[0].r.id]))[0].fulfil_mode === 'payg');
-await plan(orgA, { m2: 10, pkgs: { ful: true } });
-ok('a later plan change does not change an order already placed', (await one('select fulfil_mode from public.orders where id=$1', [oP.rows[0].r.id]))[0].fulfil_mode === 'payg');
+await plan(orgA, { m2: 10, pkgs: {} }); await setOrg(admin, 'aal2', orgA, { fulfil_mode_override: 'storage' });
+ok('a later change of mode does not change an order already placed', (await one('select fulfil_mode from public.orders where id=$1', [oP.rows[0].r.id]))[0].fulfil_mode === 'payg');
 const oF = await order(ua, 'aal1', orgA, 'M-2', [{ product_id: S1, qty: 1 }]);
-ok('but the next order follows the new plan', (await one('select fulfil_mode from public.orders where id=$1', [oF.rows[0].r.id]))[0].fulfil_mode === 'full');
+ok('but the next order follows the new mode', (await one('select fulfil_mode from public.orders where id=$1', [oF.rows[0].r.id]))[0].fulfil_mode === 'storage'); await setOrg(admin, 'aal2', orgA, { fulfil_mode_override: '' });
 ok('new label columns exist and start empty', (await one('select label_source, label_flag from public.orders where id=$1', [oF.rows[0].r.id]))[0].label_source === null);
 // ---- the ledger of shipping charges ----
 const O1 = await mkPacked('S-1', [{ product_id: S1, qty: 4 }, { product_id: S2, qty: 2 }]);
@@ -159,7 +157,8 @@ const ch2 = (await one('select * from public.shipping_charges where shipment_id=
 ok('a label bought in the sandbox is recorded as waived, so test orders can never bill a real customer', ch2.status === 'waived' && ch2.env === 'sandbox' && Number(ch2.net) === 11.7, JSON.stringify(ch2));
 ok('and its shipment says waived too', (await one('select billing_status from public.shipments where id=$1', [SH2.id]))[0].billing_status === 'waived');
 // who can see the ledger
-ok('staff can read the ledger, customers cannot', (await as(wh, 'aal1', 'select id from public.shipping_charges')).rows.length === 2 && (await as(support, 'aal2', 'select id from public.shipping_charges')).rows.length === 2 && (await as(ua, 'aal1', 'select id from public.shipping_charges')).rows.length === 0 && (await as(ub, 'aal1', 'select id from public.shipping_charges')).rows.length === 0);
+const LEDGER = (await one('select count(*)::int n from public.shipping_charges'))[0].n;
+ok('staff can read the ledger, customers cannot', (await as(wh, 'aal1', 'select id from public.shipping_charges')).rows.length === LEDGER && (await as(support, 'aal2', 'select id from public.shipping_charges')).rows.length === LEDGER && (await as(ua, 'aal1', 'select id from public.shipping_charges')).rows.length === 0 && (await as(ub, 'aal1', 'select id from public.shipping_charges')).rows.length === 0);
 ok('nobody writes the ledger directly', !!(await call(admin, 'aal2', `update public.shipping_charges set net = 0`)).err && !!(await call(wh, 'aal1', `delete from public.shipping_charges`)).err);
 // existing flows are untouched
 ok('the staff flow still ships the order and takes the goods out of stock', (await one('select status from public.orders where id=$1', [O1]))[0].status === 'shipped' && (await one(`select count(*)::int n from public.stock_movements where reason='ship' and ref_id=$1`, [O1]))[0].n === 2);

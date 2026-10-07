@@ -158,6 +158,10 @@
                 <p style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: #A8701A; margin: 0 0 10px;">Services</p>
                 <h2 style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 108; font-weight: 700; font-size: 28px; letter-spacing: -0.015em; margin: 0 0 6px;">What should we handle for you?</h2>
                 <p style="font-size: 15px; line-height: 1.55; color: rgba(11,12,14,0.62); margin: 0; max-width: 60ch;">Storage is already in your plan. Add only what you need. You can change this any month.</p>
+                <div style="margin-top: 14px; padding: 14px 16px; background: #FFFFFF; border: 1px solid rgba(11,12,14,0.12); border-radius: 4px; max-width: 64ch;">
+                  <p style="margin: 0 0 4px; font-weight: 600; font-size: 15px;">Fulfilment and returns are pay as you go</p>
+                  <p style="margin: 0; font-size: 14px; line-height: 1.55; color: rgba(11,12,14,0.7);">There is no monthly fee for them. {{ payNote }}</p>
+                </div>
               </div>
               <sc-for list="{{ svcList }}" as="v" hint-placeholder-count="3">
                 <div style="background: #FFFFFF; border: 2px solid {{ v.bd }}; border-radius: 4px; padding: 22px; display: flex; flex-direction: column; gap: 14px;">
@@ -1173,7 +1177,7 @@ class Component extends DCLogic {
     logoUrl: '', orgName: '', domainName: '', curPlan: null, hasDomain: false,
     view: 'build', step: 0, userEmail: '', menuOpen: false, userName: '', payErr: '', changeMode: false, chPrev: null, chBusy: false, chErr: '', chDone: '', domainOffer: false, dmInfo: null, dmErr: '', dmAccept: false, dmName: '', dmStatus: null, dmAlts: [], dmNote: '', dmBusy: false, domainAlts: [], mkCat: 'home', payNotice: '', payBanner: '',
     qty: 15, estUnits: 6000, estSize: 'medium',
-    pkgs: { ful: false, payg: false, ret: false, retp: false, imp: false }, tariff: null, orders: 1500,
+    pkgs: { imp: false }, tariff: null, orders: 1500,
     storeOn: false, domain: '', domainStatus: null, theme: 'mono',
     langs: { Polish: true, English: true, German: false, Czech: false },
     pays: { BLIK: true, Przelewy24: true, Cards: true, 'Apple Pay': false, PayPo: false },
@@ -1185,13 +1189,11 @@ class Component extends DCLogic {
 
   // Storage is sold by the square metre. Plans bought earlier per shelf bin (0.3 m²) or pallet (1.2 m²) are read as their area: the price is the same, 300 zł per m².
   STORAGE = { price: 300, min: 1, max: 1000, step: 1 };
-  LEGACY_M2 = { shelf: 0.3, pallet: 1.2 };
   // 2ACE Market is switched off for now. Everything for it stays in this file; set this to true to bring the option back.
   MARKET_ENABLED = false;
   planM2(c) {
     if (!c) return 0;
-    if (c.m2 != null) return Math.round(Number(c.m2) * 10) / 10;
-    return Math.round(Number(c.qty) * (this.LEGACY_M2[c.storageType] || 0) * 10) / 10;
+    return Math.round(Number(c.m2 || 0) * 10) / 10;
   }
 
   COUNTRIES = [
@@ -1232,7 +1234,6 @@ class Component extends DCLogic {
       const o = JSON.parse(localStorage.getItem('ace_plan') || 'null');
       if (!o || !o.plan || Date.now() - (o.t || 0) > this.PLAN_TTL) { if (o) this.clearPlan(); return {}; }
       const out = {}; this.PLAN_KEYS.forEach((k) => { if (o.plan[k] !== undefined) out[k] = o.plan[k]; });
-      if (o.plan.storageType) out.qty = this.planM2({ storageType: o.plan.storageType, qty: o.plan.qty }); // a plan saved in bins or pallets, read as its area
       if (!(out.qty >= 0.3 && out.qty <= this.STORAGE.max)) delete out.qty;
       delete out.step; // always open the builder at Space; only the choices are restored
       delete out.tt; delete out.meta; // marketing channels are no longer offered in the plan builder
@@ -1878,10 +1879,11 @@ class Component extends DCLogic {
   async loadTariff() {
     try { const r = await fetch(this.API + '/rest/v1/rpc/handling_tariff', { method: 'POST', headers: { apikey: this.ANON, 'Content-Type': 'application/json' }, body: '{}' }); if (r.ok) { const t = await r.json(); if (t && Array.isArray(t.tiers) && t.tiers.length) this.setState({ tariff: t }); } } catch (e) { /* the cards then say a fee per order by parcel size, without numbers */ }
   }
+  // What fulfilment and returns cost, in words, from the public tariff (a fee per order and per return by parcel size, plus labels at the carrier price and a small fee).
   tariffText(kind) {
     const t = this.state.tariff, z = (n) => Number(n).toFixed(2).replace('.', ',') + ' zł';
-    if (kind === 'payg') return t ? 'No monthly fee. ' + z(t.tiers[0].handling_net) + ' to ' + z(t.tiers[t.tiers.length - 1].handling_net) + ' per order by parcel size, never more than 350 zł per m² a month.' : 'No monthly fee. A fee per order by parcel size, never more than 350 zł per m² a month.';
-    return t ? 'No monthly fee. ' + z(t.tiers[0].return_net) + ' to ' + z(t.tiers[t.tiers.length - 1].return_net) + ' per return by parcel size, never more than 150 zł per m² a month.' : 'No monthly fee. A fee per return by parcel size, never more than 150 zł per m² a month.';
+    if (kind === 'return') return t ? z(t.tiers[0].return_net) + ' to ' + z(t.tiers[t.tiers.length - 1].return_net) + ' per return, by the size of the parcel' : 'a fee per return, by the size of the parcel';
+    return t ? z(t.tiers[0].handling_net) + ' to ' + z(t.tiers[t.tiers.length - 1].handling_net) + ' per order, by the size of the parcel' : 'a fee per order, by the size of the parcel';
   }
   componentDidMount() {
     this.loadTariff();
@@ -1948,10 +1950,6 @@ class Component extends DCLogic {
     const storage = Math.round(s.qty * st.price);
     m.push({ key: 'storage', label: 'Storage', detail: this.m2fmt(s.qty) + ' m² at ' + this.fmt(st.price) + ' / m²', v: storage });
     const fp = s.qty;
-    if (s.pkgs.ful) m.push({ label: 'Fulfillment', detail: this.num(fp) + ' m² at 350 zł', v: fp * 350 });
-    if (s.pkgs.payg) m.push({ label: 'Fulfilment as you go', detail: 'No monthly fee. A handling fee per order, up to 350 zł per m² a month', v: 0 });
-    if (s.pkgs.retp) m.push({ label: 'Returns as you go', detail: 'No monthly fee. A fee per return, up to 150 zł per m² a month', v: 0 });
-    if (s.pkgs.ret) m.push({ label: 'Returns handling', detail: this.num(fp) + ' m² at 150 zł', v: fp * 150 });
     if (s.pkgs.imp) m.push({ label: 'Import & customs', detail: 'Quoted per shipment', v: 0, quote: true });
     if (s.storeOn) { m.push({ label: 'Storefront ' + (s.domain || 'yourbrand') + '.pl', detail: 'Hosting and care', v: 199, once: 2950 }); }
     const ch = [['tt', 'TikTok Shop', 1690, 1890], ['meta', 'Meta Business', 1190, 1690]];
@@ -2025,10 +2023,6 @@ class Component extends DCLogic {
     }));
 
     const svcDefs = [
-      { k: 'ful', name: 'E-commerce fulfillment (flat monthly fee)', rate: 350, title: 'Want us to ship your orders?', lead: 'Connect your store and we pick, pack and dispatch every order from your space. Priced on your space, with no per-order fees.', addLabel: 'Add fulfillment', points: ['Same-day dispatch on a 15:00 cut-off', 'InPost, DPD, DHL and GLS at 2ACE rates', 'Shopify, WooCommerce, Allegro and TikTok Shop connected', 'Live tracking pushed to your customers'] },
-      { k: 'payg', name: 'Fulfilment as you go', price: '__PAYG__', title: 'Pay only for the orders you ship', lead: 'No monthly fulfilment fee. We pick, pack and hand over every order and charge a handling fee per order, by the size of the parcel, like the marketplaces do. The monthly total never passes the old flat price. You buy each shipping label in your dashboard at the carrier price plus a small fee, or add your own.', addLabel: 'Add fulfilment as you go', points: ['One handling fee per order, set by parcel size', 'Never more than 350 zł per m² of your space in a month', 'Compare InPost, DPD, DHL and GLS prices in your dashboard, or use your own label', 'Pick, pack and same-day dispatch on a 15:00 cut-off'] },
-      { k: 'retp', name: 'Returns as you go', price: '__RETP__', title: 'Pay only for the returns you get', lead: 'No monthly returns fee. Your buyer sends the parcel back with a return label that you issue in your dashboard, addressed to our warehouse. We inspect, grade and restock it within 48 hours and charge a small handling fee per return, never more than 150 zł per m² of your space in a month.', addLabel: 'Add returns as you go', points: ['Issue return labels yourself, in seconds', 'Inspected and graded within 48 hours', 'A-grade stock restocked automatically', 'Photos on every rejected item'] },
-      { k: 'ret', name: 'Returns handling (flat monthly fee)', rate: 150, title: 'Add returns handling?', lead: 'Returned parcels come back to us, get graded and go straight back on sale. You see every result in the dashboard.', addLabel: 'Add returns', points: ['Inspected and graded within 48 hours', 'A-grade stock restocked automatically', 'Photos on every rejected item', 'Branded returns portal for your buyers'] },
       { k: 'imp', name: 'Import & customs', price: 'Quoted per shipment', title: 'Importing from outside the EU?', lead: 'We book the freight and clear customs into Poland. Cost depends on the value, origin and route of each shipment, so we quote every one before it moves.', addLabel: 'Add import & customs', points: ['Air, sea and road freight booked for you', 'Customs clearance, duty and import VAT handled', 'CE and EU labelling checks before goods ship', 'Every milestone tracked in your dashboard'] }
     ];
 
@@ -2046,8 +2040,7 @@ class Component extends DCLogic {
     const onOff = (v, yes) => (v ? yes || 'Included' : 'Not in plan');
     const planRows = pc ? [
       { k: 'Space', v: this.m2fmt(this.planM2(pc)) + ' m²' },
-      { k: 'E-commerce fulfillment', v: pc.pkgs && pc.pkgs.payg ? 'As you go (a handling fee per order)' : onOff(pc.pkgs && pc.pkgs.ful) },
-      { k: 'Returns handling', v: pc.pkgs && pc.pkgs.retp ? 'As you go (a fee per return)' : onOff(pc.pkgs && pc.pkgs.ret) },
+      { k: 'Fulfilment and returns', v: 'Pay as you go' },
       { k: 'Import & customs', v: onOff(pc.pkgs && pc.pkgs.imp, 'Quoted per shipment') },
       { k: '.pl storefront', v: onOff(pc.storeOn) },
       this.MARKET_ENABLED && { k: '2ACE Market', v: onOff(pc.marketOn, this.mkRange() + ' per sale') }
@@ -2136,7 +2129,7 @@ class Component extends DCLogic {
           const bl = open && s.shInfo ? s.shInfo.bought_label : null, canBuy = !!(open && caps && caps.buy_label), money = (n) => Number(n).toFixed(2).replace('.', ',') + ' zł';
           const BR = { dhl: ['DHL', '#FFCC00', '#D40511'], dpd: ['DPD', '#DC0032', '#FFFFFF'], ups: ['UPS', '#351C15', '#FFB500'], fedex: ['FedEx', '#4D148C', '#FFFFFF'], inpost: ['InPost', '#FFCD00', '#1A1A1A'], gls: ['GLS', '#061AB1', '#FFFFFF'], poczta: ['Poczta', '#D6001C', '#FFFFFF'], orlen: ['Orlen', '#E30613', '#FFFFFF'] };
           const brand = (c) => { const k = Object.keys(BR).find((x) => String(c || '').toLowerCase().includes(x)); return k ? BR[k] : [String(c || '?').slice(0, 3).toUpperCase(), '#E5E3DE', '#0B0C0E']; };
-          const intro = !open ? '' : s.shBusy && !caps ? 'Checking…' : !caps ? '' : caps.mode === 'full' ? 'On your Fulfilment plan we choose the carrier and buy the label when your order is packed. If you already have a label for this order, add it here instead.' : caps.mode === 'payg' ? (caps.buy_label ? 'On Fulfilment as you go you prepare the label yourself: buy it here with 2ACE, or add your own.' : 'On Fulfilment as you go you prepare the label yourself. Buying a label with 2ACE is coming soon; for now, add your own label here.') : 'Your plan does not include fulfilment, so we do not ship orders for you. Add Fulfilment to your plan to use this.';
+          const intro = !open ? '' : s.shBusy && !caps ? 'Checking…' : !caps ? '' : caps.mode === 'payg' ? (caps.buy_label ? 'You prepare the label yourself: buy it here with 2ACE, or add your own.' : 'You prepare the label yourself. Buying a label with 2ACE is coming soon; for now, add your own label here.') : 'Your plan does not include fulfilment, so we do not ship orders for you. Add Fulfilment to your plan to use this.';
           return { shipDisplay: can ? 'inline-block' : 'none', shipLabel: open ? 'Hide shipping' : o.label_source === 'own' ? 'Shipping (own label added)' : o.label_source === '2ace' ? 'Shipping (label bought)' : 'Shipping', onShip: () => this.shToggle(o.id),
             panelDisplay: open ? 'flex' : 'none', shIntro: intro, shErr: open ? s.shErr : '', shErrDisplay: open && s.shErr ? 'block' : 'none', shNote: open ? s.shNote : '', shNoteDisplay: open && s.shNote ? 'block' : 'none',
             shOwnDisplay: open && caps && caps.own_label && !bl ? 'flex' : 'none',
@@ -2252,14 +2245,14 @@ class Component extends DCLogic {
         this.showToast('Set to ' + n + ' m².');
       },
 
-      svcList: svcDefs.filter((d) => !['ful', 'ret'].includes(d.k) || s.pkgs[d.k] || !!(s.curPlan && s.curPlan.config && s.curPlan.config.pkgs && s.curPlan.config.pkgs[d.k])).map((d) => {
+      svcList: svcDefs.map((d) => {
         const on = !!s.pkgs[d.k];
         return {
           name: d.name, lead: d.lead, points: d.points.map((t) => ({ t })),
-          price: d.rate ? '+ ' + this.fmt(d.rate) + ' / m² · ' + this.fmt(s.qty * d.rate) + ' / month' : d.price === '__PAYG__' ? this.tariffText('payg') : d.price === '__RETP__' ? this.tariffText('retp') : d.price,
+          price: d.rate ? '+ ' + this.fmt(d.rate) + ' / m² · ' + this.fmt(s.qty * d.rate) + ' / month' : d.price,
           bd: on ? '#0B0C0E' : 'rgba(11,12,14,0.12)',
           label: on ? 'Added ✓  Tap to remove' : d.addLabel, bg: on ? '#0B0C0E' : '#E39A2B', fg: on ? '#F5F4F1' : '#0B0C0E',
-          toggle: () => this.setState({ pkgs: Object.assign({}, s.pkgs, { [d.k]: !on }, !on && d.k === 'payg' ? { ful: false } : {}, !on && d.k === 'ful' ? { payg: false } : {}, !on && d.k === 'retp' ? { ret: false } : {}, !on && d.k === 'ret' ? { retp: false } : {}) })
+          toggle: () => this.setState({ pkgs: Object.assign({}, s.pkgs, { [d.k]: !on }) })
         };
       }),
 
@@ -2314,8 +2307,8 @@ class Component extends DCLogic {
     const KIND = { label: 'Shipping label', adjustment: 'Shipping adjustment', handling: 'Handling fee', return_handling: 'Return handling fee', return_label: 'Return label', credit: 'Credit' };
     const CST = { pending: 'On your next invoice', queued: 'On your invoice', invoiced: 'On your invoice', paid: 'Paid', test: 'Test, not billed', void: 'Cancelled' };
     return {
-      tabReturns: s.tab === 'returns', rtFormShow: s.rtOpen, rtBtnLabel: s.rtOpen ? 'Cancel' : 'New return', rtToggle: () => this.rtToggle(),
-      rtIntro: 'Your buyer sends goods back to our warehouse. You announce the return here, issue the return label yourself (the carrier price plus a small fee, on your invoice), and we inspect, grade and restock within 48 hours. ' + this.tariffText('retp').replace(/^No monthly fee\. /, 'On Returns as you go: '),
+      tabReturns: s.tab === 'returns', payNote: 'Each order we ship costs ' + this.tariffText('payg') + '. Each return costs ' + this.tariffText('return') + '. Shipping labels are the carrier price plus a small fee. It all goes on your monthly invoice, before VAT.', rtFormShow: s.rtOpen, rtBtnLabel: s.rtOpen ? 'Cancel' : 'New return', rtToggle: () => this.rtToggle(),
+      rtIntro: 'Your buyer sends goods back to our warehouse. You announce the return here, issue the return label yourself (the carrier price plus a small fee, on your invoice), and we inspect, grade and restock within 48 hours. Returns are pay as you go: ' + this.tariffText('return') + ', on your monthly invoice.',
       rtOrderOpts: [{ v: '', label: shipped.length ? 'Choose a shipped order' : 'No shipped orders yet' }].concat(shipped.map((o) => ({ v: o.id, label: o.ref + ' · ' + o.ship_name + ', ' + o.ship_city }))), rtOrderV: s.rtOrder, onRtOrder: (e) => this.rtPickOrder(e.target.value),
       rtDetailsShow: !!chosen, rtNameV: s.rtName, onRtName: (e) => this.setState({ rtName: e.target.value, rtErr: '' }), rtPhoneV: s.rtPhone, onRtPhone: (e) => this.setState({ rtPhone: e.target.value, rtErr: '' }), rtEmailV: s.rtEmail, onRtEmail: (e) => this.setState({ rtEmail: e.target.value }),
       rtLine1V: s.rtLine1, onRtLine1: (e) => this.setState({ rtLine1: e.target.value, rtErr: '' }), rtPostalV: s.rtPostal, onRtPostal: (e) => this.setState({ rtPostal: e.target.value, rtErr: '' }), rtCityV: s.rtCity, onRtCity: (e) => this.setState({ rtCity: e.target.value, rtErr: '' }),
@@ -2349,7 +2342,7 @@ class Component extends DCLogic {
     const chLiveKind = chLiveDelta > 0 ? 'upgrade' : chLiveDelta < 0 ? 'downgrade' : 'same';
     // Market (commission per sale) and Import & customs (quoted) have no monthly price: the plan can change while the price stays.
     const cc0 = (s.curPlan && s.curPlan.config) || {};
-    const chCfgDiff = !!s.curPlan && (Number(s.qty) !== this.planM2(cc0) || !!s.pkgs.ful !== !!(cc0.pkgs && cc0.pkgs.ful) || !!s.pkgs.payg !== !!(cc0.pkgs && cc0.pkgs.payg) || !!s.pkgs.ret !== !!(cc0.pkgs && cc0.pkgs.ret) || !!s.pkgs.retp !== !!(cc0.pkgs && cc0.pkgs.retp) || !!s.pkgs.imp !== !!(cc0.pkgs && cc0.pkgs.imp) || !!s.storeOn !== !!cc0.storeOn || !!s.marketOn !== !!cc0.marketOn);
+    const chCfgDiff = !!s.curPlan && (Number(s.qty) !== this.planM2(cc0) ||   !!s.pkgs.imp !== !!(cc0.pkgs && cc0.pkgs.imp) || !!s.storeOn !== !!cc0.storeOn || !!s.marketOn !== !!cc0.marketOn);
     const chKind = s.chPrev ? s.chPrev.kind : chLiveKind;
     const fld = (k) => (e) => this.setState({ [k]: e.target.value });
     const bd = (bad) => bad ? '#B4442E' : 'rgba(11,12,14,0.2)';

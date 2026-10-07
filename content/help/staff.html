@@ -71,7 +71,7 @@
     <li><b>Company</b>: country, tax ID, address, voivodeship, phone, Stripe customer id, join date.</li>
     <li><b>People</b>: members and their roles.</li>
     <li><b>Plan</b>: the current plan, monthly and one-time amounts, and history of earlier plans.</li>
-    <li><b>Shipping and fulfilment</b> (the box right under Plan): the customer's fulfilment mode (from their plan: Fulfilment, Fulfilment as you go, or storage only), their shipping markup, whether they may buy labels themselves, the most unpaid shipping they may have at once, and the labels waiting to be invoiced. An <b>admin</b> clicks <span class="ui">Edit</span> to change these. The mode override is for testing only; normally it follows the plan. The markup is added to the carrier's net price (empty = the default of 30%).</li>
+    <li><b>Shipping and fulfilment</b> (the box right under Plan): the customer's fulfilment mode (pay as you go for every customer with an active plan), their shipping markup, whether they may buy labels themselves, the most unpaid shipping they may have at once, and the labels waiting to be invoiced. An <b>admin</b> clicks <span class="ui">Edit</span> to change these. The mode override is for testing only; normally it follows the plan. The markup is added to the carrier's net price (empty = the default of 30%).</li>
     <li><b>Subscription</b>: Stripe subscription id, status and renewal date.</li>
     <li><b>Invoices</b>: loaded live from Stripe.</li>
     <li><b>Signed agreements</b>: who signed, which version, from which IP and when. Domain customers also have a "hostinger-domain-registration" row. Keep this evidence at least 3 years, as Hostinger requires.</li>
@@ -335,8 +335,8 @@
   </ul>
   <p>It tries up to three of the cheapest carriers if one refuses the parcel before any charge. It never buys twice: if a carrier does not confirm in time, it stops and an alert goes to the team.</p>
   <div class="ex"><b>Example</b><p>Marta weighs ORD-000021 at 1,2 kg, 30 × 20 × 15 cm, and taps Finish packing. A few seconds later the phone says "Label bought: DPD · package, tracking WB123". She goes to her computer, opens the order, clicks Download label, prints and sticks it.</p></div>
-  <h3>When the customer bought the label (Fulfilment as you go)</h3>
-  <p>Customers on Fulfilment as you go can buy their own label before the order is packed. The order's <span class="ui">Shipping label</span> card then shows <b>Bought by: The customer</b>, the carrier, tracking and the parcel the label was bought for. You do not buy anything: pick and pack as usual, print the label (<span class="ui">Download label</span>) and stick it on.</p>
+  <h3>When the customer bought the label </h3>
+  <p>Customers can buy their own label before the order is packed. The order's <span class="ui">Shipping label</span> card then shows <b>Bought by: The customer</b>, the carrier, tracking and the parcel the label was bought for. You do not buy anything: pick and pack as usual, print the label (<span class="ui">Download label</span>) and stick it on.</p>
   <ol class="steps">
     <li>When you finish packing, the system compares your real parcel with the one the customer declared. Within the tolerance (10% and 100 g, 2 cm a side, a smaller parcel is fine) nothing happens.</li>
     <li>If the real parcel is clearly bigger, heavier or there are more parcels, a red box says exactly what differs and <span class="ui">Mark shipped</span> is hidden. Weigh and measure again.</li>
@@ -400,7 +400,7 @@
 
 <section id="s-returns">
   <h2>17. Returns and the handling fee</h2>
-  <p class="lead">Customers announce returns and issue the return label themselves. You receive the parcel, grade each line and the customer is told. On pay-as-you-go plans every shipped order and every return also writes a handling fee.</p>
+  <p class="lead">Customers announce returns and issue the return label themselves. You receive the parcel, grade each line and the customer is told. Every shipped order and every return also writes a handling fee: everything is pay as you go.</p>
   <h3>Receive and grade a return</h3>
   <ol class="steps">
     <li>Open <span class="ui">Returns</span> (works on a phone too). <span class="ui">To handle</span> lists announced returns, returns whose label is on its way, and parcels already received.</li>
@@ -410,12 +410,10 @@
   </ol>
   <p>A return can be cancelled until a label is bought. A parcel that arrives with no announced return: ask the customer to announce it, or write to them from <span class="ui">Requests</span>.</p>
   <h3>The handling fee</h3>
-  <p>On Fulfilment as you go, each shipped order is charged one handling fee when it leaves stock: the class of its dearest packed parcel (by weight and longest side) once, plus a small amount for each further parcel. Returns use the return price of the class of the parcel that arrived. A parcel bigger than the biggest class has no tariff: the charge is recorded as 0 with the note "oversize" and an admin sets it by hand.</p>
+  <p>Each shipped order is charged one handling fee when it leaves stock: the class of its dearest packed parcel (by weight and longest side) once, plus a small amount for each further parcel. Returns use the return price of the class of the parcel that arrived. A parcel bigger than the biggest class has no tariff: the charge is recorded as 0 with the note "oversize" and an admin sets it by hand.</p>
   <ul>
     <li><b>The tariff</b>: <span class="ui">Shipping</span> (admin only) lists the classes with their limits and two prices (packing an order, handling a return) and the fee for each extra parcel. An admin can change it. A new tariff applies to orders that ship afterwards.</li>
-    <li><b>Per customer</b>: under <span class="ui">Customers → company → Shipping and fulfilment → Edit</span> an admin can set a discount or surcharge on the tariff, the monthly ceilings per m² (default 350 for handling fees, 150 for return fees) and <b>Live</b>. Until a customer is marked live, handling and return fees are recorded as <b>test</b> and never invoiced.</li>
-    <li><b>The ceiling</b> is applied when the invoice is made: if the month's handling fees exceed the ceiling per m² of the customer's space, a credit line cuts them back and the invoice shows both.</li>
-    <li>Customers on flat plans (fulfilment or returns at a fixed monthly price) are charged no per-order or per-return fee.</li>
+    <li><b>Per customer</b>: under <span class="ui">Customers → company → Shipping and fulfilment → Edit</span> an admin can set a discount or surcharge on the tariff and <b>Live</b>. Until a customer is marked live, handling and return fees are recorded as <b>test</b> and never invoiced..</li>
   </ul>
   <div class="ex"><b>Example</b><p>Marta ships ORD-000052: one parcel of 600 g, 33 cm long. That is class S (up to 1 kg, 40 cm), so Acme's handling fee is the S price. The same day RET-000007 arrives weighing 1,2 kg and 45 cm: class M, and the return price of M is charged. Acme is marked live, so both are pending and go on its next invoice.</p></div>
 </section>

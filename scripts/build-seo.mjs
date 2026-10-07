@@ -44,8 +44,6 @@ const graph = (lang) => ({
         '@type': 'OfferCatalog', name: '2ACE services and prices (net of VAT)',
         itemListElement: [
           offer('Storage', 'Space in square metres dedicated to your products, resized month to month.', unit(300, 'per m² per month')),
-          offer('E-commerce fulfillment', 'Pick, pack and ship your orders, with same-day dispatch before 15:00.', unit(350, 'per m² of your space per month')),
-          offer('Returns handling', 'Returned items are inspected, graded within 48 hours and restocked.', unit(150, 'per m² of your space per month')),
           offer('.pl storefront', 'A designed and hosted .pl online shop, domain included.', [unit(199, 'per month'), unit(2950, 'one-time setup')]),
           ...(MARKET_ENABLED ? [{ '@type': 'Offer', itemOffered: { '@type': 'Service', name: '2ACE Market', description: 'Sell on the 2ACE marketplace with no setup or monthly fee. A commission of 3.6% to 9.2% applies by category, only when something sells.' } }] : []),
           { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Import and customs', description: 'Freight and customs clearance into Poland, quoted per shipment.' } },
@@ -79,8 +77,8 @@ fs.writeFileSync(file('llms.txt'), `# 2ACE
 
 ## What 2ACE offers (prices in PLN, net of VAT)
 - Storage: 300 zł per m² per month, sized in square metres and resized month to month.
-- E-commerce fulfillment: 350 zł per m² of your space per month. Same-day dispatch for orders before 15:00.
-- Returns handling: 150 zł per m² of your space per month. Items graded within 48 hours.
+- E-commerce fulfillment: pay as you go, no monthly fee. A handling fee per order, set by the size of the parcel. Same-day dispatch for orders before 15:00. Shipping labels at the carrier price plus a small fee.
+- Returns: pay as you go, no monthly fee. A handling fee per return, by parcel size. The customer issues the return label in their dashboard. Items graded within 48 hours.
 - Import and customs: freight and customs clearance into Poland, quoted per shipment.
 - .pl storefront: 199 zł per month plus 2,950 zł one-time setup, domain included.
 ${MARKET_ENABLED ? '- 2ACE Market: sell on the 2ACE marketplace with no setup or monthly fee. Commission 3.6% to 9.2% by category, only when something sells.\n' : ''}- Plans are monthly, billed in advance, cancel or resize with 30 days notice. VAT: 23% for Polish companies, reverse charge for EU companies with a VAT number.

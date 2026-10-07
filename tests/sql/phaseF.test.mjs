@@ -134,8 +134,8 @@ ok('tracking numbers alone are enough', !(await attach(orgA, oA, null, null, nul
 ok('the customer sees their own label, another customer does not', (await as(ua, 'aal1', 'select id from public.own_labels')).rows.length === 3 && (await as(ub, 'aal1', 'select id from public.own_labels')).rows.length === 0 && (await as(support, 'aal2', 'select id from public.own_labels')).rows.length === 3);
 ok('nobody writes labels directly', !!(await call(ua, 'aal1', `delete from public.own_labels`)).err && !!(await call(admin, 'aal2', `update public.own_labels set voided_at = null`)).err);
 // ---- the plan decides ----
-await plan(orgA, { m2: 10, pkgs: { ret: true } });
-ok('a customer whose plan has no fulfilment cannot attach labels', /does not include fulfilment/.test((await attach(orgA, oA, null, null, null, ['TRACK123'], null)).err || ''));
+await db.query(`update public.plans set status='canceled' where org_id=$1`, [orgA]);
+ok('a customer with no active plan cannot attach labels', /does not include fulfilment/.test((await attach(orgA, oA, null, null, null, ['TRACK123'], null)).err || ''));
 await plan(orgA, { m2: 10, pkgs: { ful: true } });
 ok('on full fulfilment they can too (per order choice)', !(await attach(orgA, oA, null, null, null, ['TRACK124'], null)).err);
 // ---- removing ----

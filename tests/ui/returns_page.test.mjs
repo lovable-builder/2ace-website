@@ -43,7 +43,7 @@ const openTab = async (dom) => { const d = dom.window.document; [...d.querySelec
 // ---- nothing yet ----
 let { dom, calls } = await run({ cs: cs() }); let d = await openTab(dom);
 ok('the Returns tab opens a real screen (not the old "coming soon" card) with an honest empty state', /Returns/.test(T(d)) && /No returns yet/.test(T(d)) && !btn(d, 'Back to overview') && !!btn(d, 'New return'), T(d).slice(0, 300));
-ok('it explains pay as you go with the real return prices from the tariff', /On Returns as you go: 4,80 zł to 19,35 zł per return by parcel size, never more than 150 zł per m² a month/.test(T(d)), T(d).slice(0, 500));
+ok('it explains that returns are pay as you go, with the real return prices from the tariff', /Returns are pay as you go: 4,80 zł to 19,35 zł per return, by the size of the parcel, on your monthly invoice/.test(T(d)), T(d).slice(0, 500));
 // ---- announce ----
 btn(d, 'New return').click(); await wait(300); ok('the form asks which order the goods came from', /The order the goods came from/.test(T(d)) && !!inp(d, 'The order the goods came from'));
 btn(d, 'Announce the return').click(); await wait(100); ok('announcing with no order is refused politely', /Choose the order the goods are coming back from/.test(T(d)) && !calls.some((c) => c.rpc === 'create_return'));

@@ -119,20 +119,19 @@ await setOrg({ live: true, adj: -10 });
 { const o = await mkOrd('H-disc'); await shipIt(o.id, [[400, 30, 20, 10]]); ok('a customer discount applies to the tariff (-10%: 3.20 becomes 2.88)', Number((await fee(o.id)).net) === 2.88); }
 await setOrg({ live: true, adj: 25 });
 { const o = await mkOrd('H-sur'); await shipIt(o.id, [[400, 30, 20, 10]]); ok('a surcharge applies too (+25%: 3.20 becomes 4.00)', Number((await fee(o.id)).net) === 4); }
-await setOrg({ mode: 'full', live: true });
-{ const o = await mkOrd('H-flat'); await shipIt(o.id, [[400, 30, 20, 10]]); ok('an order of a flat-fee plan (Fulfilment) is charged no handling fee', (await fee(o.id)) === undefined && (await one(`select fulfil_mode from public.orders where id=$1`, [o.id]))[0].fulfil_mode === 'full'); }
+await setOrg({ mode: 'storage', live: true });
+{ const o = await mkOrd('H-nomode'); await direct(`insert into public.parcels (order_id, org_id, seq, weight_g, length_cm, width_cm, height_cm) values ($1,$2,1,400,30,20,10)`, [o.id, orgA]); await direct(`select public.wms_write_handling('${o.id}')`); ok('an order of a customer without pay-as-you-go (no plan) is charged no handling fee', (await fee(o.id)) === undefined && (await one(`select fulfil_mode from public.orders where id=$1`, [o.id]))[0].fulfil_mode === 'storage'); }
 await setOrg({ mode: 'payg', live: true });
 { const o = await mkOrd('H-once'); await shipIt(o.id, [[400, 30, 20, 10]]); await W(`select public.ship_order($1)`, [o.id]); await direct(`select public.wms_write_handling('${o.id}')`);
   ok('the fee is written once, however many times shipping is repeated', (await one(`select count(*)::int n from public.shipping_charges where order_id=$1 and kind='handling'`, [o.id]))[0].n === 1);
   ok('a second row for the same order is refused by the database', !!(await direct(`insert into public.shipping_charges (org_id, order_id, kind, seq, net, status, env) values ($1,$2,'handling',2,1,'pending','production')`, [orgA, o.id])).err); }
-{ const o = await mkOrd('H-moved'); await setOrg({ mode: 'full', live: true }); await shipIt(o.id, [[400, 30, 20, 10]]); ok('the mode stamped when the order was placed decides, not the plan at shipping time', (await fee(o.id))?.size_class === 'XS'); await setOrg({ mode: 'payg', live: true }); }
 ok('customers cannot read the charge ledger, staff can', (await call(ua, 'aal1', `select count(*)::int n from public.shipping_charges`)).rows[0].n === 0 && (await W(`select count(*)::int n from public.shipping_charges where kind='handling'`)).rows[0].n > 5);
 ok('nobody can call the fee writer directly', !!(await call(ua, 'aal1', `select public.wms_write_handling($1)`, [orgA])).err && !!(await asAnon(`select public.wms_write_handling('${orgA}')`)).err && !!(await call(admin, 'aal2', `select public.wms_write_handling($1)`, [orgA])).err);
 
 // ---- per-customer settings ----
-ok('admins can set the cap and the discount per customer, and mark a customer live', !!(await call(admin, 'aal2', `select public.set_org_shipping($1,'{"handling_cap_per_m2":300,"return_cap_per_m2":120,"handling_adjust_percent":-5,"usage_billing_live":true}'::jsonb)`, [orgA])).rows
-  && (await one(`select handling_cap_per_m2 h, return_cap_per_m2 r, handling_adjust_percent a, usage_billing_live l from public.org_shipping_settings where org_id=$1`, [orgA]))[0].h == 300);
-ok('out-of-range values are refused', !!(await call(admin, 'aal2', `select public.set_org_shipping($1,'{"handling_cap_per_m2":99999}'::jsonb)`, [orgA])).err && !!(await call(admin, 'aal2', `select public.set_org_shipping($1,'{"handling_adjust_percent":-150}'::jsonb)`, [orgA])).err && !!(await call(admin, 'aal2', `select public.set_org_shipping($1,'{"made_up":1}'::jsonb)`, [orgA])).err);
+ok('admins can set the discount per customer, and mark a customer live', !!(await call(admin, 'aal2', `select public.set_org_shipping($1,'{"handling_adjust_percent":-5,"usage_billing_live":true}'::jsonb)`, [orgA])).rows
+  && (await one(`select handling_adjust_percent a, usage_billing_live l from public.org_shipping_settings where org_id=$1`, [orgA]))[0].a == -5);
+ok('out-of-range values are refused, and the old ceilings no longer exist as settings', !!(await call(admin, 'aal2', `select public.set_org_shipping($1,'{"handling_cap_per_m2":300}'::jsonb)`, [orgA])).err && !!(await call(admin, 'aal2', `select public.set_org_shipping($1,'{"handling_adjust_percent":-150}'::jsonb)`, [orgA])).err && !!(await call(admin, 'aal2', `select public.set_org_shipping($1,'{"made_up":1}'::jsonb)`, [orgA])).err);
 ok('support cannot change them', !!(await call(support, 'aal2', `select public.set_org_shipping($1,'{"usage_billing_live":true}'::jsonb)`, [orgA])).err);
 // ---- a new tariff is used by the next order ----
 ok('an admin replaces the tariff', !!(await call(admin, 'aal2', `select public.set_handling_tiers($1::jsonb, '{"handling_extra_parcel":1}'::jsonb)`, [T5])).rows && (await W(`select count(*)::int n from public.handling_tiers`)).rows[0].n === 2);

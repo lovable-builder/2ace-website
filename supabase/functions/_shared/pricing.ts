@@ -7,14 +7,10 @@
 export const PRICE_PER_M2 = 300;
 export const MIN_M2 = 1;           // smallest space a new plan can ask for
 export const MAX_M2 = 2000;
-const LEGACY_M2 = { shelf: 0.3, pallet: 1.2 } as const;
-const LEGACY_MAX_QTY = { shelf: 2000, pallet: 1000 } as const;
 
 export type PlanConfig = {
   m2?: number;                                    // the area, in square metres (current plans)
-  storageType?: keyof typeof LEGACY_M2;           // old plans: 'shelf' or 'pallet'
-  qty?: number;                                   // old plans: how many of them
-  pkgs: { ful?: boolean; payg?: boolean; ret?: boolean; retp?: boolean; imp?: boolean };   // ful / ret: flat monthly fees (existing plans). payg / retp: pay as you go (handling fee per order, fee per return): no monthly fee, capped per m²   // ful = Fulfilment (we do everything), payg = Fulfilment as you go (the customer buys the labels; no monthly fee)
+  pkgs?: { imp?: boolean };                       // Import & customs is quoted per shipment. Fulfilment and returns are pay as you go for everyone: they are not part of the plan price.
   storeOn?: boolean;
   domain?: string;
   tt?: 'off' | 'setup' | 'managed';
@@ -31,11 +27,7 @@ export function storageM2(c: PlanConfig): number {
     if (!Number.isFinite(v) || v < MIN_M2 || v > MAX_M2) throw new Error('invalid m2');
     return round1(v);
   }
-  const f = c.storageType ? LEGACY_M2[c.storageType] : undefined;
-  if (!f) throw new Error('invalid storageType');
-  const qty = Math.round(Number(c.qty));
-  if (!Number.isFinite(qty) || qty < 1 || qty > LEGACY_MAX_QTY[c.storageType!]) throw new Error('invalid qty');
-  return round1(qty * f);
+  throw new Error('invalid m2');
 }
 export const fmtM2 = (n: number) => String(round1(n)).replace(/\.0$/, '');
 
@@ -45,13 +37,6 @@ export function priceConfig(c: PlanConfig) {
   const m2 = storageM2(c);
   const lines: Line[] = [{ label: `Storage (${fmtM2(m2)} m²)`, monthly: Math.round(m2 * PRICE_PER_M2), once: 0 }];
   const fp = m2;
-  if (c.pkgs?.ful && c.pkgs?.payg) throw new Error('choose one fulfilment option');
-  if (c.pkgs?.ful) lines.push({ label: 'Fulfillment', monthly: Math.round(fp * 350), once: 0 });
-  // Fulfilment as you go has no monthly fee: the customer pays for each label (carrier price plus a fee) on the monthly invoice. It is on the plan so we know how to treat the orders.
-  if (c.pkgs?.payg) lines.push({ label: 'Fulfilment as you go (handling fee per order, up to 350 zł per m² a month)', monthly: 0, once: 0 });
-  if (c.pkgs?.ret && c.pkgs?.retp) throw new Error('choose one returns option');
-  if (c.pkgs?.ret) lines.push({ label: 'Returns handling', monthly: Math.round(fp * 150), once: 0 });
-  if (c.pkgs?.retp) lines.push({ label: 'Returns as you go (fee per return, up to 150 zł per m² a month)', monthly: 0, once: 0 });
   // Import & customs is quoted per shipment: not billed here.
   if (c.storeOn) lines.push({ label: 'Storefront hosting and care', monthly: 199, once: 2950 });
   const channels: [keyof PlanConfig, string, number, number][] = [

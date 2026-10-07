@@ -40,7 +40,7 @@ const noMoney = (r: ReturnType<typeof rig>) => { ok(!r.log.includes('order') && 
 
 Deno.test('capabilities: buying is offered only when every switch is on', async () => {
   eq((await capabilitiesBuy(rig().d)).buy_label, true, 'all on');
-  for (const [name, o] of [['kill switch off', { env: { CUSTOMER_LABELS_ENABLED: 'no' } }], ['not payg', { mode: 'full' }], ['plan not active', { orgStatus: 'past_due' }], ['customer not enabled', { settings: { label_buying_enabled: false, markup_percent: null, max_label_net: null } }], ['no settings row', { settings: null }], ['wrong role', { role: 'finance' }]] as const) eq((await capabilitiesBuy(rig(o as never).d)).buy_label, false, name);
+  for (const [name, o] of [['kill switch off', { env: { CUSTOMER_LABELS_ENABLED: 'no' } }], ['not payg', { mode: 'storage' }], ['plan not active', { orgStatus: 'past_due' }], ['customer not enabled', { settings: { label_buying_enabled: false, markup_percent: null, max_label_net: null } }], ['no settings row', { settings: null }], ['wrong role', { role: 'finance' }]] as const) eq((await capabilitiesBuy(rig(o as never).d)).buy_label, false, name);
 });
 Deno.test('parcels: 1 to 3, weight and sides in range, comma decimals and rounding up', () => {
   eq(cleanParcels([{ weight_kg: '1,8', length_cm: '30.2', width_cm: 20, height_cm: 15 }]), [{ weight_g: 1800, length_cm: 31, width_cm: 20, height_cm: 15 }], 'cleaned');
@@ -66,7 +66,7 @@ Deno.test('quote: the customer sees the price with the markup and nothing else o
 Deno.test('quote: guards come first', async () => {
   await refuses(() => quote(rig({ env: { CUSTOMER_LABELS_ENABLED: '' } }).d, { order_id: OID, parcels: PARCELS }), 403, /not open yet/);
   await refuses(() => quote(rig({ role: 'finance' }).d, { order_id: OID, parcels: PARCELS }), 403, /role/);
-  await refuses(() => quote(rig({ mode: 'full' }).d, { order_id: OID, parcels: PARCELS }), 403, /as you go/);
+  await refuses(() => quote(rig({ mode: 'storage' }).d, { order_id: OID, parcels: PARCELS }), 403, /as you go/);
   await refuses(() => quote(rig({ order: { ...order, org_id: 'other' } }).d, { order_id: OID, parcels: PARCELS }), 404, /not found/);
   await refuses(() => quote(rig({ order: null }).d, { order_id: OID, parcels: PARCELS }), 404, /not found/);
   await refuses(() => quote(rig({ order: { ...order, status: 'held' } }).d, { order_id: OID, parcels: PARCELS }), 409, /reserved order/);

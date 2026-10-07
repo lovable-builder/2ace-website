@@ -84,8 +84,6 @@ const add = (org, kind, net, status = 'pending', env = 'production', note = null
 const prep = (org, inv) => svc(`select public.usage_prepare_invoice($1,$2) r`, [org, inv]);
 const rowsOf = async (org, inv) => (await one(`select kind, net::float n, status from public.shipping_charges where org_id=$1 and stripe_invoice_id=$2 order by kind, net`, [org, inv]));
 const lineOf = (r, kind) => r.rows[0].r.lines.find((l) => l.kind === kind);
-await direct(`insert into public.plans (org_id, config, monthly_pln, once_pln, status) values ($1,'{"m2":10,"pkgs":{"payg":true}}'::jsonb,3000,0,'active')`, [orgA]);
-ok('the area of the customer is read from the active plan (10 m²; an old pallet plan counts 1.2 m² each)', Number((await direct(`select public.org_area_m2($1) a`, [orgA])).rows[0].a) === 10);
 
 // ---- one invoice: everything pending is queued, nothing else is touched ----
 await add(orgA, 'label', 13); await add(orgA, 'label', 20); await add(orgA, 'adjustment', 6.5); await add(orgA, 'handling', 3.2); await add(orgA, 'handling', 4.2); await add(orgA, 'return_handling', 4.8); await add(orgA, 'return_label', 14);
@@ -95,7 +93,7 @@ ok('the lines are grouped by kind with the count and the amount in grosz', lineO
 ok('the total is the sum', p1.rows[0].r.total_cents === 3300 + 650 + 740 + 480 + 1400, String(p1.rows[0].r.total_cents));
 ok('the charges are queued for that invoice', (await rowsOf(orgA, 'in_1')).length === 7 && (await rowsOf(orgA, 'in_1')).every((x) => x.status === 'queued'));
 ok('test (waived) charges, sandbox charges and other customers\' charges are left alone', (await one(`select count(*)::int n from public.shipping_charges where org_id=$1 and status in ('waived','pending')`, [orgA]))[0].n === 2 && (await one(`select status from public.shipping_charges where org_id=$1`, [orgB]))[0].status === 'pending');
-ok('under the ceilings there is no credit line', !lineOf(p1, 'credit'));
+ok('there is no ceiling: no credit line is ever added', !lineOf(p1, 'credit'));
 const p1b = await prep(orgA, 'in_1');
 ok('asking again for the same invoice (a retried webhook) returns the same lines and changes nothing', JSON.stringify(p1b.rows[0].r) === JSON.stringify(p1.rows[0].r) && (await rowsOf(orgA, 'in_1')).length === 7);
 // ---- events ----
@@ -104,30 +102,21 @@ ok('paid moves them to paid, and a repeat changes nothing', (await svc(`select p
 ok('once paid, preparing the same invoice again returns the same lines', JSON.stringify((await prep(orgA, 'in_1')).rows[0].r) === JSON.stringify(p1.rows[0].r));
 ok('an unknown event is refused', /Unknown invoice event/.test((await svc(`select public.usage_invoice_event('in_1','exploded')`)).err ?? ''));
 
-// ---- the ceiling per m² ----
+// ---- big months are billed as they are (no ceiling) ----
 await add(orgA, 'handling', 2000); await add(orgA, 'handling', 2000); await add(orgA, 'return_handling', 2000); await add(orgA, 'label', 40);
 const p2 = await prep(orgA, 'in_2');
-ok('handling fees above 350 zł x 10 m² = 3 500 are cut back by a visible credit line (4 000 - 3 500 = 500)', lineOf(p2, 'credit') && p2.rows[0].r.lines.filter((l) => l.kind === 'credit').some((l) => l.net_cents === -50000 && /handling/.test(l.note)), JSON.stringify(p2.rows[0].r.lines));
-ok('return fees above 150 zł x 10 m² = 1 500 are cut back too (2 000 - 1 500 = 500), as a separate line', p2.rows[0].r.lines.filter((l) => l.kind === 'credit').some((l) => l.net_cents === -50000 && /return/.test(l.note)));
-ok('labels are never capped', lineOf(p2, 'label').net_cents === 4000);
-ok('the invoice total is what the customer really owes: 4 000 + 2 000 + 40 - 1 000', p2.rows[0].r.total_cents === 400000 + 200000 + 4000 - 100000, String(p2.rows[0].r.total_cents));
-ok('asking again does not add another credit', (await one(`select count(*)::int n from public.shipping_charges where org_id=$1 and kind='credit' and stripe_invoice_id='in_2'`, [orgA]))[0].n === 2 && JSON.stringify((await prep(orgA, 'in_2')).rows[0].r) === JSON.stringify(p2.rows[0].r) && (await one(`select count(*)::int n from public.shipping_charges where org_id=$1 and kind='credit'`, [orgA]))[0].n === 2);
+ok('large handling and return fees are billed in full: no credit line, whatever the total', !lineOf(p2, 'credit') && lineOf(p2, 'handling').net_cents === 400000 && lineOf(p2, 'return_handling').net_cents === 200000 && lineOf(p2, 'label').net_cents === 4000 && p2.rows[0].r.total_cents === 604000, JSON.stringify(p2.rows[0].r));
+ok('asking again returns the same lines and adds nothing', JSON.stringify((await prep(orgA, 'in_2')).rows[0].r) === JSON.stringify(p2.rows[0].r) && (await one(`select count(*)::int n from public.shipping_charges where org_id=$1 and kind='credit'`, [orgA]))[0].n === 0);
 // ---- a voided invoice gives the charges back ----
-ok('a voided invoice puts its charges back to pending and cancels its ceiling credits', (await svc(`select public.usage_invoice_event('in_2','voided')`)).rows !== undefined && (await one(`select count(*)::int n from public.shipping_charges where org_id=$1 and status='pending' and stripe_invoice_id is null and kind <> 'credit'`, [orgA]))[0].n >= 4 && (await one(`select count(*)::int n from public.shipping_charges where org_id=$1 and kind='credit' and status='void'`, [orgA]))[0].n === 2);
+ok('a voided invoice puts its charges back to pending', (await svc(`select public.usage_invoice_event('in_2','voided')`)).rows !== undefined && (await one(`select count(*)::int n from public.shipping_charges where org_id=$1 and status='pending' and stripe_invoice_id is null`, [orgA]))[0].n >= 4);
 const p3 = await prep(orgA, 'in_3');
-ok('they go on the next invoice, with the ceiling worked out afresh', p3.rows[0].r.lines.filter((l) => l.kind === 'credit').length === 2 && p3.rows[0].r.total_cents === 400000 + 200000 + 4000 - 100000);
-// ---- per-customer ceiling and no known area ----
+ok('they go on the next invoice', p3.rows[0].r.total_cents === 604000);
 await svc(`select public.usage_invoice_event('in_3','paid')`);
-await direct(`insert into public.org_shipping_settings (org_id, handling_cap_per_m2) values ($1, 100) on conflict (org_id) do update set handling_cap_per_m2 = 100`, [orgA]);
-await add(orgA, 'handling', 1500); const p4 = await prep(orgA, 'in_4');
-ok('a customer\'s own ceiling is used (100 zł x 10 m² = 1 000: 1 500 becomes 1 000)', p4.rows[0].r.lines.some((l) => l.kind === 'credit' && l.net_cents === -50000) && p4.rows[0].r.total_cents === 100000, JSON.stringify(p4.rows[0].r));
-await direct(`update public.plans set status='canceled' where org_id=$1`, [orgA]); await add(orgA, 'handling', 9000); const p5 = await prep(orgA, 'in_5');
-ok('with no active plan there is no area to cap against: the fees are billed as they are, and the area is reported as unknown', !lineOf(p5, 'credit') && lineOf(p5, 'handling').net_cents === 900000 && p5.rows[0].r.area_m2 === null);
 ok('an empty invoice id is refused', /invoice id is missing/.test((await prep(orgA, '')).err ?? ''));
-const none = await prep(orgB, 'in_b'); ok('a customer with nothing pending gets no lines... except what is really pending (50 zł of labels)', lineOf(none, 'label').net_cents === 5000);
+const none = await prep(orgB, 'in_b'); ok('another customer\'s pending charges go on their own invoice only', lineOf(none, 'label').net_cents === 5000);
 const empty = await prep(orgC, 'in_c'); ok('a customer with no charges gets an empty answer', empty.rows[0].r.lines.length === 0 && empty.rows[0].r.total_cents === 0);
 // ---- who may call ----
-ok('visitors, customers and even admins cannot call the billing functions, only the server', !!(await asAnon(`select public.usage_prepare_invoice('${orgA}','x')`)).err && !!(await call(ua, 'aal1', `select public.usage_prepare_invoice($1,'x')`, [orgA])).err && !!(await call(admin, 'aal2', `select public.usage_invoice_event('in_1','paid')`)).err && !!(await call(ua, 'aal1', `select public.org_area_m2($1)`, [orgA])).err);
+ok('visitors, customers and even admins cannot call the billing functions, only the server', !!(await asAnon(`select public.usage_prepare_invoice('${orgA}','x')`)).err && !!(await call(ua, 'aal1', `select public.usage_prepare_invoice($1,'x')`, [orgA])).err && !!(await call(admin, 'aal2', `select public.usage_invoice_event('in_1','paid')`)).err);
 
 await db.exec('rollback');
 console.log(`\n${pass} passed, ${fail} failed`);

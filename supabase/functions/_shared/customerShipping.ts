@@ -31,7 +31,7 @@ async function ownOrder(d: CsDeps, id: unknown) {
 // What this customer can do right now. The page asks first, so it never calls something that is not deployed or not allowed.
 export async function capabilities(d: CsDeps) {
   const mode = await d.mode(d.orgId);
-  return { mode, can_prepare: CAN_PREPARE_ROLES.includes(d.role), own_label: (mode === 'full' || mode === 'payg') && CAN_PREPARE_ROLES.includes(d.role), buy_label: false };
+  return { mode, can_prepare: CAN_PREPARE_ROLES.includes(d.role), own_label: mode === 'payg' && CAN_PREPARE_ROLES.includes(d.role), buy_label: false };
 }
 
 export async function status(d: CsDeps, orderId: unknown) {

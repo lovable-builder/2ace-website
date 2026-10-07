@@ -40,7 +40,7 @@ ok('open orders get a Shipping button; shipped and cancelled orders do not', shi
 ok('an order that already has an own label says so on the button', [...d.querySelectorAll('button')].some((b) => b.textContent.trim() === 'Shipping (own label added)'));
 btn(d, 'Shipping').click(); await wait(500);
 ok('opening the panel asks the server what this customer can do and for the order\'s state', calls.some((c) => c.action === 'capabilities') && calls.some((c) => c.action === 'status' && c.order_id === 'a1'));
-ok('on fulfilment as you go the panel explains it and offers the own-label form', /How is this order shipped\?/.test(d.body.textContent) && /you prepare the label yourself/.test(d.body.textContent) && /I provide my own label/.test(d.body.textContent) && !!d.querySelector('input[aria-label="Label PDF"]'));
+ok('for a pay-as-you-go customer the panel explains it and offers the own-label form', /How is this order shipped\?/.test(d.body.textContent) && /You prepare the label yourself/.test(d.body.textContent) && /I provide my own label/.test(d.body.textContent) && !!d.querySelector('input[aria-label="Label PDF"]'));
 ok('it says there is no charge from 2ACE for an own label', /no shipping charge from us/.test(d.body.textContent));
 // saving nothing, a wrong file, a huge file
 btn(d, 'Save the label').click(); await wait(100); ok('saving with nothing is refused politely', /Add the label file, or at least a tracking number/.test(d.body.textContent) && !calls.some((c) => c.action === 'own_label.attach'));
@@ -69,9 +69,6 @@ btn(d, 'Hide shipping').click(); await wait(200); const heading = () => [...d.qu
 ok('the panel closes again', heading().parentElement.style.display === 'none');
 ok('no errors while rendering', errs.length === 0, errs.slice(0, 3).join(' | ')); dom.window.close();
 
-// full fulfilment: same form, different words
-label = null; ({ dom, calls, uploaded } = await run(normal('full'))); d = await openOrders(dom); btn(d, 'Shipping').click(); await wait(500);
-ok('on full fulfilment it says we buy the label at packing, and the customer can still add their own', /we choose the carrier and buy the label when your order is packed/.test(d.body.textContent) && !!d.querySelector('input[aria-label="Label PDF"]')); dom.window.close();
 // storage only: no form
 ({ dom, calls, uploaded } = await run(normal('storage'))); d = await openOrders(dom); btn(d, 'Shipping').click(); await wait(500);
 const own = [...d.querySelectorAll('strong')].find((x) => x.textContent === 'I provide my own label.').parentElement.parentElement;

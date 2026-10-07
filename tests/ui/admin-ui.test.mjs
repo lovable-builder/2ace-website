@@ -29,7 +29,7 @@ DB.__rpc = { admin_customers: [
   { org_id: 'o2', name: 'Beta GmbH', country: 'DE', status: 'past_due', created_at: '2026-10-02T10:00:00Z', owner_name: 'Bernd', owner_email: 'bernd@beta.de', monthly_pln: 900, plan_status: 'active', sub_status: 'past_due', domain: null, open_requests: 0 }] };
 DB.members = [{ org_id: 'o1', user_id: 'u1', role: 'owner' }];
 DB.profiles = [{ user_id: 'u1', full_name: 'Anna Kowalska', email: 'anna@acme.pl', phone: '+48600100200' }];
-DB.plans = [{ id: 'p1', org_id: 'o1', status: 'active', monthly_pln: 4320, once_pln: 0, created_at: '2026-10-01T10:00:00Z', config: { storageType: 'pallet', qty: 12, pkgs: { ful: true }, storeOn: true } }];
+DB.plans = [{ id: 'p1', org_id: 'o1', status: 'active', monthly_pln: 4320, once_pln: 0, created_at: '2026-10-01T10:00:00Z', config: { m2: 14.4, pkgs: {}, storeOn: true } }];
 DB.subscriptions = [{ org_id: 'o1', stripe_subscription_id: 'sub_1', status: 'active', current_period_end: '2026-11-01T00:00:00Z', updated_at: '2026-10-01' }];
 DB.agreements = [{ org_id: 'o1', signer_name: 'Anna Kowalska', version: '2026-10-v1', ip: '1.2.3.4', signed_at: '2026-10-01T10:00:00Z' }];
 DB.domain_orders = [
@@ -58,7 +58,7 @@ document.body.innerHTML = '<div id="root"></div>'; calls.length = 0; c = mkCtx('
 const noReason = await modalClick('Continue'); ok('opening a customer asks for a reason first', noReason && /Please give a reason/.test(document.querySelector('.modal')?.textContent || ''));
 await modalClick('Continue', (m) => { m.querySelector('select').value = 'Support request'; }); await p; await tick(50);
 ok('reason is sent to the audit endpoint', calls.some((x) => x[0] === 'viewas.start' && x[1].org_id === 'o1' && /Support request/.test(x[1].reason)), JSON.stringify(calls[0]));
-ok('detail shows company, owner, plan, agreement', /Prosta 1/.test(text()) && /Anna Kowalska/.test(text()) && /14\.4 m² \+ fulfillment \(flat\), storefront/.test(text()) && /2026-10-v1/.test(text()), text().slice(0, 140));
+ok('detail shows company, owner, plan, agreement', /Prosta 1/.test(text()) && /Anna Kowalska/.test(text()) && /14\.4 m² \+ storefront/.test(text()) && /2026-10-v1/.test(text()), text().slice(0, 140));
 ok('support cannot change customer status', !/Change status/.test(text()));
 calls.length = 0; await mods.customers.render(c, root(), ['o1']); await tick(50); ok('reason asked only once per customer per session', !document.querySelector('.modal') && !calls.some((x) => x[0] === 'viewas.start'));
 c = mkCtx('admin'); c.session['opened:o1'] = true; await mods.customers.render(c, root(), ['o1']); await tick(50); ok('admin sees Change status', /Change status/.test(text()));
@@ -98,13 +98,13 @@ ok('customer-supplied text is never interpreted as HTML', !root().querySelector(
 // ---- shipping and fulfilment settings on a customer ----
 DB.__rpc.my_fulfil_mode = 'payg'; DB.org_shipping_settings = []; DB.shipping_charges = [{ org_id: 'o1', net: 13, status: 'pending', env: 'production' }, { org_id: 'o1', net: 2.5, status: 'queued', env: 'production' }];
 c = mkCtx('support'); c.session['opened:o1'] = true; await mods.customers.render(c, root(), ['o1']); await tick(50);
-ok('the customer page shows the fulfilment mode in words, the default markup, and what is waiting to be invoiced', /Shipping and fulfilment/.test(text()) && /Fulfilment as you go \(they prepare labels\)/.test(text()) && /Default/.test(text()) && /15 zł net|16 zł net|15,5 zł net|zł net/.test(text()) && !/set by an admin/.test(text()), text().slice(text().indexOf('Shipping and fulfilment'), text().indexOf('Shipping and fulfilment') + 300));
+ok('the customer page shows the fulfilment mode in words, the default markup, and what is waiting to be invoiced', /Shipping and fulfilment/.test(text()) && /Pay as you go \(handling fee per order/.test(text()) && /Default/.test(text()) && /15 zł net|16 zł net|15,5 zł net|zł net/.test(text()) && !/set by an admin/.test(text()), text().slice(text().indexOf('Shipping and fulfilment'), text().indexOf('Shipping and fulfilment') + 300));
 ok('support can read the settings but not edit them', ![...root().querySelectorAll('button')].some((b) => b.textContent === 'Edit'));
-DB.org_shipping_settings = [{ org_id: 'o1', markup_percent: 25, exposure_cap_net: 450, daily_label_cap: 6, label_buying_enabled: true, fulfil_mode_override: 'full' }];
+DB.org_shipping_settings = [{ org_id: 'o1', markup_percent: 25, exposure_cap_net: 450, daily_label_cap: 6, label_buying_enabled: true, fulfil_mode_override: 'payg' }];
 c = mkCtx('admin'); c.session['opened:o1'] = true; await mods.customers.render(c, root(), ['o1']); await tick(50);
 ok('an admin sees the real settings, and that the mode was set by hand', /25 %/.test(text()) && /May buy labels themselvesYes/.test(text()) && /450 zł net/.test(text()) && /set by an admin, not the plan/.test(text()) && !![...root().querySelectorAll('button')].find((b) => b.textContent === 'Edit'));
 [...root().querySelectorAll('button')].find((b) => b.textContent === 'Edit').click(); await tick(40);
-{ const m = document.querySelector('.modal'); const sel = m.querySelector('select'); ok('the form starts with the current values', sel.value === 'full' && m.querySelectorAll('input[type=number]')[0].value === '25' && m.querySelectorAll('input[type=number]')[1].value === '450' && m.querySelector('input[type=checkbox]').checked === true); }
+{ const m = document.querySelector('.modal'); const sel = m.querySelector('select'); ok('the form starts with the current values', sel.value === 'payg' && m.querySelectorAll('input[type=number]')[0].value === '25' && m.querySelectorAll('input[type=number]')[1].value === '450' && m.querySelector('input[type=checkbox]').checked === true); }
 calls.length = 0; await modalClick('Save', (m) => { m.querySelector('select').value = ''; const n = m.querySelectorAll('input[type=number]'); n[0].value = ''; n[1].value = '300'; n[2].value = '8'; m.querySelector('input[type=checkbox]').checked = false; }); await tick(80);
 const sv = calls.find((x) => x[0] === 'org.setShipping');
 ok('saving sends the whole patch: the mode override cleared, the markup back to default, the caps and the switch', sv && sv[1].org_id === 'o1' && sv[1].patch.fulfil_mode_override === '' && sv[1].patch.markup_percent === '' && sv[1].patch.exposure_cap_net === 300 && sv[1].patch.daily_label_cap === 8 && sv[1].patch.label_buying_enabled === false, JSON.stringify(sv));

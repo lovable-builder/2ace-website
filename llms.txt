@@ -4,8 +4,8 @@
 
 ## What 2ACE offers (prices in PLN, net of VAT)
 - Storage: 300 zł per m² per month, sized in square metres and resized month to month.
-- E-commerce fulfillment: 350 zł per m² of your space per month. Same-day dispatch for orders before 15:00.
-- Returns handling: 150 zł per m² of your space per month. Items graded within 48 hours.
+- E-commerce fulfillment: pay as you go, no monthly fee. A handling fee per order, set by the size of the parcel. Same-day dispatch for orders before 15:00. Shipping labels at the carrier price plus a small fee.
+- Returns: pay as you go, no monthly fee. A handling fee per return, by parcel size. The customer issues the return label in their dashboard. Items graded within 48 hours.
 - Import and customs: freight and customs clearance into Poland, quoted per shipment.
 - .pl storefront: 199 zł per month plus 2,950 zł one-time setup, domain included.
 - Plans are monthly, billed in advance, cancel or resize with 30 days notice. VAT: 23% for Polish companies, reverse charge for EU companies with a VAT number.

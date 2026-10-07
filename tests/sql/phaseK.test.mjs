@@ -91,7 +91,7 @@ const O1 = await shipped();
 
 // ---- announcing a return ----
 const c1 = await mkRet(O1); const RT1 = c1.rows?.[0]?.r;
-ok('a customer announces a return of a shipped order, and gets a reference', /^RET-\d{6}$/.test(RT1?.ref) && RT1.fee_mode === 'flat', JSON.stringify(c1));
+ok('a customer announces a return of a shipped order, and gets a reference', /^RET-\d{6}$/.test(RT1?.ref) && RT1.fee_mode === 'payg', JSON.stringify(c1));
 const rrow = (await one(`select * from public.returns where id=$1`, [RT1.id]))[0];
 ok('the buyer\'s details are stored cleaned (phone as 9 digits), the status is announced', rrow.status === 'announced' && rrow.buyer_phone === '600100200' && rrow.buyer_name === 'Anna Nowak' && rrow.buyer_country === 'PL');
 for (const [name, over, re] of [['a buyer name without a surname', { buyer: { name: 'Anna' } }, /first name and surname/], ['a bad phone', { buyer: { phone: '123' } }, /9 digits/], ['no city', { buyer: { city: '' } }, /city is required/], ['a bad postal code', { buyer: { postal: '3100' } }, /00-001/], ['a bad email', { buyer: { email: 'nope' } }, /email looks wrong/]]) ok('refused: ' + name, re.test((await mkRet(O1, over)).err ?? ''));
@@ -143,7 +143,6 @@ ok('a grade is required for goods that came back', /Choose a grade/.test((await 
 const g1 = await W(`select public.grade_return_line($1, 2, 'A', 'like new') r`, [ln]);
 ok('grade A puts the goods back on the customer\'s shelf, and the return is finished when its last line is graded', g1.rows?.[0]?.r?.finished === true && Number((await one(`select coalesce(sum(on_hand),0)::int n from public.stock_levels where product_id=$1`, [S1]))[0].n) === before + 2 && (await one(`select status from public.returns where id=$1`, [RT1.id]))[0].status === 'graded');
 ok('grading the same line again changes nothing', (await W(`select public.grade_return_line($1, 5, 'A') r`, [ln])).rows[0].r.replayed === true && Number((await one(`select coalesce(sum(on_hand),0)::int n from public.stock_levels where product_id=$1`, [S1]))[0].n) === before + 2);
-ok('a flat-fee return is charged no handling fee', (await one(`select count(*)::int n from public.shipping_charges where return_id=$1 and kind='return_handling'`, [RT1.id]))[0].n === 0);
 
 // ---- grades B and C, partial, and the fee on pay as you go ----
 await setOrg({ mode: 'payg', live: true });

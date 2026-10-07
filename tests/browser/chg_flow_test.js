@@ -10,7 +10,7 @@ let pass = 0, fail = 0; const ok = (n, x, e = '') => { x ? pass++ : fail++; cons
 const wait = (ms = 40) => new Promise((r) => setTimeout(r, ms));
 const server = (price) => { const log = []; global.fetch = async (u, o) => { const b = JSON.parse(o.body); log.push(b); const r = price(b); return r.ok === false ? { ok: false, json: async () => ({ error: r.error }) } : { ok: true, json: async () => r }; }; return log; };
 const prev = (b) => { const m = Math.round(b.config.m2 * 300); return { kind: m > 4320 ? 'upgrade' : m < 4320 ? 'downgrade' : 'same', delta: m - 4320, currentMonthly: 4320, newMonthly: m, today: Math.max(0, m - 4320), onceToCharge: 0 }; };
-const fresh = async () => { const c = new Component(); c.state = Object.assign({}, c.state, { view: 'dash', tab: 'overview', activated: true, userEmail: 'a@b.pl', curPlan: { config: { storageType: 'pallet', qty: 12, pkgs: {}, storeOn: false }, monthly: 4320 } }); c.startChange(); await wait(); return c; };
+const fresh = async () => { const c = new Component(); c.state = Object.assign({}, c.state, { view: 'dash', tab: 'overview', activated: true, userEmail: 'a@b.pl', curPlan: { config: { m2: 14.4, pkgs: {}, storeOn: false }, monthly: 4320 } }); c.startChange(); await wait(); return c; };
 const toReview = async (c) => { for (let i = 0; i < 3; i++) { c.setState({ step: c.state.step + 1 }); await wait(); } };
 (async () => {
   let log = server(prev), c = await fresh(); saved = [];
@@ -35,7 +35,7 @@ const toReview = async (c) => { for (let i = 0; i < 3; i++) { c.setState({ step:
   log = server(prev); c = await fresh(); c.setState({ qty: 10 }); await wait(); await toReview(c); await wait(60);
   ok('a smaller space is a downgrade', c.renderVals().ctaLabel === 'Confirm downgrade', c.renderVals().ctaLabel);
   log = server(prev); c = await fresh(); await toReview(c); await wait(60);
-  ok('an unchanged plan (14.4 m² = the old 12 pallets) is priced as the same', c.renderVals().ctaLabel === 'Confirm change' && log[0].config.m2 === 14.4, c.renderVals().ctaLabel);
+  ok('an unchanged plan (14.4 m²) is priced as the same', c.renderVals().ctaLabel === 'Confirm change' && log[0].config.m2 === 14.4, c.renderVals().ctaLabel);
   // a new customer's builder still saves their choices
   saved = []; const n = new Component(); n.state = Object.assign({}, n.state, { view: 'build', step: 0 }); n.setState({ qty: 33 }); await wait(); await wait(500);
   ok('a new customer building a plan still has it saved in the browser', saved.includes('ace_plan'), saved.join());
