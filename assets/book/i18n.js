@@ -1,6 +1,6 @@
-// Words on the booking page, in English, Chinese and Arabic. Arabic is shown right to left (set on <html> by book.js).
-export const LOCALE = { en: 'en-GB', zh: 'zh-CN', ar: 'ar-EG-u-nu-latn' };
-export const NATIVE = { en: 'English', zh: '中文', ar: 'العربية' };
+// Words on the booking page, in English, Polish, Chinese and Arabic. Arabic is shown right to left (set on <html> by book.js).
+export const LOCALE = { en: 'en-GB', pl: 'pl-PL', zh: 'zh-CN', ar: 'ar-EG-u-nu-latn' };
+export const NATIVE = { en: 'English', pl: 'Polski', zh: '中文', ar: 'العربية' };
 export const I18N = {
   en: {
     pageTitle: 'Book a call | 2ACE', h1: 'Book a call with 2ACE', lead: 'Pick the language you would like to talk in, then a time that suits you. We confirm by email with a calendar invitation and a meeting link.',
@@ -15,6 +15,20 @@ export const I18N = {
     mTitle: 'Your booking', mCancelled: 'This booking was cancelled.', mPast: 'This meeting has already taken place or started.', mNotFound: 'We could not find this booking. Check the link in your email.',
     reschedule: 'Choose another time', move: 'Move to this time', cancel: 'Cancel this booking', cancelAsk: 'Cancel this booking?', cancelWhy: 'Reason (optional)', cancelYes: 'Yes, cancel it', keep: 'Keep it', moved: 'Your booking was moved. A new confirmation is on its way.', cancelledDone: 'Your booking was cancelled.', bookAgain: 'Book a new time', back: 'Back',
     language: 'Language', home: 'Home',
+  },
+  pl: {
+    pageTitle: 'Umów rozmowę | 2ACE', h1: 'Umów rozmowę z 2ACE', lead: 'Wybierz język, w którym chcesz rozmawiać, a potem dogodny termin. Potwierdzimy go e-mailem z zaproszeniem do kalendarza i linkiem do spotkania.',
+    noAccount: 'Konto nie jest potrzebne. Umówić się mogą zarówno klienci, jak i goście.', stepLang: '1. Język spotkania', stepTime: '2. Wybierz dzień i godzinę', stepYou: '3. Twoje dane',
+    meetIn: (n) => `Rozmowa: ${n}`, minutes: (m) => `${m} minut`, tz: 'Godziny są podane w Twojej strefie czasowej', loading: 'Ładowanie…', noSlots: 'W tym języku nie ma teraz wolnych terminów. Wybierz inny język lub napisz na hello@2ace.pl.',
+    closed: 'Rezerwacja online nie jest jeszcze dostępna. Napisz na hello@2ace.pl, a ustalimy z Tobą termin.', pickDay: 'Dzień', pickTime: 'Godzina', selected: 'Twój termin',
+    name: 'Imię i nazwisko', email: 'E-mail', phone: 'Telefon (opcjonalnie)', company: 'Firma (opcjonalnie)', topic: 'O czym chcesz porozmawiać? (opcjonalnie)', topicPh: 'Na przykład: magazyn 20 m² i wysyłka do Niemiec',
+    submit: 'Potwierdź rezerwację', working: 'Rezerwuję…', privacy: 'Twoich danych używamy wyłącznie do umówienia tej rozmowy.', privacyLink: 'Polityka prywatności',
+    doneTitle: 'Termin zarezerwowany', doneText: (when) => `Twoja rozmowa jest potwierdzona: ${when}.`, emailed: (e) => `Wysłaliśmy potwierdzenie z zaproszeniem do kalendarza na adres ${e}. Jeśli go nie widzisz, sprawdź folder spam.`, notEmailed: 'Rezerwacja jest zapisana, ale nie udało się wysłać e-maila z potwierdzeniem. Zachowaj tę stronę lub poniższy link.',
+    addGoogle: 'Dodaj do Kalendarza Google', ics: 'Pobierz plik kalendarza', manage: 'Zmień lub odwołaj tę rezerwację', ref: 'Numer rezerwacji', link: 'Link do spotkania', join: 'Dołącz do spotkania', noLink: 'Link do spotkania wyślemy Ci e-mailem przed rozmową.',
+    taken: 'Ten termin został właśnie zajęty. Wybierz inny.', errName: 'Podaj imię i nazwisko', errEmail: 'Podaj poprawny adres e-mail', errTime: 'Wybierz dzień i godzinę', error: 'Coś poszło nie tak. Spróbuj ponownie lub napisz na hello@2ace.pl.',
+    mTitle: 'Twoja rezerwacja', mCancelled: 'Ta rezerwacja została odwołana.', mPast: 'To spotkanie już się odbyło lub trwa.', mNotFound: 'Nie znaleźliśmy tej rezerwacji. Sprawdź link w e-mailu.',
+    reschedule: 'Wybierz inny termin', move: 'Przenieś na ten termin', cancel: 'Odwołaj tę rezerwację', cancelAsk: 'Odwołać tę rezerwację?', cancelWhy: 'Powód (opcjonalnie)', cancelYes: 'Tak, odwołaj', keep: 'Zostaw', moved: 'Rezerwacja została przeniesiona. Nowe potwierdzenie jest w drodze.', cancelledDone: 'Rezerwacja została odwołana.', bookAgain: 'Zarezerwuj nowy termin', back: 'Wstecz',
+    language: 'Język', home: 'Strona główna',
   },
   zh: {
     pageTitle: '预约通话 | 2ACE', h1: '预约与 2ACE 通话', lead: '请选择您想使用的交流语言，再选一个合适的时间。我们会通过邮件确认，并附上日历邀请和会议链接。',

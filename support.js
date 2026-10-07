@@ -155,7 +155,7 @@
     runtime.markFetched(rootName);
     runtime.setRootName(rootName);
     runtime.adoptParsed(rootName, parsed);
-    if (!window.__resources) {
+    if (!window.__resources && !(window.aceI18n && window.aceI18n.lang !== "en")) {   // a translated page keeps its translated template
       fetch(location.href).then((res) => res.ok ? res.text() : "").then((t) => {
         const raw = t ? parseDcText(t) : null;
         if (raw?.template) runtime.updateHtml(rootName, raw.template);
@@ -1904,7 +1904,7 @@
     else document.addEventListener("DOMContentLoaded", () => api.__dcBoot());
   }
   hideRawTemplate();
-  loadReactUmd().then(init).catch((err) => {
+  Promise.all([loadReactUmd(), window.aceI18n && window.aceI18n.ready]).then(init).catch((err) => {
     console.error("[dc] failed to load React or boot:", err);
     throw err;
   });

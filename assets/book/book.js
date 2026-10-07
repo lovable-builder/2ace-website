@@ -3,7 +3,9 @@
 import { I18N, LOCALE, NATIVE } from './i18n.js';
 
 const API = window.ACE_CONFIG.supabaseUrl + '/functions/v1/booking';
-const LANGS = ['en', 'zh', 'ar'];
+const LANGS = ['en', 'pl', 'zh', 'ar'];
+const EMAIL_LANGS = ['en', 'zh', 'ar'];   // confirmation emails (bookingMail.ts); a Polish page gets them in English
+const SITE_LANGS = ['en', 'pl', 'zh'];   // the languages of the rest of the site, remembered as ace_lang (assets/i18n.js)
 
 const el = (tag, attrs, ...kids) => {
   const e = document.createElement(tag);
@@ -27,8 +29,8 @@ async function api(action, payload) {
 export async function start(root, opts = {}) {
   const q = new URLSearchParams(opts.search ?? location.search);
   const detectTz = () => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Warsaw'; } catch { return 'Europe/Warsaw'; } };
-  const guess = () => { const l = String((typeof navigator !== 'undefined' && navigator.language) || 'en').toLowerCase(); return l.startsWith('zh') ? 'zh' : l.startsWith('ar') ? 'ar' : 'en'; };
-  const S = { ui: LANGS.includes(q.get('lang')) ? q.get('lang') : LANGS.includes(store.get('2ace-book-ui')) ? store.get('2ace-book-ui') : guess(), uiChosen: false,
+  const guess = () => { const l = String((typeof navigator !== 'undefined' && navigator.language) || 'en').toLowerCase(); return l.startsWith('pl') ? 'pl' : l.startsWith('zh') ? 'zh' : l.startsWith('ar') ? 'ar' : 'en'; };
+  const S = { ui: LANGS.includes(q.get('lang')) ? q.get('lang') : LANGS.includes(store.get('2ace-book-ui')) ? store.get('2ace-book-ui') : SITE_LANGS.includes(store.get('ace_lang')) ? store.get('ace_lang') : guess(), uiChosen: false,
     tz: detectTz(), langs: [], lang: null, minutes: 30, slots: [], day: null, start: null, token: q.get('t') || '', booking: null, mode: 'book', busy: false, err: '', loading: true, form: { name: '', email: '', phone: '', company: '', topic: '' }, done: null, note: '' };
   const t = () => I18N[S.ui];
   const loc = () => LOCALE[S.ui];
@@ -44,7 +46,7 @@ export async function start(root, opts = {}) {
   const applyLang = () => {
     document.documentElement.lang = S.ui; document.documentElement.dir = S.ui === 'ar' ? 'rtl' : 'ltr'; document.title = t().pageTitle;
   };
-  const setUi = (l) => { S.ui = l; S.uiChosen = true; store.set('2ace-book-ui', l); render(); };
+  const setUi = (l) => { S.ui = l; S.uiChosen = true; store.set('2ace-book-ui', l); if (SITE_LANGS.includes(l)) store.set('ace_lang', l); render(); };
   const say = (msg) => { S.err = msg; render(); };
   const errText = (e) => (e && e.status === 409 ? t().taken : e && e.message && !/^(error|Failed|NetworkError|Load failed)/i.test(e.message) && e.status && e.status < 500 ? e.message : t().error);
 
@@ -87,7 +89,7 @@ export async function start(root, opts = {}) {
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(f.email.trim())) return say(t().errEmail);
     S.busy = true; S.err = ''; render();
     try {
-      const r = await api('book', { lang: S.lang, ui_lang: S.ui, start: S.start, name: f.name, email: f.email, phone: f.phone, company: f.company, topic: f.topic, tz: S.tz, website: S.hp || '' });
+      const r = await api('book', { lang: S.lang, ui_lang: EMAIL_LANGS.includes(S.ui) ? S.ui : 'en', start: S.start, name: f.name, email: f.email, phone: f.phone, company: f.company, topic: f.topic, tz: S.tz, website: S.hp || '' });
       S.token = r.token; S.done = { ...r.booking, email: f.email.trim(), emailed: r.emailed, ui_lang: S.ui }; S.mode = 'done'; S.busy = false; render(); scrollTo(0, 0);
     } catch (e) { S.busy = false; if (e.status === 409) await loadSlots(); S.err = errText(e); render(); }
   }

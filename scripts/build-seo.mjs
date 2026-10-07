@@ -14,7 +14,7 @@ const pages = [
   ...(MARKET_ENABLED ? [{ f: 'market.html', url: '/market', title: '2ACE Market | Sell in Europe without building a website', desc: 'Sell on the 2ACE marketplace with no setup and no monthly fee. You pay a commission of 3.6% to 9.2% by category, only when something sells.' }] : []),
   { f: 'about.html', url: '/about', title: 'About 2ACE | Warehousing run by operators', desc: 'A Chinese and Egyptian partnership with a long history in manufacturing, sales and operations, based in China and Poland to run your storage and fulfillment smoothly.' },
   { f: 'book.html', url: '/book', title: 'Book a call | 2ACE', desc: 'Book a call with 2ACE in English, Chinese or Arabic. Pick a time that suits you, no account needed. We confirm by email with a calendar invitation and a meeting link.' },
-  { f: 'terms.html', url: '/terms', title: 'Terms of service | 2ACE', desc: 'The terms of the 2ACE service: plans, billing, service levels, insurance, customs, domains and domains.' },
+  { f: 'terms.html', url: '/terms', title: 'Terms of service | 2ACE', desc: 'The terms of the 2ACE service: plans, billing, service levels, insurance, customs and domains.' },
   { f: 'privacy.html', url: '/privacy', title: 'Privacy policy | 2ACE', desc: 'How 2ACE collects, uses and protects personal data, who we share it with, and your rights.' },
   { f: 'login.html', url: '/login', title: 'Log in | 2ACE', desc: 'Log in to your 2ACE account.', noindex: true },
   { f: 'account.html', url: '/account', title: 'Your account | 2ACE', desc: 'Your 2ACE account.', noindex: true },

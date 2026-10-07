@@ -115,6 +115,7 @@ const head = (title, desc, url, image, extra = '') => `<!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(title)}</title><meta name="description" content="${esc(desc)}">${iconTags()}
 ${socialTags({ title, desc, url, image: image || DEFAULT_OG, type: extra ? 'article' : 'website' })}${extra}
+<script src="/assets/i18n.js"></script>
 ${fonts}<style>${css}</style></head><body>`;
 
 // ---- pages ----

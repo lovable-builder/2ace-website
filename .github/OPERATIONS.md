@@ -61,6 +61,18 @@ privacy policy (`privacy.html`), e.g. "Sentry: error reports when something brea
 database API and the Edge Functions runtime. A failed run is emailed by GitHub. Run it by hand from the Actions tab, or
 locally: `node scripts/uptime.mjs https://2ace.pl`. GitHub pauses scheduled workflows after 60 days with no commits.
 
+## Languages (English, Polish, Chinese)
+
+The public pages (home, about, help, news, privacy, terms, login, account) are written in English and translated in the
+browser by `assets/i18n.js`, using `assets/i18n/pl.json` and `assets/i18n/zh.json` (English text → translation). The visitor's
+choice is kept as `ace_lang`, the same setting as the customer app, so both follow it. A link with `?lang=pl` or `?lang=zh` opens a
+page in that language. `/book` has its own English, Polish, Chinese and Arabic text in `assets/book/i18n.js`, and follows the same choice.
+
+After changing any English text on these pages, or adding a news article, run `node scripts/i18n-site.mjs --missing pl` (and
+`zh`), add the translations, then `node scripts/i18n-site.mjs --sort`. The tests fail while any text is untranslated. The
+Polish and Chinese texts were machine-written: have a native speaker review them, especially the privacy policy and terms,
+where the English version is the binding one. `/admin`, `/scan` and the old `/platform` stay in English.
+
 ## The new customer app
 
 Built from `web/` into `app/`, served at `/app/`. See `web/README.md`, including how to switch `/platform` over to it.

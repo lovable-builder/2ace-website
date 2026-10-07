@@ -29,7 +29,7 @@ const head = (title, desc, extraHead = '') => `<!DOCTYPE html>\n<html lang="en">
 
 // ---- public customer guide ----
 const HELP_DESC = 'Step-by-step guide to your 2ACE account: build a plan, add products, book a delivery, read inventory, change your plan and get a domain, with examples.';
-const pub = head('Help and user guide | 2ACE', HELP_DESC, iconTags() + socialTags({ title: 'Help and user guide | 2ACE', desc: HELP_DESC, url: '/help' })) + `
+const pub = head('Help and user guide | 2ACE', HELP_DESC, iconTags() + socialTags({ title: 'Help and user guide | 2ACE', desc: HELP_DESC, url: '/help' }) + '<script src="/assets/i18n.js"></script>') + `
 <body>
 <header class="top"><a class="brand" href="/">2ACE<small>Help</small></a><nav class="sitenav"><a href="/about">About</a><a href="/book">Book a call</a><a href="/news">News</a><a href="/platform">Build your plan</a><a href="/login">Log in</a></nav></header>
 <div class="wrap">
