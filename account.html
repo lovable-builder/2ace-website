@@ -126,16 +126,18 @@
   <p class="fine" style="margin-top:10px;font-size:12px">2ACE sp. z o.o. · ul. Ostrobramska 101A lok. 301, 04-041 Warszawa · NIP 1133212948 · REGON 545746743 · KRS 0001267111 · tel. +48 608 180 946</p>
 </main>
 
+<script src="/config.js"></script>
+<script src="/assets/monitor.js"></script>
 <script src="countries.js?v=3"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-  const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2YmNtaWxjanJhZ3JjZXp3emxvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEwNjMyODMsImV4cCI6MjEwNjYzOTI4M30.Q6TlQnDToz2oPr4FXNgKdgdrZT3ojUToCroLRVQGRsw';
-  const sb = window.supabase.createClient('https://hvbcmilcjragrcezwzlo.supabase.co', ANON);
+  const ANON = window.ACE_CONFIG.supabaseAnonKey;
+  const sb = window.supabase.createClient(window.ACE_CONFIG.supabaseUrl, ANON);
   const $ = (id) => document.getElementById(id);
   const say = (id, text, kind) => { const el = $(id); el.textContent = text; el.className = 'msg ' + (kind || ''); };
   const nz = (v) => { v = v.trim(); return v === '' ? null : v; };
   let user = null, orgId = null, canEditOrg = false, logoPath = null, orgName = '';
-  const LOGO_BASE = 'https://hvbcmilcjragrcezwzlo.supabase.co/storage/v1/object/public/logos/';
+  const LOGO_BASE = window.ACE_CONFIG.supabaseUrl + '/storage/v1/object/public/logos/';
 
   function paintAvatar() {
     const av = $('av');
@@ -266,7 +268,7 @@
     $('n-pw').value = ''; say('m-pw', 'Password changed.', 'ok');
   });
 
-  const FN = 'https://hvbcmilcjragrcezwzlo.supabase.co/functions/v1/';
+  const FN = window.ACE_CONFIG.supabaseUrl + '/functions/v1/';
   async function callFn(name) {
     const { data } = await sb.auth.getSession();
     const r = await fetch(FN + name, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + data.session.access_token, apikey: ANON } , body: '{}' });

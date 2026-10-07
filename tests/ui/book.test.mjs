@@ -1,3 +1,4 @@
+import { ACE_CONFIG } from '../lib/ace-config.mjs';
 import { ROOT } from '../lib/root.mjs';
 import { JSDOM } from 'jsdom';
 const dom = new JSDOM('<!DOCTYPE html><body><div id="book-app"></div></body>', { url: 'https://2ace.pl/book' });
@@ -5,6 +6,7 @@ Object.defineProperty(globalThis, 'navigator', { value: dom.window.navigator, co
 Object.assign(globalThis, { window: dom.window, document: dom.window.document, location: dom.window.location, localStorage: dom.window.localStorage, scrollTo: () => {}, __BOOK_NO_AUTOSTART: true });
 let pass = 0, fail = 0; const ok = (n, c, x = '') => { c ? pass++ : fail++; console.log((c ? 'PASS ' : 'FAIL ') + n + (c || !x ? '' : '  -> ' + x)); };
 const tick = (ms = 30) => new Promise((r) => setTimeout(r, ms)); const text = () => document.body.textContent.replace(/\s+/g, ' ');
+dom.window.ACE_CONFIG = ACE_CONFIG;
 const calls = []; const H = {};
 globalThis.fetch = async (u, o) => { const b = JSON.parse(o.body); calls.push(b); const r = (H[b.action] || (() => ({ status: 404, body: { error: 'x' } })))(b); return { ok: (r.status ?? 200) < 400, status: r.status ?? 200, json: async () => r.body }; };
 const { start } = await import('file://' + ROOT + '/assets/book/book.js');

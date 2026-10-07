@@ -1,6 +1,6 @@
 // Square-metre builder: pricing, the estimator, old (bin / pallet) plans, restoring old saved plans, and 2ACE Market being switched off.
 const fs = require('fs');
-global.window = { addEventListener(){}, removeEventListener(){}, scrollTo(){}, matchMedia: () => ({ matches: false }) };
+global.window = { ACE_CONFIG: require('../lib/ace-config.cjs'), addEventListener(){}, removeEventListener(){}, scrollTo(){}, matchMedia: () => ({ matches: false }) };
 let stored = null;
 global.localStorage = { getItem: () => stored, setItem(k, v) { stored = v; }, removeItem() { stored = null; } };
 global.location = { search: '', pathname: '/platform', href: '' }; global.history = { pushState(){}, replaceState(){} };

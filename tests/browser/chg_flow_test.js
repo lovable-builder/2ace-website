@@ -1,7 +1,7 @@
 // Plan change as the browser really runs it: every setState is followed by componentDidUpdate.
 const fs = require('fs');
 let saved = [];
-global.window = { addEventListener(){}, removeEventListener(){}, scrollTo(){}, matchMedia: () => ({ matches: false }) };
+global.window = { ACE_CONFIG: require('../lib/ace-config.cjs'), addEventListener(){}, removeEventListener(){}, scrollTo(){}, matchMedia: () => ({ matches: false }) };
 global.localStorage = { getItem: (k) => (k.startsWith('sb-') ? JSON.stringify({ access_token: 't', expires_at: Date.now() / 1000 + 3600 }) : null), setItem(k, v) { saved.push(k); }, removeItem(){} };
 global.location = { search: '', pathname: '/platform', href: '' }; global.history = { pushState(){}, replaceState(){} };
 class DCLogic { constructor(){ this.props = {}; } setState(u){ const n = typeof u === 'function' ? u(this.state) : u; this.state = Object.assign({}, this.state, n); Promise.resolve().then(() => this.componentDidUpdate && this.componentDidUpdate()); } }

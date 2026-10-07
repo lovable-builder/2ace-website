@@ -1,6 +1,7 @@
 // Public booking of calls, for customers and guests alike (no account, no login). Visitors never touch the tables: this function
 // checks every rule, then uses the service role. Actions: config, slots, book, get, reschedule, cancel.
 import { corsHeaders, json } from '../_shared/cors.ts';
+import { withMonitoring, captureException } from '../_shared/monitor.ts';
 import { admin } from '../_shared/auth.ts';
 import { availableSlots, cleanBooking, isLang, type Settings } from '../_shared/booking.ts';
 import { busyFor, loadAppt, loadSettings, mailCustomer, mailHosts } from '../_shared/bookingOps.ts';
@@ -81,7 +82,7 @@ const actions: Record<string, (b: Record<string, unknown>) => Promise<unknown>> 
   },
 };
 
-Deno.serve(async (req) => {
+Deno.serve(withMonitoring('booking', async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders(req) });
   if (req.method !== 'POST') return json(req, { error: 'method' }, 405);
   let b: Record<string, unknown>;
@@ -91,7 +92,7 @@ Deno.serve(async (req) => {
   try { return json(req, await act(b)); }
   catch (e) {
     if (e instanceof Bad) return json(req, { error: e.message }, e.status);
-    console.error('booking', b.action, e);
+    await captureException(e, { fn: 'booking', action: String(b.action ?? '') });
     return json(req, { error: 'Something went wrong. Please try again, or write to hello@2ace.pl.' }, 500);
   }
-});
+}));

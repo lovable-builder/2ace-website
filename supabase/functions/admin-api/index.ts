@@ -1,4 +1,5 @@
 import { corsHeaders, json } from '../_shared/cors.ts';
+import { withMonitoring, captureException } from '../_shared/monitor.ts';
 import { admin, staffCaller, audit, userClient, type StaffCtx, type StaffRole } from '../_shared/auth.ts';
 import { sendEmail, layout, esc } from '../_shared/email.ts';
 import { retryAutoRegister } from '../_shared/domainOrder.ts';
@@ -580,7 +581,7 @@ const actions: Record<string, { roles?: StaffRole[]; run: (s: StaffCtx, b: Recor
   } },
 };
 
-Deno.serve(async (req) => {
+Deno.serve(withMonitoring('admin-api', async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders(req) });
   if (req.method !== 'POST') return json(req, { error: 'method' }, 405);
   let b: Record<string, unknown>;
@@ -592,7 +593,7 @@ Deno.serve(async (req) => {
   try { return json(req, await act.run(s, b)); }
   catch (e) {
     if (e instanceof Bad) return json(req, { error: e.message }, e.status);
-    console.error('admin-api', b.action, e);
+    await captureException(e, { fn: 'admin-api', action: String(b.action ?? '') });
     return json(req, { error: 'Something went wrong. Nothing was changed if you see this twice, tell the developer.' }, 500);
   }
-});
+}));

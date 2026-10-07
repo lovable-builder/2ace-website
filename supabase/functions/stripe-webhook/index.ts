@@ -1,4 +1,5 @@
 import Stripe from 'npm:stripe';
+import { withMonitoring } from '../_shared/monitor.ts';
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { sendEmail, layout, esc } from '../_shared/email.ts';
 import { createDomainOrder } from '../_shared/domainOrder.ts';
@@ -45,7 +46,7 @@ async function syncSub(sub: Stripe.Subscription) {
   if (map[sub.status]) await setOrg(orgId, map[sub.status]);
 }
 
-Deno.serve(async (req) => {
+Deno.serve(withMonitoring('stripe-webhook', async (req) => {
   const sig = req.headers.get('stripe-signature');
   if (!sig) return new Response('missing signature', { status: 400 });
   const body = await req.text();
@@ -118,4 +119,4 @@ Deno.serve(async (req) => {
     return new Response('handler error', { status: 500 });
   }
   return new Response('ok', { status: 200 });
-});
+}));

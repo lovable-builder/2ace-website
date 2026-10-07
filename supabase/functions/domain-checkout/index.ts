@@ -1,4 +1,5 @@
 import Stripe from 'npm:stripe';
+import { withMonitoring } from '../_shared/monitor.ts';
 import { corsHeaders, json } from '../_shared/cors.ts';
 import { admin, caller } from '../_shared/auth.ts';
 import { validName, cleanName, rdapStatus } from '../_shared/domain.ts';
@@ -23,7 +24,7 @@ async function eligibility(orgId: string) {
   return { eligible: true, free, planId: plan?.id ?? null, fee: FEE_PLN };
 }
 
-Deno.serve(async (req) => {
+Deno.serve(withMonitoring('domain-checkout', async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders(req) });
   if (req.method !== 'POST') return json(req, { error: 'method' }, 405);
   const me = await caller(req);
@@ -76,4 +77,4 @@ Deno.serve(async (req) => {
     integration_identifier: `2ace-domain-${rand}`,
   } as Stripe.Checkout.SessionCreateParams);
   return json(req, { url: session.url });
-});
+}));

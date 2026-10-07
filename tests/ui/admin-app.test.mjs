@@ -1,3 +1,4 @@
+import { ACE_CONFIG } from '../lib/ace-config.mjs';
 import { ROOT } from '../lib/root.mjs';
 import { JSDOM } from 'jsdom';
 let pass = 0, fail = 0; const ok = (n, c, x = '') => { c ? pass++ : fail++; console.log((c ? 'PASS ' : 'FAIL ') + n + (x ? '  -> ' + x : '')); };
@@ -7,6 +8,7 @@ async function scenario(name, { role, factors, meResponses }) {
   const dom = new JSDOM('<!DOCTYPE html><body><div id="app"></div></body>', { url: 'https://2ace.pl/admin' });
   Object.defineProperty(globalThis, 'navigator', { value: dom.window.navigator, configurable: true });
   Object.assign(globalThis, { window: dom.window, document: dom.window.document, Node: dom.window.Node, location: dom.window.location, addEventListener: dom.window.addEventListener.bind(dom.window) });
+  dom.window.ACE_CONFIG = ACE_CONFIG;
   const log = [];
   let meCalls = 0;
   dom.window.supabase = { createClient: () => ({

@@ -1,10 +1,11 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { withMonitoring, captureException } from '../_shared/monitor.ts';
 import { corsHeaders, json } from '../_shared/cors.ts';
 import { sendEmail, layout, esc } from '../_shared/email.ts';
 
 const NOTIFY = Deno.env.get('LEAD_NOTIFY_TO') ?? 'hello@2ace.pl';
 
-Deno.serve(async (req) => {
+Deno.serve(withMonitoring('lead', async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders(req) });
   if (req.method !== 'POST') return json(req, { error: 'method' }, 405);
 
@@ -19,7 +20,7 @@ Deno.serve(async (req) => {
 
   const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
   const { data: lead, error } = await db.from('leads').insert({ name, email, message }).select('id').single();
-  if (error) { console.error(error); return json(req, { error: 'server' }, 500); }
+  if (error) { await captureException(error, { fn: 'lead' }); return json(req, { error: 'server' }, 500); }
   // Also open an inbox request for staff (best effort: the lead is already saved).
   const { data: rq } = await db.from('requests').insert({ lead_id: lead.id, requester_name: name, requester_email: email, subject: 'Message from the website', source: 'website' }).select('id').single();
   if (rq && message) await db.from('request_messages').insert({ request_id: rq.id, direction: 'in', body: message });
@@ -29,4 +30,4 @@ Deno.serve(async (req) => {
     sendEmail({ to: email, subject: 'We got your message | 2ACE', html: layout(`Thanks, ${name.split(' ')[0]}`, '<p>We received your message. A person who runs the floor replies within one working day.</p>') }),
   ]);
   return json(req, { ok: true });
-});
+}));

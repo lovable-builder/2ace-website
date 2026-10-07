@@ -1,4 +1,5 @@
 import { corsHeaders, json } from '../_shared/cors.ts';
+import { withMonitoring } from '../_shared/monitor.ts';
 import { admin, caller, userClient } from '../_shared/auth.ts';
 import { sendEmail, layout, esc } from '../_shared/email.ts';
 import { notifyHeld } from '../_shared/orderNotice.ts';
@@ -10,7 +11,7 @@ const SITE = Deno.env.get('SITE_URL') ?? 'https://2ace.pl';
 const TEAM_INBOX = Deno.env.get('LEAD_NOTIFY_TO') ?? 'hello@2ace.pl';
 const isUuid = (v: unknown): v is string => typeof v === 'string' && /^[0-9a-f-]{36}$/i.test(v);
 
-Deno.serve(async (req) => {
+Deno.serve(withMonitoring('change-request', async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders(req) });
   if (req.method !== 'POST') return json(req, { error: 'method' }, 405);
   const me = await caller(req);
@@ -42,4 +43,4 @@ Deno.serve(async (req) => {
   await sendEmail({ to: TEAM_INBOX, subject: `Change request: ${summary} (${me.orgName ?? 'customer'})`,
     html: layout('A customer asked for a change', `<p><b>${esc(me.orgName ?? 'A customer')}</b> asks to: ${esc(summary)}.</p><p>Nothing has changed yet.</p><p><a href="${SITE}/admin#approvals">Review it in the admin panel</a></p>`) });
   return json(req, { ok: true, id: data });
-});
+}));

@@ -1,0 +1,159 @@
+name: Test and deploy
+
+# Every pull request and every push runs the tests. A push to main deploys only when they all pass:
+# first the database and Edge Functions (when switched on, see below), then the website.
+# A push to the staging branch does the same against the "staging" environment.
+#
+# Settings (GitHub > Settings > Environments > production / staging):
+#   variable AUTO_DEPLOY_SUPABASE = true   switch on database migrations + Edge Function deploys from CI
+#   variable SUPABASE_PROJECT_REF          e.g. hvbcmilcjragrcezwzlo
+#   secret   SUPABASE_ACCESS_TOKEN         a personal access token (supabase.com > Account > Access tokens)
+#   secret   SUPABASE_DB_PASSWORD          the project's database password
+#   secret   DEPLOY_SSH_KEY                the website deploy key (already set for production)
+#   variables DEPLOY_HOST, DEPLOY_PORT, DEPLOY_USER, DEPLOY_HOST_KEY   only for staging: where its copy of the site lives
+
+on:
+  pull_request:
+  push:
+    branches: [main, staging]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  site:
+    name: Website and database tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: tests/package-lock.json
+      - run: npm ci
+        working-directory: tests
+      # Every migration in an in-memory Postgres, the admin and scan screens, the old /platform page, the guides, SEO.
+      - run: bash tests/run.sh
+
+  functions:
+    name: Edge Functions
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Type-check every function
+        run: deno check supabase/functions/*/index.ts
+      - name: Unit tests
+        run: deno test --allow-env supabase/functions/_shared/
+
+  app:
+    name: Customer app (web/)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+        working-directory: web
+      - run: npm run typecheck
+        working-directory: web
+      - run: npm test
+        working-directory: web
+      - run: npm run build
+        working-directory: web
+      # The server only runs `git pull`, so the built app is committed in app/. It must be exactly what web/ builds.
+      - name: The committed app/ matches web/
+        run: |
+          if [ -n "$(git status --porcelain -- app)" ]; then
+            git status --short -- app
+            echo "::error::app/ is out of date. Run 'cd web && npm run build' and commit app/."
+            exit 1
+          fi
+
+  supabase:
+    name: Deploy database and functions
+    needs: [site, functions, app]
+    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: ${{ github.ref == 'refs/heads/staging' && 'staging' || 'production' }}
+    concurrency:
+      group: supabase-${{ github.ref }}
+      cancel-in-progress: false
+    env:
+      ENABLED: ${{ vars.AUTO_DEPLOY_SUPABASE }}
+      PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+    steps:
+      - name: Switched off?
+        if: env.ENABLED != 'true'
+        run: echo "::notice::Database and function deploys from CI are off. Apply migrations and deploy functions by hand, or set AUTO_DEPLOY_SUPABASE=true (see the top of this file)."
+      - uses: actions/checkout@v4
+        if: env.ENABLED == 'true'
+      - uses: supabase/setup-cli@v1
+        if: env.ENABLED == 'true'
+        with:
+          version: latest
+      - name: Link the project
+        if: env.ENABLED == 'true'
+        run: |
+          test -n "$PROJECT_REF" || { echo "::error::Set the SUPABASE_PROJECT_REF variable"; exit 1; }
+          supabase link --project-ref "$PROJECT_REF" --password "$SUPABASE_DB_PASSWORD"
+      # Shows what is about to change before it changes. Migrations already applied are skipped.
+      - name: Migrations (preview)
+        if: env.ENABLED == 'true'
+        run: supabase db push --dry-run --password "$SUPABASE_DB_PASSWORD"
+      - name: Migrations
+        if: env.ENABLED == 'true'
+        run: supabase db push --password "$SUPABASE_DB_PASSWORD"
+      # verify_jwt for each function comes from supabase/config.toml.
+      - name: Edge Functions
+        if: env.ENABLED == 'true'
+        run: supabase functions deploy --project-ref "$PROJECT_REF" --use-api
+
+  website:
+    name: Deploy website
+    needs: [supabase]
+    if: github.event_name != 'pull_request' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/staging')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: ${{ github.ref == 'refs/heads/staging' && 'staging' || 'production' }}
+    concurrency:
+      group: deploy-${{ github.ref }}
+      cancel-in-progress: false
+    env:
+      # Production defaults: the Hostinger account the site has always deployed to. Staging sets its own.
+      DEPLOY_HOST: ${{ vars.DEPLOY_HOST || (github.ref == 'refs/heads/main' && '46.17.175.67' || '') }}
+      DEPLOY_PORT: ${{ vars.DEPLOY_PORT || '65002' }}
+      DEPLOY_USER: ${{ vars.DEPLOY_USER || (github.ref == 'refs/heads/main' && 'u203694375' || '') }}
+      DEPLOY_HOST_KEY: ${{ vars.DEPLOY_HOST_KEY || (github.ref == 'refs/heads/main' && 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIBxxg8uGrWNdj0Uf4MzcdXX4Q/B+vfvouQ2aoVXWzbJk' || '') }}
+      DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+    steps:
+      - name: Pull latest on the server
+        run: |
+          if [ -z "$DEPLOY_HOST" ] || [ -z "$DEPLOY_SSH_KEY" ]; then
+            echo "::notice::No website host set up for this environment yet; nothing deployed."
+            exit 0
+          fi
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          # Pinned server host key (public), so a fake server can't receive our key.
+          echo "[$DEPLOY_HOST]:$DEPLOY_PORT $DEPLOY_HOST_KEY" > ~/.ssh/known_hosts
+          # The server key is restricted to one command: git pull --ff-only in the site folder.
+          ssh -i ~/.ssh/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -p "$DEPLOY_PORT" "$DEPLOY_USER@$DEPLOY_HOST" deploy

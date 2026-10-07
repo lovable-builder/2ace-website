@@ -2,8 +2,8 @@ import { el, clear, toast, field } from './ui.js';
 
 // Admin shell: sign-in check, second factor, role-based navigation, hash router. Real authorization is in the database and
 // admin-api; hiding menu entries here is only convenience.
-const SUPABASE_URL = 'https://hvbcmilcjragrcezwzlo.supabase.co';
-const ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2YmNtaWxjanJhZ3JjZXp3emxvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEwNjMyODMsImV4cCI6MjEwNjYzOTI4M30.Q6TlQnDToz2oPr4FXNgKdgdrZT3ojUToCroLRVQGRsw';
+const SUPABASE_URL = window.ACE_CONFIG.supabaseUrl;
+const ANON = window.ACE_CONFIG.supabaseAnonKey;
 const sb = window.supabase.createClient(SUPABASE_URL, ANON);
 const V = new URL(import.meta.url).search;            // ?v=N keeps modules in step with this file
 const app = document.getElementById('app');

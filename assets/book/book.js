@@ -2,7 +2,7 @@
 // Also the "manage" view opened from the email link (?t=...): see, move or cancel a booking. Everything shown is built with textContent.
 import { I18N, LOCALE, NATIVE } from './i18n.js';
 
-const API = 'https://hvbcmilcjragrcezwzlo.supabase.co/functions/v1/booking';
+const API = window.ACE_CONFIG.supabaseUrl + '/functions/v1/booking';
 const LANGS = ['en', 'zh', 'ar'];
 
 const el = (tag, attrs, ...kids) => {
