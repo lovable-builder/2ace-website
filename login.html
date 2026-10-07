@@ -100,18 +100,20 @@
   <p class="fine" style="margin-top:10px;font-size:12px">2ACE sp. z o.o. · ul. Ostrobramska 101A lok. 301, 04-041 Warszawa · NIP 1133212948 · REGON 545746743 · KRS 0001267111 · tel. +48 608 180 946</p>
 </main>
 
+<script src="/config.js"></script>
+<script src="/assets/monitor.js"></script>
 <script src="countries.js?v=3"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
   // The anon key is public by design; data is protected by row level security in the database.
-  const SUPABASE_URL = 'https://hvbcmilcjragrcezwzlo.supabase.co';
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh2YmNtaWxjanJhZ3JjZXp3emxvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTEwNjMyODMsImV4cCI6MjEwNjYzOTI4M30.Q6TlQnDToz2oPr4FXNgKdgdrZT3ojUToCroLRVQGRsw';
+  const SUPABASE_URL = window.ACE_CONFIG.supabaseUrl;
+  const SUPABASE_ANON_KEY = window.ACE_CONFIG.supabaseAnonKey;
   const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   const $ = (id) => document.getElementById(id);
   const NEXT = (() => {
     const n = new URLSearchParams(location.search).get('next');
-    return n && /^\/[a-z0-9_-]+(\?[a-z0-9=&_-]*)?$/i.test(n) ? n : '/platform?view=dash';
+    return n && /^\/[a-z0-9_-]+(\/[a-z0-9_-]+)*\/?(\?[a-z0-9=&_-]*)?$/i.test(n) ? n : '/platform?view=dash';   // same-site paths only, e.g. /account or /app/dashboard/orders
   })();
   const say = (el, text, kind) => { el.textContent = text; el.className = 'msg ' + (kind || ''); };
   const busy = (form, on) => form.querySelectorAll('button').forEach((b) => { b.disabled = on; });
