@@ -7,6 +7,7 @@ http.createServer((req, res) => {
   let p = decodeURIComponent(u.pathname);
   if (/\/\.(?!well-known)/.test(p) || /^\/(supabase|node_modules|content|scripts|tests|web)(\/|$)/.test(p) || p === '/skills-lock.json') { res.writeHead(404); return res.end('Not found'); }
   if (/^\/market(\.html)?\/?$/.test(p)) { res.writeHead(302, { Location: '/' }); return res.end(); }   // 2ACE Market is switched off for now (see .htaccess)
+  if (/^\/platform(\.html)?\/?$/.test(p)) { res.writeHead(302, { Location: '/app/' + u.search }); return res.end(); }   // the old plan builder: the customer app replaced it (see .htaccess)
   if (/^\/index(\.html)?$/.test(p)) { res.writeHead(301, { Location: '/' + u.search }); return res.end(); }
   if (/^\/news\/index(\.html)?$/.test(p)) { res.writeHead(301, { Location: '/news/' }); return res.end(); }
   if (/\.html$/.test(p)) { res.writeHead(301, { Location: p.slice(0, -5) + u.search }); return res.end(); }

@@ -1,7 +1,7 @@
 # Customer app (`web/`)
 
-The plan builder, checkout and customer dashboard as a React + TypeScript app built with Vite. It replaces `platform.html`
-(a design-tool export that compiled JSX in the visitor's browser) and talks to the same Supabase tables, database functions
+The plan builder, checkout and customer dashboard as a React + TypeScript app built with Vite. It replaced `platform.html`
+(a design-tool export that compiled JSX in the visitor's browser, now deleted) and talks to the same Supabase tables, database functions
 and Edge Functions, with no backend changes.
 
 The build is written to `../app/` and **committed**, because the server only runs `git pull`. CI rebuilds it and fails if
@@ -34,10 +34,9 @@ Polish and Chinese were written from the app's strings and **need a native speak
 use `t('English text')` in the code, then add it to `src/i18n/pl.ts` and `src/i18n/zh.ts` (`npm test` lists what is missing).
 `node scripts/i18n-keys.mjs` prints every key.
 
-## Going live
+## The old address
 
-The new app is served at `/app/` next to the old `/platform` page. When it has been checked against the live backend,
-uncomment the switch-over line in `.htaccess`. `/platform` then redirects to `/app/` with its query string, so Stripe's
-return links and the links in emails keep working. Leave `platform.html` in place until then, for rollback.
+`/platform` redirects to `/app/` with its query string (`.htaccess`, and `dev-server.js` locally), so Stripe's return links
+and links in older emails (`?checkout=`, `?domain=`, `?view=`, `?tab=`) keep working: `src/App.tsx` reads them.
 
-2ACE Market (switched off) is not in the new app; its code stays in `platform.html`.
+2ACE Market (switched off) is not in the app. Its plan-builder part was in `platform.html`, which is now only in git history.

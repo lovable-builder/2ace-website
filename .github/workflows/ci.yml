@@ -39,7 +39,7 @@ jobs:
           cache-dependency-path: tests/package-lock.json
       - run: npm ci
         working-directory: tests
-      # Every migration in an in-memory Postgres, the admin and scan screens, the old /platform page, the guides, SEO.
+      # Every migration in an in-memory Postgres, the admin and scan screens, the guides, the translations, SEO.
       - run: bash tests/run.sh
 
   functions:

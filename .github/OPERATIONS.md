@@ -6,7 +6,7 @@
 
 | Job | Checks |
 |---|---|
-| Website and database tests | `tests/run.sh`: every migration in an in-memory Postgres, admin and scan screens, `/platform`, guides, SEO |
+| Website and database tests | `tests/run.sh`: every migration in an in-memory Postgres, admin and scan screens, guides, translations, SEO |
 | Edge Functions | `deno check` on every function, `deno test --allow-env` on `_shared/` |
 | Customer app | `web/`: types, tests, build, and that the committed `app/` matches the build |
 
@@ -57,7 +57,7 @@ privacy policy (`privacy.html`), e.g. "Sentry: error reports when something brea
 
 ## Uptime
 
-`.github/workflows/uptime.yml` checks every 15 minutes: the home page, `/platform`, `/app/`, `/login`, `config.js`, the
+`.github/workflows/uptime.yml` checks every 15 minutes: the home page, `/app/`, `/login`, `config.js`, the
 database API and the Edge Functions runtime. A failed run is emailed by GitHub. Run it by hand from the Actions tab, or
 locally: `node scripts/uptime.mjs https://2ace.pl`. GitHub pauses scheduled workflows after 60 days with no commits.
 
@@ -71,8 +71,9 @@ page in that language. `/book` has its own English, Polish, Chinese and Arabic t
 After changing any English text on these pages, or adding a news article, run `node scripts/i18n-site.mjs --missing pl` (and
 `zh`), add the translations, then `node scripts/i18n-site.mjs --sort`. The tests fail while any text is untranslated. The
 Polish and Chinese texts were machine-written: have a native speaker review them, especially the privacy policy and terms,
-where the English version is the binding one. `/admin`, `/scan` and the old `/platform` stay in English.
+where the English version is the binding one. `/admin` and `/scan` stay in English. The customer app has its own translations (`web/src/i18n/`).
 
 ## The new customer app
 
-Built from `web/` into `app/`, served at `/app/`. See `web/README.md`, including how to switch `/platform` over to it.
+Built from `web/` into `app/`, served at `/app/`. See `web/README.md`. It replaced the old plan builder (`platform.html`, deleted):
+`/platform` redirects to `/app/` with its query string, so Stripe's return links and older emails still land on the right screen.

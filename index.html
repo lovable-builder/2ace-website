@@ -60,7 +60,7 @@
       <a id="authlink" class="navlink" href="/login" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: #0B0C0E; transition: color 320ms ease;">Log in</a>
       <a id="logoutlink" class="navlink" href="#" style="display: none; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: #0B0C0E; transition: color 320ms ease;">Log out</a>
       <span data-lang-switch class="navlink" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #0B0C0E; transition: color 320ms ease;"></span>
-      <a href="/platform" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: #0B0C0E; background: #E39A2B; padding: 9px 16px 8px; border-radius: 2px;" style-hover="background: #F0AE47;">Build your plan</a>
+      <a href="/app/plan" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; color: #0B0C0E; background: #E39A2B; padding: 9px 16px 8px; border-radius: 2px;" style-hover="background: #F0AE47;">Build your plan</a>
     </div>
   </nav>
 
@@ -122,7 +122,7 @@
             <p style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.2em; text-transform: uppercase; margin: 0 0 18px; color: #E39A2B;">Five services · One plan</p>
             <h2 style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 112; font-weight: 800; font-size: clamp(36px, 5.8vw, 86px); line-height: 0.94; letter-spacing: -0.025em; margin: 0; color: #F5F4F1;">You build the brand.<br />We hold the peace of mind.</h2>
             <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 14px; margin-top: 26px;">
-              <a href="/platform" style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: #0B0C0E; background: #E39A2B; padding: 15px 26px 14px; border-radius: 2px;" style-hover="background: #F0AE47;">Build your plan</a>
+              <a href="/app/plan" style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: #0B0C0E; background: #E39A2B; padding: 15px 26px 14px; border-radius: 2px;" style-hover="background: #F0AE47;">Build your plan</a>
               <a href="#pricing" style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: #F5F4F1; border: 1px solid rgba(245,244,241,0.35); padding: 15px 26px 14px; border-radius: 2px;" style-hover="border-color: #F5F4F1;">See pricing</a>
             </div>
           </div>
@@ -240,7 +240,7 @@
             <span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; color: rgba(245,244,241,0.6);">PER MONTH</span>
             <span id="cT" style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 118; font-weight: 800; font-size: 44px; line-height: 1; letter-spacing: -0.025em;">0 zł</span>
           </div>
-          <a href="/platform" style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: #0B0C0E; background: #E39A2B; padding: 15px 20px 14px; border-radius: 2px; text-align: center;" style-hover="background: #F0AE47; color: #0B0C0E;">Build this plan</a>
+          <a href="/app/plan" style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: #0B0C0E; background: #E39A2B; padding: 15px 20px 14px; border-radius: 2px; text-align: center;" style-hover="background: #F0AE47; color: #0B0C0E;">Build this plan</a>
         </div>
       </div>
       <div>
@@ -291,7 +291,7 @@
       </div>
       <div class="reveal" style="display: flex; flex-wrap: wrap; gap: 12px;">
         <a href="/market" style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: #0B0C0E; background: #E39A2B; padding: 15px 26px 14px; border-radius: 2px;" style-hover="background: #F0AE47; color: #0B0C0E;">See 2ACE Market</a>
-        <a href="/platform" style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: #F5F4F1; border: 1px solid rgba(245,244,241,0.35); padding: 15px 26px 14px; border-radius: 2px;" style-hover="border-color: #F5F4F1; color: #F5F4F1;">Add it to your plan</a>
+        <a href="/app/plan" style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: #F5F4F1; border: 1px solid rgba(245,244,241,0.35); padding: 15px 26px 14px; border-radius: 2px;" style-hover="border-color: #F5F4F1; color: #F5F4F1;">Add it to your plan</a>
       </div>
     </div>
   </section>
@@ -707,7 +707,7 @@ class Component extends DCLogic {
     const q = (id) => document.querySelector(id);
     const link = q('#authlink'), out = q('#logoutlink'), hi = q('#welcome');
     if (!link || !out || !hi) return;
-    link.textContent = 'Dashboard'; link.setAttribute('href', '/platform?view=dash');
+    link.textContent = 'Dashboard'; link.setAttribute('href', '/app/dashboard');
     out.style.display = ''; hi.style.display = '';
     const email = sess.user && sess.user.email;
     hi.textContent = 'Welcome' + (email ? ', ' + email : '');

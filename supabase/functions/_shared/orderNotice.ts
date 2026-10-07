@@ -15,7 +15,7 @@ export async function notifyHeld(orderIds: string[]): Promise<number> {
     const org = (m?.organizations as unknown as { name?: string } | null)?.name ?? 'a customer';
     const label = o.external_ref ? `${o.ref} (your reference ${o.external_ref})` : o.ref;
     if (p?.email) await sendEmail({ to: p.email as string, subject: `Order ${o.ref} is on hold: not enough stock`,
-      html: layout('Your order is on hold', `<p>Order <b>${esc(label)}</b> for ${esc(o.ship_name)} cannot be reserved yet:</p><p><b>${esc(o.hold_reason ?? 'not enough stock')}</b></p><p>Nothing was reserved. As soon as the stock is on our shelves, the order is reserved automatically. To add stock, book a delivery in your dashboard under Inbound.</p><p><a href="${SITE}/platform?view=dash">Open your dashboard</a></p>`) });
+      html: layout('Your order is on hold', `<p>Order <b>${esc(label)}</b> for ${esc(o.ship_name)} cannot be reserved yet:</p><p><b>${esc(o.hold_reason ?? 'not enough stock')}</b></p><p>Nothing was reserved. As soon as the stock is on our shelves, the order is reserved automatically. To add stock, book a delivery in your dashboard under Inbound.</p><p><a href="${SITE}/app/dashboard/orders">Open your dashboard</a></p>`) });
     await sendEmail({ to: TEAM_INBOX, subject: `Order ${o.ref} on hold (${org})`,
       html: layout('An order is on hold', `<p><b>${esc(org)}</b>: order ${esc(o.ref)} is short of stock: ${esc(o.hold_reason ?? '')}.</p><p><a href="${SITE}/admin#orders/${o.id}">Open the order</a></p>`) });
   }

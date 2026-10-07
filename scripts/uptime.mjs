@@ -32,7 +32,6 @@ const page = (path, mustContain) => async () => {
 let cfg = null;
 const results = [
   await check('home page', page('/', '2ACE')),
-  await check('plan builder (/platform)', page('/platform', 'x-dc')),
   await check('customer app (/app/)', page('/app/', 'id="root"')),
   await check('login', page('/login', 'config.js')),
   await check('config.js', async () => {
