@@ -4,6 +4,8 @@ const vc = new VirtualConsole(); const errs = []; vc.on('jsdomError', (e) => err
 let pass = 0, fail = 0; const ok = (n, x, e = '') => { x ? pass++ : fail++; console.log((x ? 'PASS ' : 'FAIL ') + n + (x ? '' : ' -> ' + e)); };
 const tok = JSON.stringify({ access_token: 'x', expires_at: Math.floor(Date.now() / 1000) + 3600, user: { id: 'u1', email: 'a@b.pl' } });
 const wait = (ms = 250) => new Promise((r) => setTimeout(r, ms));
+// Polls until fn() is truthy (at most 15 s) and returns its value.
+const until = async (fn, ms = 15000) => { const t0 = Date.now(); let v; while (!(v = fn()) && Date.now() - t0 < ms) await wait(50); return v; };
 const orders = [{ id: 'o1', ref: 'ORD-000001', status: 'shipped', label_source: null, ship_name: 'Anna Nowak', ship_line1: 'Lipowa 5', ship_line2: '2', ship_postal: '31-000', ship_city: 'Krakow', ship_country: 'PL', ship_phone: '600100200', ship_email: 'anna@x.pl', created_at: '2026-10-05T10:00:00Z', order_lines: [{ qty: 3, product_id: 'p1', products: { sku: 'MUG', name: 'Blue mug' } }, { qty: 1, product_id: 'p2', products: { sku: 'CAP', name: 'Red cap' } }] },
   { id: 'o2', ref: 'ORD-000002', status: 'allocated', label_source: null, ship_name: 'Jan', ship_line1: 'x', ship_postal: '00-001', ship_city: 'Warszawa', ship_country: 'PL', created_at: '2026-10-05T11:00:00Z', order_lines: [] }];
 const run = async (S, confirmAnswer = true) => {
@@ -19,7 +21,8 @@ const run = async (S, confirmAnswer = true) => {
         if (/members\?/.test(u)) return j([{ org_id: 'o1', role: 'owner', organizations: { name: 'Acme', country: 'PL', status: 'active', domain_orders: [] } }]);
         if (/returns\?/.test(u)) return j(S.returns || []);
         if (/orders\?/.test(u)) return j(orders); return j([]); } } });
-  await wait(1800); return { dom, calls, opened };
+  // Wait for the dashboard to be on screen (React and Babel load from a CDN, slower on CI), not a fixed time.
+  await until(() => [...dom.window.document.querySelectorAll('button, a')].some((b) => b.textContent.trim().startsWith('Orders'))); return { dom, calls, opened };
 };
 const T = (d) => { const out = []; const walk = (n) => { if (n.nodeType === 3) { out.push(n.textContent); return; } if (n.nodeType !== 1) return; if (/^(SCRIPT|STYLE|NOSCRIPT)$/.test(n.tagName) || n.style.display === 'none') return; for (const c of n.childNodes) walk(c); out.push(' '); }; walk(d.body); return out.join('').replace(/\s+/g, ' '); };
 const shown = (n) => { for (let x = n; x && x.nodeType === 1; x = x.parentElement) if (x.style.display === 'none') return false; return true; };

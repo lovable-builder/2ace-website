@@ -4,6 +4,8 @@ const vc = new VirtualConsole(); const errs = []; vc.on('jsdomError', (e) => err
 let pass = 0, fail = 0; const ok = (n, x, e = '') => { x ? pass++ : fail++; console.log((x ? 'PASS ' : 'FAIL ') + n + (x ? '' : ' -> ' + e)); };
 const tok = JSON.stringify({ access_token: 'x', expires_at: Math.floor(Date.now() / 1000) + 3600, user: { id: 'u1', email: 'a@b.pl' } });
 const wait = (ms = 250) => new Promise((r) => setTimeout(r, ms));
+// Polls until fn() is truthy (at most 15 s) and returns its value.
+const until = async (fn, ms = 15000) => { const t0 = Date.now(); let v; while (!(v = fn()) && Date.now() - t0 < ms) await wait(50); return v; };
 const orders = [
   { id: 'a1', ref: 'ORD-000001', status: 'allocated', label_source: null, ship_name: 'Jan', ship_city: 'Warszawa', ship_country: 'PL', created_at: '2026-10-05T10:00:00Z', order_lines: [{ qty: 2, products: { sku: 'MUG', name: 'Mug' } }] },
   { id: 'a2', ref: 'ORD-000002', status: 'shipped', label_source: null, ship_name: 'Ola', ship_city: 'Gdansk', ship_country: 'PL', created_at: '2026-10-05T11:00:00Z', order_lines: [] },
@@ -18,7 +20,8 @@ const run = async (behaviour) => {
         if (/storage\/v1\/object\/labels\//.test(u)) { uploaded.push({ url: u, type: o.headers['Content-Type'], size: o.body && o.body.size }); return j({}, behaviour.uploadStatus || 200); }
         if (/members\?/.test(u)) return j([{ org_id: 'o1', role: 'owner', organizations: { name: 'Acme', country: 'PL', status: 'active', domain_orders: [] } }]);
         if (/orders\?/.test(u)) return j(orders); return j([]); } } });
-  await wait(1800); return { dom, calls, uploaded };
+  // Wait for the dashboard to be on screen (React and Babel load from a CDN, slower on CI), not a fixed time.
+  await until(() => [...dom.window.document.querySelectorAll('button, a')].some((b) => b.textContent.trim().startsWith('Orders'))); return { dom, calls, uploaded };
 };
 const info = { order: { id: 'a1', ref: 'ORD-000001', status: 'allocated' }, label_source: null, own_label: null };
 let label = null;
