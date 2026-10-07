@@ -20,6 +20,8 @@
     <tr><td>Add stock, Store in bin, Move (Stock screen)</td><td class="y">Yes</td><td class="ro">Read only</td><td class="y">Yes</td></tr>
     <tr><td>A customer's shipping settings (markup, caps, mode)</td><td class="y">Yes (edit)</td><td class="ro">Read only</td><td class="no">No</td></tr>
     <tr><td>Edit an order's delivery details, ask the customer to correct them</td><td class="y">Yes</td><td class="ro">See the problems only</td><td class="y">Yes</td></tr>
+    <tr><td>Returns: receive and grade</td><td class="y">Yes</td><td class="ro">Read only</td><td class="y">Yes</td></tr>
+    <tr><td>Handling fee tariff (Shipping page)</td><td class="y">Yes (edit)</td><td class="no">No</td><td class="no">No</td></tr>
     <tr><td>Mark an order shipped</td><td class="y">Yes</td><td class="no">No</td><td class="y">Yes</td></tr>
     <tr><td>Shipping labels (prices, buy, download)</td><td class="y">Yes</td><td class="ro">Read only</td><td class="y">Yes, over-limit needs an admin</td></tr>
     <tr><td>Approvals (decide)</td><td class="y">Yes</td><td class="ro">Read only</td><td class="y">Yes</td></tr>
@@ -333,6 +335,15 @@
   </ul>
   <p>It tries up to three of the cheapest carriers if one refuses the parcel before any charge. It never buys twice: if a carrier does not confirm in time, it stops and an alert goes to the team.</p>
   <div class="ex"><b>Example</b><p>Marta weighs ORD-000021 at 1,2 kg, 30 × 20 × 15 cm, and taps Finish packing. A few seconds later the phone says "Label bought: DPD · package, tracking WB123". She goes to her computer, opens the order, clicks Download label, prints and sticks it.</p></div>
+  <h3>When the customer bought the label (Fulfilment as you go)</h3>
+  <p>Customers on Fulfilment as you go can buy their own label before the order is packed. The order's <span class="ui">Shipping label</span> card then shows <b>Bought by: The customer</b>, the carrier, tracking and the parcel the label was bought for. You do not buy anything: pick and pack as usual, print the label (<span class="ui">Download label</span>) and stick it on.</p>
+  <ol class="steps">
+    <li>When you finish packing, the system compares your real parcel with the one the customer declared. Within the tolerance (10% and 100 g, 2 cm a side, a smaller parcel is fine) nothing happens.</li>
+    <li>If the real parcel is clearly bigger, heavier or there are more parcels, a red box says exactly what differs and <span class="ui">Mark shipped</span> is hidden. Weigh and measure again.</li>
+    <li>If it is right, click <span class="ui">Accept the parcel</span>. An admin can click <span class="ui">Accept and charge extra…</span> to add what the carrier will charge extra (net, with a reason) to the customer's account.</li>
+    <li>Then click <span class="ui">Mark shipped</span>.</li>
+  </ol>
+  <p>An order with a bought label cannot be cancelled, and automatic labels skip it. A label bought here cannot be cancelled in the system: refunds and cancellations are done in Furgonetka, and the charge on the customer's account is corrected by an admin.</p>
   <h3>When the customer brought their own label</h3>
   <p>If the customer added their own label, the order's <span class="ui">Shipping label</span> card shows it instead of prices: carrier, tracking numbers, the file and "Charged: Nothing".</p>
   <ol class="steps">
@@ -387,8 +398,30 @@
   <div class="note"><b>Good to know</b><p>If you scan a wrong code, a red message tells you what was not found. A repeated scan cannot book stock twice.</p></div>
 </section>
 
+<section id="s-returns">
+  <h2>17. Returns and the handling fee</h2>
+  <p class="lead">Customers announce returns and issue the return label themselves. You receive the parcel, grade each line and the customer is told. On pay-as-you-go plans every shipped order and every return also writes a handling fee.</p>
+  <h3>Receive and grade a return</h3>
+  <ol class="steps">
+    <li>Open <span class="ui">Returns</span> (works on a phone too). <span class="ui">To handle</span> lists announced returns, returns whose label is on its way, and parcels already received.</li>
+    <li>When a parcel arrives, find its return (the reference is on the label, <code>RET-000003</code>), open it and enter the <b>weight in grams</b> and the <b>longest side in cm</b>, then click <span class="ui">Receive the parcel</span>. These two numbers decide the handling fee class.</li>
+    <li>For each line enter how many came back and a grade, with a note if you like, and click <span class="ui">Save grade</span>: <b>A</b> goes back on the customer's shelf and is available at once (waiting orders can reserve it), <b>B</b> and <b>C</b> go to quarantine. Nothing coming back is recorded as 0.</li>
+    <li>When the last line is graded the return is finished, its handling fee is written and the customer is emailed the outcome (once).</li>
+  </ol>
+  <p>A return can be cancelled until a label is bought. A parcel that arrives with no announced return: ask the customer to announce it, or write to them from <span class="ui">Requests</span>.</p>
+  <h3>The handling fee</h3>
+  <p>On Fulfilment as you go, each shipped order is charged one handling fee when it leaves stock: the class of its dearest packed parcel (by weight and longest side) once, plus a small amount for each further parcel. Returns use the return price of the class of the parcel that arrived. A parcel bigger than the biggest class has no tariff: the charge is recorded as 0 with the note "oversize" and an admin sets it by hand.</p>
+  <ul>
+    <li><b>The tariff</b>: <span class="ui">Shipping</span> (admin only) lists the classes with their limits and two prices (packing an order, handling a return) and the fee for each extra parcel. An admin can change it. A new tariff applies to orders that ship afterwards.</li>
+    <li><b>Per customer</b>: under <span class="ui">Customers → company → Shipping and fulfilment → Edit</span> an admin can set a discount or surcharge on the tariff, the monthly ceilings per m² (default 350 for handling fees, 150 for return fees) and <b>Live</b>. Until a customer is marked live, handling and return fees are recorded as <b>test</b> and never invoiced.</li>
+    <li><b>The ceiling</b> is applied when the invoice is made: if the month's handling fees exceed the ceiling per m² of the customer's space, a credit line cuts them back and the invoice shows both.</li>
+    <li>Customers on flat plans (fulfilment or returns at a fixed monthly price) are charged no per-order or per-return fee.</li>
+  </ul>
+  <div class="ex"><b>Example</b><p>Marta ships ORD-000052: one parcel of 600 g, 33 cm long. That is class S (up to 1 kg, 40 cm), so Acme's handling fee is the S price. The same day RET-000007 arrives weighing 1,2 kg and 45 cm: class M, and the return price of M is charged. Acme is marked live, so both are pending and go on its next invoice.</p></div>
+</section>
+
 <section id="s-daily">
-  <h2>17. A day in the warehouse</h2>
+  <h2>18. A day in the warehouse</h2>
   <p>Put the pieces together with one routine.</p>
   <div class="tw"><table>
     <tr><th>When</th><th>Who</th><th>What</th></tr>
@@ -406,7 +439,7 @@
 </section>
 
 <section id="s-appointments">
-  <h2>18. Booked calls (Appointments)</h2>
+  <h2>19. Booked calls (Appointments)</h2>
   <p class="lead">Anyone, customer or guest, can book a call at <code>2ace.pl/book</code> in English, Chinese or Arabic. Admin and Support manage the bookings under <span class="ui">Appointments</span>.</p>
   <h3>What happens when someone books</h3>
   <ul>

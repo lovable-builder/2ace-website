@@ -61,3 +61,7 @@ Deno.test('a failed quote lookup is not swallowed', async () => {
 Deno.test('ties on price are broken by the order Furgonetka returned them in (stable)', async () => {
   const r = rig({ quotes: [q(7, 'GLS', 10), q(8, 'DPD', 10)] }); await autoLabel(r.deps); eq(r.bought, [7], 'first of equal prices');
 });
+Deno.test('an order that already has a label (bought by the customer, or their own) is reported as such even while automatic labels are off', async () => {
+  const a = rig({ enabled: false, hasActiveShipment: async () => true }); const x = await autoLabel(a.deps); ok(x.status === 'skipped' && x.reason === 'has_label', 'a bought label is reported'); eq(a.bought, [], 'nothing bought');
+  const b = rig({ enabled: false, hasOwnLabel: async () => true }); const y = await autoLabel(b.deps); ok(y.status === 'skipped' && y.reason === 'own_label', 'an own label is reported');
+});

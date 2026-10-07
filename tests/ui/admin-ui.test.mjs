@@ -58,7 +58,7 @@ document.body.innerHTML = '<div id="root"></div>'; calls.length = 0; c = mkCtx('
 const noReason = await modalClick('Continue'); ok('opening a customer asks for a reason first', noReason && /Please give a reason/.test(document.querySelector('.modal')?.textContent || ''));
 await modalClick('Continue', (m) => { m.querySelector('select').value = 'Support request'; }); await p; await tick(50);
 ok('reason is sent to the audit endpoint', calls.some((x) => x[0] === 'viewas.start' && x[1].org_id === 'o1' && /Support request/.test(x[1].reason)), JSON.stringify(calls[0]));
-ok('detail shows company, owner, plan, agreement', /Prosta 1/.test(text()) && /Anna Kowalska/.test(text()) && /14\.4 m² \+ fulfillment, storefront/.test(text()) && /2026-10-v1/.test(text()), text().slice(0, 140));
+ok('detail shows company, owner, plan, agreement', /Prosta 1/.test(text()) && /Anna Kowalska/.test(text()) && /14\.4 m² \+ fulfillment \(flat\), storefront/.test(text()) && /2026-10-v1/.test(text()), text().slice(0, 140));
 ok('support cannot change customer status', !/Change status/.test(text()));
 calls.length = 0; await mods.customers.render(c, root(), ['o1']); await tick(50); ok('reason asked only once per customer per session', !document.querySelector('.modal') && !calls.some((x) => x[0] === 'viewas.start'));
 c = mkCtx('admin'); c.session['opened:o1'] = true; await mods.customers.render(c, root(), ['o1']); await tick(50); ok('admin sees Change status', /Change status/.test(text()));

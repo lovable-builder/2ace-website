@@ -41,3 +41,20 @@ Deno.test('comparing plans still works across the formats', () => {
   const a = priceConfig({ storageType: 'pallet', qty: 12, pkgs: {} }), b = priceConfig({ m2: 20, pkgs: {} }), c = priceConfig({ m2: 14.4, pkgs: {} });
   eq(comparePlans(a, b).kind, 'upgrade', 'bigger'); eq(comparePlans(a, c).kind, 'same', 'same area, new format'); eq(comparePlans(b, a).kind, 'downgrade', 'smaller');
 });
+
+Deno.test('Fulfilment as you go has no monthly fee, is shown on the plan, and cannot be combined with Fulfilment', () => {
+  const base = priceConfig({ m2: 10, pkgs: {} }), payg = priceConfig({ m2: 10, pkgs: { payg: true } });
+  if (payg.monthly !== base.monthly || base.monthly !== 3000) throw new Error('as-you-go must add nothing to the monthly price: ' + payg.monthly);
+  if (!payg.lines.some((l) => /as you go/i.test(l.label) && l.monthly === 0 && l.once === 0)) throw new Error('it should appear as a zero line');
+  const withRet = priceConfig({ m2: 10, pkgs: { payg: true, ret: true } }); if (withRet.monthly !== 4500) throw new Error('returns still work with it: ' + withRet.monthly);
+  try { priceConfig({ m2: 10, pkgs: { ful: true, payg: true } }); throw new Error('should refuse both'); } catch (e) { if (!/choose one/.test((e as Error).message)) throw e; }
+});
+
+Deno.test('Returns as you go has no monthly fee, cannot be combined with flat returns, and flat plans price exactly as before', () => {
+  const r = priceConfig({ m2: 10, pkgs: { payg: true, retp: true } });
+  if (r.monthly !== 3000) throw new Error('both pay-as-you-go options add nothing monthly: ' + r.monthly);
+  if (!r.lines.some((l) => /returns as you go/i.test(l.label) && l.monthly === 0)) throw new Error('returns line missing');
+  try { priceConfig({ m2: 10, pkgs: { ret: true, retp: true } }); throw new Error('should refuse'); } catch (e) { if (!/choose one returns/.test((e as Error).message)) throw e; }
+  const flat = priceConfig({ m2: 10, pkgs: { ful: true, ret: true } }); if (flat.monthly !== 3000 + 3500 + 1500) throw new Error('flat plans unchanged: ' + flat.monthly);
+  const mix = priceConfig({ m2: 10, pkgs: { ful: true, retp: true } }); if (mix.monthly !== 6500) throw new Error('flat fulfilment with pay-as-you-go returns: ' + mix.monthly);
+});

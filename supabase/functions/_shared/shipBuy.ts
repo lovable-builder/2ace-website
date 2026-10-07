@@ -26,7 +26,8 @@ export interface BuyDeps {
   alert(subject: string, html: string): Promise<void>;
   audit(action: string, shipmentId: string, payload: Record<string, unknown>): Promise<void>;
 }
-export type BuyInput = { order: OrderShip; parcels: ParcelRow[]; serviceId: number; role: string; confirmOverLimit: boolean };
+// `build` replaces the normal outgoing package (used for return labels, where the buyer is the sender and our warehouse the receiver).
+export type BuyInput = { order: OrderShip; parcels: ParcelRow[]; serviceId: number; role: string; confirmOverLimit: boolean; build?: (parcels: ParcelRow[], serviceId?: number) => unknown };
 
 const withDetail = (e: FurgonetkaError) => { const d = fieldErrors(e.payload); return `${e.message}${d.length ? ' (' + d.slice(0, 4).join('; ') + ')' : ''}`; };
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]!));
@@ -34,7 +35,7 @@ const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&
 export async function buyLabel(d: BuyDeps, i: BuyInput) {
   // 1. the price, asked again for exactly this service (the browser's price is never trusted)
   let quote: Quote | undefined;
-  try { quote = parseQuotes(await d.api.quote(buildPackage(i.order, i.parcels), { serviceIds: [i.serviceId] })).find((q) => q.service_id === i.serviceId); }
+  try { quote = parseQuotes(await d.api.quote(i.build ? i.build(i.parcels) : buildPackage(i.order, i.parcels), { serviceIds: [i.serviceId] })).find((q) => q.service_id === i.serviceId); }
   catch (e) { throw new ShipError(e instanceof FurgonetkaError ? withDetail(e) : (e as Error).message, 502); }
   if (!quote || !quote.available) throw new ShipError(`This service is not available for this parcel${quote?.reason ? ': ' + quote.reason : ''}`);
   // 2. the guards
@@ -45,12 +46,12 @@ export async function buyLabel(d: BuyDeps, i: BuyInput) {
   if (refusal) throw new ShipError(refusal, 403);
   // 3. the record, before any money moves
   let sh: { id: string; order_uuid: string };
-  try { sh = await d.begin({ serviceId: i.serviceId, quote, markupPct: d.settings.markupPct }); } catch (e) { throw new ShipError((e as Error).message); }
+  try { sh = await d.begin({ serviceId: i.serviceId, quote, markupPct: d.settings.markupPct }); } catch (e) { throw e instanceof ShipError ? e : new ShipError((e as Error).message); }   // a refusal that carries its own status (a price that changed, a limit) keeps it
   const close = async (m: string, status: number) => { try { await d.fail(sh.id, m); } catch (_e) { /* the row stays 'buying' and shows up for a recheck */ } return new ShipError(m, status); };
   // 4. dry run, then create in Furgonetka's cart. Neither charges, so any failure here closes the row.
   let packageId = '';
   try {
-    const pkg = buildPackage(i.order, i.parcels, i.serviceId);
+    const pkg = i.build ? i.build(i.parcels, i.serviceId) : buildPackage(i.order, i.parcels, i.serviceId);
     const v = await d.api.validate(pkg);
     if (!v.ok) throw await close('Furgonetka rejected the shipment: ' + v.errors.slice(0, 5).join('; '), 422);
     const created = await d.api.createPackage(pkg);

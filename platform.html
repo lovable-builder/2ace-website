@@ -836,6 +836,102 @@
         </sc-if>
 
 
+        <sc-if value="{{ tabReturns }}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; flex-direction: column; gap: 20px; max-width: 860px;">
+            <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; align-items: center;">
+              <h1 style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 108; font-weight: 800; font-size: clamp(26px, 3vw, 36px); letter-spacing: -0.02em; margin: 0;">Returns</h1>
+              <button onClick="{{ rtToggle }}" style="cursor: pointer; min-height: 46px; padding: 13px 20px; border: 0; border-radius: 3px; background: #E39A2B; color: #0B0C0E; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;">{{ rtBtnLabel }}</button>
+            </div>
+            <p style="margin: 0; font-size: 14px; color: rgba(11,12,14,0.65); max-width: 70ch; line-height: 1.55;">{{ rtIntro }}</p>
+            <sc-if value="{{ whNoteShow }}" hint-placeholder-val="{{ false }}"><div role="status" onClick="{{ whNoteClear }}" style="padding: 14px 18px; background: #0B0C0E; color: #F5F4F1; border-radius: 4px; font-size: 15px; cursor: pointer;">{{ whNoteText }}</div></sc-if>
+            <sc-if value="{{ whErrShow }}" hint-placeholder-val="{{ false }}"><p style="margin: 0; font-size: 14px; color: #B4442E;">{{ whErrText }}</p></sc-if>
+            <sc-if value="{{ rtFormShow }}" hint-placeholder-val="{{ false }}">
+              <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px; display: flex; flex-direction: column; gap: 14px;">
+                <span style="font-family: Archivo, sans-serif; font-weight: 800; font-size: 20px;">New return</span>
+                <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.6);">The order the goods came from<select value="{{ rtOrderV }}" onChange="{{ onRtOrder }}" style="padding: 11px 12px; border: 1px solid rgba(11,12,14,0.25); border-radius: 3px; font-size: 15px; background: #FFFFFF; min-width: 0; width: 100%;"><sc-for list="{{ rtOrderOpts }}" as="o" hint-placeholder-count="2"><option value="{{ o.v }}">{{ o.label }}</option></sc-for></select></label>
+                <sc-if value="{{ rtDetailsShow }}" hint-placeholder-val="{{ false }}">
+                  <div style="display: flex; flex-direction: column; gap: 14px;">
+                    <span style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.6);">How many of each are coming back</span>
+                    <sc-for list="{{ rtLineRows }}" as="l" hint-placeholder-count="2">
+                      <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 12px; background: #F5F4F1; border-radius: 3px; font-size: 15px;"><span>{{ l.label }}</span><input type="number" min="0" value="{{ l.qty }}" onInput="{{ l.onQty }}" aria-label="Units coming back" style="width: 90px; padding: 10px; border: 1px solid rgba(11,12,14,0.25); border-radius: 3px; font-size: 16px; background: #FFFFFF;" /></div>
+                    </sc-for>
+                    <span style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.6);">Who sends it (the label is made for this address)</span>
+                    <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.6);">First name and surname<input type="text" value="{{ rtNameV }}" onInput="{{ onRtName }}" style="padding: 11px 12px; border: 1px solid rgba(11,12,14,0.25); border-radius: 3px; font-size: 15px; background: #FFFFFF; min-width: 0; width: 100%;" /></label>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
+                      <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.6);">Phone, required<input type="text" inputmode="tel" value="{{ rtPhoneV }}" onInput="{{ onRtPhone }}" style="padding: 11px 12px; border: 1px solid rgba(11,12,14,0.25); border-radius: 3px; font-size: 15px; background: #FFFFFF; min-width: 0; width: 100%;" /></label>
+                      <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.6);">Email, optional<input type="email" value="{{ rtEmailV }}" onInput="{{ onRtEmail }}" style="padding: 11px 12px; border: 1px solid rgba(11,12,14,0.25); border-radius: 3px; font-size: 15px; background: #FFFFFF; min-width: 0; width: 100%;" /></label>
+                    </div>
+                    <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.6);">Street and number<input type="text" value="{{ rtLine1V }}" onInput="{{ onRtLine1 }}" style="padding: 11px 12px; border: 1px solid rgba(11,12,14,0.25); border-radius: 3px; font-size: 15px; background: #FFFFFF; min-width: 0; width: 100%;" /></label>
+                    <div style="display: grid; grid-template-columns: 1fr 1.4fr 90px; gap: 12px;">
+                      <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.6);">Postal code<input type="text" value="{{ rtPostalV }}" onInput="{{ onRtPostal }}" style="padding: 11px 12px; border: 1px solid rgba(11,12,14,0.25); border-radius: 3px; font-size: 15px; background: #FFFFFF; min-width: 0; width: 100%;" /></label>
+                      <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.6);">City<input type="text" value="{{ rtCityV }}" onInput="{{ onRtCity }}" style="padding: 11px 12px; border: 1px solid rgba(11,12,14,0.25); border-radius: 3px; font-size: 15px; background: #FFFFFF; min-width: 0; width: 100%;" /></label>
+                      <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.6);">Country<input type="text" maxlength="2" value="{{ rtCountryV }}" onInput="{{ onRtCountry }}" style="padding: 11px 12px; border: 1px solid rgba(11,12,14,0.25); border-radius: 3px; font-size: 15px; background: #FFFFFF; min-width: 0; width: 100%;" /></label>
+                    </div>
+                    <label style="display: flex; flex-direction: column; gap: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: rgba(11,12,14,0.6);">Why is it coming back? Optional<input type="text" value="{{ rtReasonV }}" onInput="{{ onRtReason }}" style="padding: 11px 12px; border: 1px solid rgba(11,12,14,0.25); border-radius: 3px; font-size: 15px; background: #FFFFFF; min-width: 0; width: 100%;" /></label>
+                  </div>
+                </sc-if>
+                <sc-if value="{{ rtErrShow }}" hint-placeholder-val="{{ false }}"><p style="margin: 0; font-size: 14px; color: #B4442E;">{{ rtErrText }}</p></sc-if>
+                <div><button onClick="{{ rtSave }}" style="cursor: pointer; min-height: 42px; padding: 10px 18px; border: 0; border-radius: 3px; background: #0B0C0E; color: #F5F4F1; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;">{{ rtSaveLabel }}</button></div>
+              </div>
+            </sc-if>
+            <sc-if value="{{ rtEmpty }}" hint-placeholder-val="{{ false }}">
+              <div style="background: #FFFFFF; border: 1px dashed rgba(11,12,14,0.3); border-radius: 4px; padding: clamp(24px, 4vw, 40px); display: flex; flex-direction: column; gap: 10px;">
+                <span style="font-family: Archivo, sans-serif; font-weight: 700; font-size: 22px;">No returns yet</span>
+                <p style="margin: 0; font-size: 15px; line-height: 1.6; color: rgba(11,12,14,0.68); max-width: 56ch;">When a buyer sends something back, announce it here, issue the label, and follow it until it is inspected and back on your shelf.</p>
+              </div>
+            </sc-if>
+            <sc-if value="{{ rtListShow }}" hint-placeholder-val="{{ false }}">
+              <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px; display: flex; flex-direction: column;">
+                <sc-for list="{{ returnRows }}" as="r" hint-placeholder-count="2">
+                  <div style="display: flex; flex-direction: column; gap: 4px; padding: 14px 0; border-top: 1px solid rgba(11,12,14,0.08); font-size: 15px;">
+                    <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px;"><strong style="font-family: 'IBM Plex Mono', monospace;">{{ r.ref }}</strong><span style="color: {{ r.color }}; font-weight: 600;">{{ r.status }}</span></div>
+                    <span style="color: rgba(11,12,14,0.65); font-size: 14px;">{{ r.who }}</span>
+                    <span style="color: rgba(11,12,14,0.65); font-size: 13px;">{{ r.items }}</span>
+                    <span style="display: {{ r.outcomeShow }}; font-size: 14px; color: #1F5C3D;">{{ r.outcome }}</span>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px;">
+                      <button onClick="{{ r.onLabel }}" style="display: {{ r.labelDisplay }}; cursor: pointer; min-height: 38px; padding: 8px 14px; border: 1px solid rgba(11,12,14,0.3); border-radius: 3px; background: transparent; color: #0B0C0E; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;">{{ r.labelBtn }}</button>
+                      <button onClick="{{ r.onCancel }}" style="display: {{ r.cancelDisplay }}; cursor: pointer; min-height: 38px; padding: 8px 14px; border: 1px solid rgba(11,12,14,0.3); border-radius: 3px; background: transparent; color: #0B0C0E; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase;">Cancel</button>
+                    </div>
+                    <div style="display: {{ r.panelDisplay }}; flex-direction: column; gap: 10px; margin-top: 8px; padding: 14px; background: #F5F4F1; border-radius: 4px;">
+                      <span style="display: {{ r.pErrShow }}; font-size: 14px; color: #B4442E;">{{ r.pErr }}</span>
+                      <span style="display: {{ r.pNoteShow }}; font-size: 14px; color: #1F5C3D;">{{ r.pNote }}</span>
+                      <span style="font-size: 14px; color: rgba(11,12,14,0.7);">{{ r.pHint }}</span>
+                      <div style="display: {{ r.pBoughtShow }}; flex-direction: column; gap: 8px;"><span style="font-size: 14px; color: #1F5C3D;">{{ r.pBoughtText }}</span><div><button onClick="{{ r.onDownload }}" style="cursor: pointer; min-height: 42px; padding: 10px 18px; border: 0; border-radius: 3px; background: #0B0C0E; color: #F5F4F1; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;">Download the label</button></div></div>
+                      <div style="display: {{ r.pBuyShow }}; flex-direction: column; gap: 10px;">
+                        <span style="font-size: 14px;"><strong>Issue the return label.</strong> The carrier collects from your buyer's address and delivers to our warehouse. Enter the packed parcel.</span>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px;">
+                          <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: rgba(11,12,14,0.65);">Weight (kg)<input type="text" inputmode="decimal" value="{{ r.pKg }}" onInput="{{ r.onKg }}" style="padding: 11px 12px; border: 1px solid rgba(11,12,14,0.25); border-radius: 3px; font-size: 15px; background: #FFFFFF; min-width: 0; width: 100%;" /></label>
+                          <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: rgba(11,12,14,0.65);">Length (cm)<input type="text" inputmode="decimal" value="{{ r.pL }}" onInput="{{ r.onL }}" style="padding: 11px 12px; border: 1px solid rgba(11,12,14,0.25); border-radius: 3px; font-size: 15px; background: #FFFFFF; min-width: 0; width: 100%;" /></label>
+                          <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: rgba(11,12,14,0.65);">Width (cm)<input type="text" inputmode="decimal" value="{{ r.pW }}" onInput="{{ r.onW }}" style="padding: 11px 12px; border: 1px solid rgba(11,12,14,0.25); border-radius: 3px; font-size: 15px; background: #FFFFFF; min-width: 0; width: 100%;" /></label>
+                          <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: rgba(11,12,14,0.65);">Height (cm)<input type="text" inputmode="decimal" value="{{ r.pH }}" onInput="{{ r.onH }}" style="padding: 11px 12px; border: 1px solid rgba(11,12,14,0.25); border-radius: 3px; font-size: 15px; background: #FFFFFF; min-width: 0; width: 100%;" /></label>
+                        </div>
+                        <div><button onClick="{{ r.onQuote }}" style="cursor: pointer; min-height: 42px; padding: 10px 18px; border: 0; border-radius: 3px; background: #0B0C0E; color: #F5F4F1; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;">{{ r.quoteLabel }}</button></div>
+                        <div style="display: {{ r.offersShow }}; flex-direction: column; gap: 8px;">
+                          <sc-for list="{{ r.offers }}" as="q" hint-placeholder-count="3">
+                            <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 0; border-top: 1px solid rgba(11,12,14,0.08);">
+                              <span style="display: flex; align-items: center; gap: 10px; font-size: 14px;"><span style="display: inline-block; min-width: 56px; text-align: center; padding: 6px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; background: {{ q.bg }}; color: {{ q.fg }};">{{ q.badge }}</span><span>{{ q.name }}</span></span>
+                              <span style="display: flex; align-items: center; gap: 10px;"><span style="font-size: 14px; font-weight: 600;">{{ q.price }}</span><button onClick="{{ q.onBuy }}" style="cursor: pointer; min-height: 42px; padding: 10px 18px; border: 0; border-radius: 3px; background: #0B0C0E; color: #F5F4F1; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;">Buy</button></span>
+                            </div>
+                          </sc-for>
+                          <span style="font-size: 13px; color: rgba(11,12,14,0.6);">{{ r.offersNote }}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-if>
+            <sc-if value="{{ chargeShow }}" hint-placeholder-val="{{ false }}">
+              <div style="background: #FFFFFF; border: 1px solid rgba(11,12,14,0.1); border-radius: 4px; padding: 20px; display: flex; flex-direction: column; gap: 6px;">
+                <span style="font-family: Archivo, sans-serif; font-weight: 800; font-size: 20px;">Usage charges on your account</span>
+                <p style="margin: 0 0 6px; font-size: 13px; color: rgba(11,12,14,0.6);">Shipping labels, handling fees and return fees are added to your monthly invoice. Amounts exclude VAT.</p>
+                <sc-for list="{{ chargeRows }}" as="c" hint-placeholder-count="3">
+                  <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 6px 14px; padding: 8px 0; border-top: 1px solid rgba(11,12,14,0.08); font-size: 14px;"><span style="color: rgba(11,12,14,0.6);">{{ c.when }}</span><span style="flex: 1; min-width: 160px;">{{ c.what }}</span><strong>{{ c.price }}</strong><span style="color: rgba(11,12,14,0.65);">{{ c.status }}</span></div>
+                </sc-for>
+              </div>
+            </sc-if>
+          </div>
+        </sc-if>
         <sc-if value="{{ tabOrders }}" hint-placeholder-val="{{ false }}">
           <div style="display: flex; flex-direction: column; gap: 20px; max-width: 860px;">
             <div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; align-items: center;">
@@ -924,6 +1020,33 @@
                       <span style="font-size: 14px; color: rgba(11,12,14,0.7);">{{ o.shIntro }}</span>
                       <span style="display: {{ o.shErrDisplay }}; font-size: 14px; color: #B4442E;">{{ o.shErr }}</span>
                       <span style="display: {{ o.shNoteDisplay }}; font-size: 14px; color: #1F5C3D;">{{ o.shNote }}</span>
+                      <div style="display: {{ o.shBuyDisplay }}; flex-direction: column; gap: 10px; padding: 12px 14px; background: #FFFFFF; border: 1px solid rgba(11,12,14,0.12); border-radius: 4px;">
+                        <span style="font-size: 14px;"><strong>Ship with 2ACE.</strong> We buy the label from the carrier you choose. You pay the carrier price plus our fee, on your monthly invoice (VAT is added).</span>
+                        <div style="display: {{ o.shBoughtDisplay }}; flex-direction: column; gap: 8px;">
+                          <span style="font-size: 14px; color: #1F5C3D;">{{ o.shBoughtText }}</span>
+                          <div><button onClick="{{ o.onShLabel }}" style="cursor: pointer; min-height: 42px; padding: 10px 18px; border: 0; border-radius: 3px; background: #0B0C0E; color: #F5F4F1; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;">Download the label</button></div>
+                        </div>
+                        <div style="display: {{ o.shPrepDisplay }}; flex-direction: column; gap: 10px;">
+                          <span style="font-size: 13px; color: rgba(11,12,14,0.65);">{{ o.shSuggestNote }}</span>
+                          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px;">
+                            <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: rgba(11,12,14,0.65);">Weight (kg)<input type="text" inputmode="decimal" value="{{ o.shKg }}" onInput="{{ o.onShKg }}" style="padding: 11px 12px; border: 1px solid rgba(11,12,14,0.25); border-radius: 3px; font-size: 15px; background: #FFFFFF; min-width: 0; width: 100%;" /></label>
+                            <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: rgba(11,12,14,0.65);">Length (cm)<input type="text" inputmode="decimal" value="{{ o.shL }}" onInput="{{ o.onShL }}" style="padding: 11px 12px; border: 1px solid rgba(11,12,14,0.25); border-radius: 3px; font-size: 15px; background: #FFFFFF; min-width: 0; width: 100%;" /></label>
+                            <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: rgba(11,12,14,0.65);">Width (cm)<input type="text" inputmode="decimal" value="{{ o.shW }}" onInput="{{ o.onShW }}" style="padding: 11px 12px; border: 1px solid rgba(11,12,14,0.25); border-radius: 3px; font-size: 15px; background: #FFFFFF; min-width: 0; width: 100%;" /></label>
+                            <label style="display: flex; flex-direction: column; gap: 4px; font-size: 12px; color: rgba(11,12,14,0.65);">Height (cm)<input type="text" inputmode="decimal" value="{{ o.shH }}" onInput="{{ o.onShH }}" style="padding: 11px 12px; border: 1px solid rgba(11,12,14,0.25); border-radius: 3px; font-size: 15px; background: #FFFFFF; min-width: 0; width: 100%;" /></label>
+                          </div>
+                          <span style="font-size: 12px; color: rgba(11,12,14,0.6);">Enter the packed parcel. If the real parcel is larger or heavier when we pack it, the carrier may charge extra and we add it to your invoice.</span>
+                          <div><button onClick="{{ o.onShQuote }}" style="cursor: pointer; min-height: 42px; padding: 10px 18px; border: 0; border-radius: 3px; background: #0B0C0E; color: #F5F4F1; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;">{{ o.shQuoteLabel }}</button></div>
+                          <div style="display: {{ o.shOffersDisplay }}; flex-direction: column; gap: 8px;">
+                            <sc-for list="{{ o.shOffers }}" as="q" hint-placeholder-count="3">
+                              <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 0; border-top: 1px solid rgba(11,12,14,0.08);">
+                                <span style="display: flex; align-items: center; gap: 10px; font-size: 14px;"><span style="display: inline-block; min-width: 56px; text-align: center; padding: 6px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; background: {{ q.bg }}; color: {{ q.fg }};">{{ q.badge }}</span><span>{{ q.name }}</span></span>
+                                <span style="display: flex; align-items: center; gap: 10px;"><span style="font-size: 14px; font-weight: 600;">{{ q.price }}</span><button onClick="{{ q.onBuy }}" style="cursor: pointer; min-height: 42px; padding: 10px 18px; border: 0; border-radius: 3px; background: #0B0C0E; color: #F5F4F1; font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.1em; text-transform: uppercase;">Buy</button></span>
+                              </div>
+                            </sc-for>
+                            <span style="font-size: 13px; color: rgba(11,12,14,0.6);">{{ o.shOffersNote }}</span>
+                          </div>
+                        </div>
+                      </div>
                       <div style="display: {{ o.shOwnDisplay }}; flex-direction: column; gap: 10px;">
                         <span style="font-size: 14px;"><strong>I provide my own label.</strong> Upload the PDF from Allegro, InPost, your carrier or marketplace. We print it and put it on the parcel. There is no shipping charge from us.</span>
                         <span style="display: {{ o.hasLabelDisplay }}; font-size: 14px; color: #1F5C3D;">Current label: {{ o.shLabelText }} <button onClick="{{ o.onShRemove }}" style="border: 0; background: none; cursor: pointer; text-decoration: underline; color: #B4442E; font-size: 14px;">Remove</button></span>
@@ -1043,13 +1166,14 @@
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900}}">
 class Component extends DCLogic {
   state = {
-    shOpen: '', shCaps: null, shInfo: null, shCarrier: '', shTracking: '', shFileName: '', shBusy: false, shErr: '', shNote: '',
+    whReturns: [], whCharges: [], rtOpen: false, rtOrder: '', rtName: '', rtPhone: '', rtEmail: '', rtLine1: '', rtPostal: '', rtCity: '', rtCountry: 'PL', rtReason: '', rtQty: {}, rtBusy: false, rtErr: '', rtSel: '', rtKg: '', rtL: '', rtW: '', rtH: '', rtOffers: [], rtOffersNote: '', rtQuoting: false, rtCaps: null, rtInfo: null, rtPBusy: false, rtPErr: '', rtPNote: '',
+    shOpen: '', shKg: '', shL: '', shW: '', shH: '', shOffers: [], shOffersNote: '', shSuggestNote: '', shQuoting: false, shCaps: null, shInfo: null, shCarrier: '', shTracking: '', shFileName: '', shBusy: false, shErr: '', shNote: '',
     orgId: '', whLoaded: false, whErr: '', whInv: [], whCodes: {}, whBook: [], whIssues: {}, whPhotos: {}, whChanges: {}, whPhotoUrls: {}, pdPhotoBusy: false, whOrders: [], oOpen: false, oRef: '', oName: '', oEmail: '', oPhone: '', oLine1: '', oPostal: '', oCity: '', oCountry: 'PL', oLines: [], oPick: '', oQty: '1', oBusy: false, oErr: '', csvOpen: false, csvOrders: null, csvInfo: '', csvBusy: false, csvErr: '', csvResult: null, pdOpen: false, pdSku: '', pdName: '', pdEan: '', pdBusy: false, pdErr: '', pdEditId: '', pdEditName: '', pdEditEan: '', pdEditActive: true, inEditId: '', inNotes: '', inOpen: false, inDate: '', inCarrier: '', inTracking: '', inLines: [], inPick: '', inQty: '1', inBusy: false, inErr: '', whNote: '',
     contactOpen: false, contactSubject: 'other', contactMsg: '', contactBusy: false, contactDone: false, contactErr: '',
     logoUrl: '', orgName: '', domainName: '', curPlan: null, hasDomain: false,
     view: 'build', step: 0, userEmail: '', menuOpen: false, userName: '', payErr: '', changeMode: false, chPrev: null, chBusy: false, chErr: '', chDone: '', domainOffer: false, dmInfo: null, dmErr: '', dmAccept: false, dmName: '', dmStatus: null, dmAlts: [], dmNote: '', dmBusy: false, domainAlts: [], mkCat: 'home', payNotice: '', payBanner: '',
     qty: 15, estUnits: 6000, estSize: 'medium',
-    pkgs: { ful: false, ret: false, imp: false }, orders: 1500,
+    pkgs: { ful: false, payg: false, ret: false, retp: false, imp: false }, tariff: null, orders: 1500,
     storeOn: false, domain: '', domainStatus: null, theme: 'mono',
     langs: { Polish: true, English: true, German: false, Czech: false },
     pays: { BLIK: true, Przelewy24: true, Cards: true, 'Apple Pay': false, PayPo: false },
@@ -1241,7 +1365,7 @@ class Component extends DCLogic {
   async whLoad() {
     if (!this.state.orgId || !this.authSession()) return;
     try {
-      const [inv, codes, book, dis, dmg, chg, ords] = await Promise.all([
+      const [inv, codes, book, dis, dmg, chg, ords, rets, chs] = await Promise.all([
         this.whGet('v_inventory_by_product?select=product_id,sku,name,active,on_hand,available,unplaced,quarantined,incoming,photo_paths&order=sku'),
         this.whGet('product_barcodes?select=product_id,barcode'),
         this.whGet('inbound_bookings?select=id,ref,status,expected_date,carrier,tracking,notes,created_at,inbound_lines(product_id,expected_qty,products(sku,name))&order=created_at.desc&limit=50'),
@@ -1249,8 +1373,11 @@ class Component extends DCLogic {
         this.whGet('receipt_lines?select=booking_id,photo_paths&condition=eq.damaged'),
         this.whGet('change_requests?select=id,entity_id,summary,status,decision_note&order=requested_at.desc&limit=200'),
         // the correction note needs the latest database update; until it is applied, load the orders without it so the list never breaks
-        this.whGet('orders?select=id,ref,external_ref,status,label_source,hold_reason,details_request_note,ship_name,ship_city,ship_country,created_at,shipped_at,order_lines(qty,products(sku,name))&order=created_at.desc&limit=100')
-          .catch(() => this.whGet('orders?select=id,ref,external_ref,status,label_source,hold_reason,ship_name,ship_city,ship_country,created_at,shipped_at,order_lines(qty,products(sku,name))&order=created_at.desc&limit=100'))
+        this.whGet('orders?select=id,ref,external_ref,status,label_source,hold_reason,details_request_note,ship_name,ship_line1,ship_line2,ship_postal,ship_city,ship_country,ship_phone,ship_email,created_at,shipped_at,order_lines(qty,product_id,products(sku,name))&order=created_at.desc&limit=100')
+          .catch(() => this.whGet('orders?select=id,ref,external_ref,status,label_source,hold_reason,ship_name,ship_line1,ship_line2,ship_postal,ship_city,ship_country,ship_phone,ship_email,created_at,shipped_at,order_lines(qty,product_id,products(sku,name))&order=created_at.desc&limit=100')),
+        // returns and charges need the latest database update: until it is applied they are simply empty
+        this.whGet('returns?select=id,ref,status,fee_mode,reason,order_id,created_at,buyer_name,buyer_city,return_lines(qty,received_qty,grade,note,products(sku,name))&order=created_at.desc&limit=100').catch(() => []),
+        this.whRpc('my_charges', { p_org: this.state.orgId }).catch(() => [])
       ]);
       const changes = {}; chg.forEach((c) => { if (!changes[c.entity_id] && (c.status === 'pending' || c.status === 'rejected')) changes[c.entity_id] = c; else if (!changes[c.entity_id]) changes[c.entity_id] = { status: 'done' }; });
       const map = {}; codes.forEach((c) => { (map[c.product_id] = map[c.product_id] || []).push(c.barcode); });
@@ -1274,7 +1401,7 @@ class Component extends DCLogic {
         } catch (e) { /* photos are optional */ }
       }
       const photos = {}; Object.keys(byBooking).forEach((k) => { photos[k] = byBooking[k].map((pth) => urls[pth]).filter(Boolean); });
-      this.setState({ whLoaded: true, whErr: '', whInv: inv, whCodes: map, whBook: book, whIssues: issues, whPhotos: photos, whChanges: changes, whPhotoUrls: purls, whOrders: ords });
+      this.setState({ whReturns: Array.isArray(rets) ? rets : [], whCharges: Array.isArray(chs) ? chs : [], whLoaded: true, whErr: '', whInv: inv, whCodes: map, whBook: book, whIssues: issues, whPhotos: photos, whChanges: changes, whPhotoUrls: purls, whOrders: ords });
     } catch (e) { this.setState({ whLoaded: true, whErr: String(e.message || e) }); }
   }
   async pdSubmit() {
@@ -1319,7 +1446,7 @@ class Component extends DCLogic {
   async shToggle(id) {
     if (this.state.shOpen === id) { this.shFile = null; this.setState({ shOpen: '' }); return; }
     this.shFile = null;
-    this.setState({ shOpen: id, shCaps: null, shInfo: null, shCarrier: '', shTracking: '', shFileName: '', shBusy: true, shErr: '', shNote: '' });
+    this.setState({ shOpen: id, shKg: '', shL: '', shW: '', shH: '', shOffers: [], shOffersNote: '', shSuggestNote: '', shQuoting: false, shCaps: null, shInfo: null, shCarrier: '', shTracking: '', shFileName: '', shBusy: true, shErr: '', shNote: '' });
     try { await this.shRefresh(id); } catch (e) { this.setState({ shBusy: false, shErr: String(e.message || e) }); }
   }
   async shRefresh(id) {
@@ -1327,6 +1454,102 @@ class Component extends DCLogic {
     if (this.state.shOpen !== id) return;
     const l = info.own_label;
     this.setState({ shCaps: caps, shInfo: info, shBusy: false, shCarrier: l ? l.carrier || '' : this.state.shCarrier, shTracking: l ? (l.tracking_numbers || []).join(', ') : this.state.shTracking });
+    // Buying here is offered: start the parcel form from the sizes of the products on the order (only a suggestion).
+    if (caps.buy_label && !info.bought_label && !info.own_label && this.state.shKg === '') {
+      try { const sg = await this.csCall({ action: 'suggest', order_id: id }); if (this.state.shOpen === id && this.state.shKg === '') { const p = sg.parcel || {}; this.setState({ shKg: p.weight_kg == null ? '' : String(p.weight_kg).replace('.', ','), shL: p.length_cm == null ? '' : String(p.length_cm), shW: p.width_cm == null ? '' : String(p.width_cm), shH: p.height_cm == null ? '' : String(p.height_cm), shSuggestNote: sg.note || '' }); } } catch (e) { /* the customer can type the parcel */ }
+    }
+  }
+  // ---- returns: announce a return, issue the return label (addressed to our warehouse), follow it ----
+  rtResetForm() { return { rtOrder: '', rtName: '', rtPhone: '', rtEmail: '', rtLine1: '', rtPostal: '', rtCity: '', rtCountry: 'PL', rtReason: '', rtQty: {}, rtErr: '' }; }
+  rtToggle() { this.setState(this.state.rtOpen ? Object.assign({ rtOpen: false }, this.rtResetForm()) : Object.assign({ rtOpen: true }, this.rtResetForm())); }
+  rtPickOrder(id) {
+    const o = this.state.whOrders.find((x) => x.id === id);
+    if (!o) return this.setState(Object.assign(this.rtResetForm(), {}));
+    this.setState({ rtOrder: id, rtName: o.ship_name || '', rtPhone: o.ship_phone || '', rtEmail: o.ship_email || '', rtLine1: [o.ship_line1, o.ship_line2].filter(Boolean).join(' '), rtPostal: o.ship_postal || '', rtCity: o.ship_city || '', rtCountry: o.ship_country || 'PL', rtQty: {}, rtErr: '' });
+  }
+  async rtSubmit() {
+    const s = this.state; if (s.rtBusy) return;
+    const o = s.whOrders.find((x) => x.id === s.rtOrder);
+    if (!o) return this.setState({ rtErr: 'Choose the order the goods are coming back from.' });
+    const lines = (o.order_lines || []).map((l) => ({ product_id: l.product_id, qty: parseInt(s.rtQty[l.product_id], 10) || 0 })).filter((l) => l.qty > 0);
+    if (!lines.length) return this.setState({ rtErr: 'Enter how many of each product are coming back.' });
+    this.setState({ rtBusy: true, rtErr: '' });
+    try {
+      const r = await this.whRpc('create_return', { p_org: s.orgId, p_order: s.rtOrder, p_buyer: { name: s.rtName, phone: s.rtPhone, email: s.rtEmail, line1: s.rtLine1, postal: s.rtPostal, city: s.rtCity, country: s.rtCountry }, p_reason: s.rtReason, p_lines: lines });
+      this.setState(Object.assign({ rtBusy: false, rtOpen: false, whNote: 'Return ' + r.ref + ' announced. Issue its label below, or wait for the parcel to arrive.' }, this.rtResetForm())); this.whLoad();
+    } catch (e) { this.setState({ rtBusy: false, rtErr: String(e.message || e) }); }
+  }
+  async rtCancel(r) {
+    if (!window.confirm('Cancel return ' + r.ref + '?')) return;
+    try { await this.whRpc('cancel_return', { p_return: r.id }); this.setState({ whNote: 'Return ' + r.ref + ' cancelled.', whErr: '' }); this.whLoad(); } catch (e) { this.setState({ whNote: '', whErr: String(e.message || e) }); }
+  }
+  async rtToggleLabel(id) {
+    if (this.state.rtSel === id) return this.setState({ rtSel: '' });
+    this.setState({ rtSel: id, rtKg: '', rtL: '', rtW: '', rtH: '', rtOffers: [], rtOffersNote: '', rtQuoting: false, rtCaps: null, rtInfo: null, rtPBusy: true, rtPErr: '', rtPNote: '' });
+    try { const [caps, info] = await Promise.all([this.csCall({ action: 'capabilities' }), this.csCall({ action: 'return.status', return_id: id })]); if (this.state.rtSel === id) this.setState({ rtCaps: caps, rtInfo: info, rtPBusy: false }); }
+    catch (e) { this.setState({ rtPBusy: false, rtPErr: String(e.message || e) }); }
+  }
+  rtParcel() { const s = this.state; return [{ weight_kg: s.rtKg, length_cm: s.rtL, width_cm: s.rtW, height_cm: s.rtH }]; }
+  async rtQuote() {
+    const s = this.state, id = s.rtSel; if (!id || s.rtQuoting || s.rtPBusy) return;
+    if (![s.rtKg, s.rtL, s.rtW, s.rtH].every((v) => String(v).trim() !== '')) return this.setState({ rtPErr: 'Enter the weight and the three sizes of the parcel.', rtPNote: '' });
+    this.setState({ rtQuoting: true, rtPErr: '', rtPNote: '', rtOffers: [], rtOffersNote: '' });
+    try { const r = await this.csCall({ action: 'return.quote', return_id: id, parcels: this.rtParcel() }); const ok = (r.offers || []).filter((q) => q.available), n = (r.offers || []).length - ok.length;
+      this.setState({ rtQuoting: false, rtOffers: ok, rtOffersNote: ok.length ? (n ? n + ' other carrier' + (n === 1 ? '' : 's') + ' cannot take this parcel.' : '') : 'No carrier can take this parcel. Check the weight and sizes.' }); }
+    catch (e) { this.setState({ rtQuoting: false, rtPErr: String(e.message || e) }); }
+  }
+  async rtBuyOffer(q) {
+    const s = this.state, id = s.rtSel; if (!id || s.rtPBusy) return;
+    const money = (n) => Number(n).toFixed(2).replace('.', ',') + ' zł';
+    if (!window.confirm('Buy the ' + q.name + ' return label for ' + money(q.bill_net) + ' + VAT (' + money(q.bill_gross) + ' with VAT)? It is added to your next invoice and cannot be undone here.')) return;
+    this.setState({ rtPBusy: true, rtPErr: '', rtPNote: '' });
+    try {
+      const r = await this.csCall({ action: 'return.buy', return_id: id, service_id: q.service_id, parcels: this.rtParcel(), expected_bill_net: q.bill_net });
+      if (r.pending) return this.setState({ rtPBusy: false, rtPNote: r.message });
+      const info = await this.csCall({ action: 'return.status', return_id: id });
+      this.setState({ rtPBusy: false, rtOffers: [], rtInfo: info, rtPNote: 'Return label bought. Download it and send it to your buyer.' }); this.whLoad();
+    } catch (e) { this.setState({ rtPBusy: false, rtPErr: String(e.message || e) }); }
+  }
+  async rtDownload() {
+    const s = this.state, id = s.rtSel; if (!id || s.rtPBusy) return;
+    this.setState({ rtPBusy: true, rtPErr: '', rtPNote: '' });
+    try { const r = await this.csCall({ action: 'return.label', return_id: id }); if (r.pending) return this.setState({ rtPBusy: false, rtPNote: r.message }); this.setState({ rtPBusy: false }); window.open(r.url, '_blank', 'noopener'); }
+    catch (e) { this.setState({ rtPBusy: false, rtPErr: String(e.message || e) }); }
+  }
+  // Fulfilment as you go: price a label for this parcel, buy it, download it. All the checking happens on the server; this only asks and shows.
+  shParcel() {
+    const s = this.state; return [{ weight_kg: s.shKg, length_cm: s.shL, width_cm: s.shW, height_cm: s.shH }];
+  }
+  async shQuote() {
+    const s = this.state, id = s.shOpen; if (!id || s.shQuoting || s.shBusy) return;
+    if (![s.shKg, s.shL, s.shW, s.shH].every((v) => String(v).trim() !== '')) { this.setState({ shErr: 'Enter the weight and the three sizes of the parcel.', shNote: '' }); return; }
+    this.setState({ shQuoting: true, shErr: '', shNote: '', shOffers: [], shOffersNote: '' });
+    try {
+      const r = await this.csCall({ action: 'quote', order_id: id, parcels: this.shParcel() });
+      const ok = (r.offers || []).filter((q) => q.available), n = (r.offers || []).length - ok.length;
+      this.setState({ shQuoting: false, shOffers: ok, shOffersNote: ok.length ? (n ? n + ' other carrier' + (n === 1 ? '' : 's') + ' cannot take this parcel.' : '') : 'No carrier can take this parcel. Check the weight and sizes, or add your own label.' });
+    } catch (e) { this.setState({ shQuoting: false, shErr: String(e.message || e) }); }
+  }
+  async shBuyOffer(q) {
+    const s = this.state, id = s.shOpen; if (!id || s.shBusy) return;
+    const money = (n) => Number(n).toFixed(2).replace('.', ',') + ' zł';
+    if (!window.confirm('Buy the ' + q.name + ' label for ' + money(q.bill_net) + ' + VAT (' + money(q.bill_gross) + ' with VAT)? It is added to your next invoice and cannot be undone here.')) return;
+    this.setState({ shBusy: true, shErr: '', shNote: '' });
+    try {
+      const r = await this.csCall({ action: 'buy', order_id: id, service_id: q.service_id, parcels: this.shParcel(), expected_bill_net: q.bill_net });
+      if (r.pending) { this.setState({ shBusy: false, shNote: r.message }); return; }
+      await this.shRefresh(id);
+      this.setState({ shBusy: false, shOffers: [], shNote: 'Label bought. We will pack your order and send it with this label.', whOrders: this.state.whOrders.map((o) => (o.id === id ? Object.assign({}, o, { label_source: '2ace' }) : o)) });
+    } catch (e) { this.setState({ shBusy: false, shErr: String(e.message || e) }); }
+  }
+  async shLabel() {
+    const s = this.state, id = s.shOpen; if (!id || s.shBusy) return;
+    this.setState({ shBusy: true, shErr: '', shNote: '' });
+    try {
+      const r = await this.csCall({ action: 'label', order_id: id });
+      if (r.pending) { this.setState({ shBusy: false, shNote: r.message }); return; }
+      this.setState({ shBusy: false }); window.open(r.url, '_blank', 'noopener');
+    } catch (e) { this.setState({ shBusy: false, shErr: String(e.message || e) }); }
   }
   async shSave() {
     const s = this.state, id = s.shOpen;
@@ -1651,7 +1874,17 @@ class Component extends DCLogic {
     if (patch.orgId) this.whLoad();
   }
 
+  // The packing tariff is public: it is shown when choosing a plan, so a visitor can see what an order costs before signing up.
+  async loadTariff() {
+    try { const r = await fetch(this.API + '/rest/v1/rpc/handling_tariff', { method: 'POST', headers: { apikey: this.ANON, 'Content-Type': 'application/json' }, body: '{}' }); if (r.ok) { const t = await r.json(); if (t && Array.isArray(t.tiers) && t.tiers.length) this.setState({ tariff: t }); } } catch (e) { /* the cards then say a fee per order by parcel size, without numbers */ }
+  }
+  tariffText(kind) {
+    const t = this.state.tariff, z = (n) => Number(n).toFixed(2).replace('.', ',') + ' zł';
+    if (kind === 'payg') return t ? 'No monthly fee. ' + z(t.tiers[0].handling_net) + ' to ' + z(t.tiers[t.tiers.length - 1].handling_net) + ' per order by parcel size, never more than 350 zł per m² a month.' : 'No monthly fee. A fee per order by parcel size, never more than 350 zł per m² a month.';
+    return t ? 'No monthly fee. ' + z(t.tiers[0].return_net) + ' to ' + z(t.tiers[t.tiers.length - 1].return_net) + ' per return by parcel size, never more than 150 zł per m² a month.' : 'No monthly fee. A fee per return by parcel size, never more than 150 zł per m² a month.';
+  }
   componentDidMount() {
+    this.loadTariff();
     const sess = this.authSession();
     const q = new URLSearchParams(location.search);
     const view = q.get('view'), co = q.get('checkout'), dom = q.get('domain'), tabQ = q.get('tab');
@@ -1716,6 +1949,8 @@ class Component extends DCLogic {
     m.push({ key: 'storage', label: 'Storage', detail: this.m2fmt(s.qty) + ' m² at ' + this.fmt(st.price) + ' / m²', v: storage });
     const fp = s.qty;
     if (s.pkgs.ful) m.push({ label: 'Fulfillment', detail: this.num(fp) + ' m² at 350 zł', v: fp * 350 });
+    if (s.pkgs.payg) m.push({ label: 'Fulfilment as you go', detail: 'No monthly fee. A handling fee per order, up to 350 zł per m² a month', v: 0 });
+    if (s.pkgs.retp) m.push({ label: 'Returns as you go', detail: 'No monthly fee. A fee per return, up to 150 zł per m² a month', v: 0 });
     if (s.pkgs.ret) m.push({ label: 'Returns handling', detail: this.num(fp) + ' m² at 150 zł', v: fp * 150 });
     if (s.pkgs.imp) m.push({ label: 'Import & customs', detail: 'Quoted per shipment', v: 0, quote: true });
     if (s.storeOn) { m.push({ label: 'Storefront ' + (s.domain || 'yourbrand') + '.pl', detail: 'Hosting and care', v: 199, once: 2950 }); }
@@ -1790,8 +2025,10 @@ class Component extends DCLogic {
     }));
 
     const svcDefs = [
-      { k: 'ful', name: 'E-commerce fulfillment', rate: 350, title: 'Want us to ship your orders?', lead: 'Connect your store and we pick, pack and dispatch every order from your space. Priced on your space, with no per-order fees.', addLabel: 'Add fulfillment', points: ['Same-day dispatch on a 15:00 cut-off', 'InPost, DPD, DHL and GLS at 2ACE rates', 'Shopify, WooCommerce, Allegro and TikTok Shop connected', 'Live tracking pushed to your customers'] },
-      { k: 'ret', name: 'Returns handling', rate: 150, title: 'Add returns handling?', lead: 'Returned parcels come back to us, get graded and go straight back on sale. You see every result in the dashboard.', addLabel: 'Add returns', points: ['Inspected and graded within 48 hours', 'A-grade stock restocked automatically', 'Photos on every rejected item', 'Branded returns portal for your buyers'] },
+      { k: 'ful', name: 'E-commerce fulfillment (flat monthly fee)', rate: 350, title: 'Want us to ship your orders?', lead: 'Connect your store and we pick, pack and dispatch every order from your space. Priced on your space, with no per-order fees.', addLabel: 'Add fulfillment', points: ['Same-day dispatch on a 15:00 cut-off', 'InPost, DPD, DHL and GLS at 2ACE rates', 'Shopify, WooCommerce, Allegro and TikTok Shop connected', 'Live tracking pushed to your customers'] },
+      { k: 'payg', name: 'Fulfilment as you go', price: '__PAYG__', title: 'Pay only for the orders you ship', lead: 'No monthly fulfilment fee. We pick, pack and hand over every order and charge a handling fee per order, by the size of the parcel, like the marketplaces do. The monthly total never passes the old flat price. You buy each shipping label in your dashboard at the carrier price plus a small fee, or add your own.', addLabel: 'Add fulfilment as you go', points: ['One handling fee per order, set by parcel size', 'Never more than 350 zł per m² of your space in a month', 'Compare InPost, DPD, DHL and GLS prices in your dashboard, or use your own label', 'Pick, pack and same-day dispatch on a 15:00 cut-off'] },
+      { k: 'retp', name: 'Returns as you go', price: '__RETP__', title: 'Pay only for the returns you get', lead: 'No monthly returns fee. Your buyer sends the parcel back with a return label that you issue in your dashboard, addressed to our warehouse. We inspect, grade and restock it within 48 hours and charge a small handling fee per return, never more than 150 zł per m² of your space in a month.', addLabel: 'Add returns as you go', points: ['Issue return labels yourself, in seconds', 'Inspected and graded within 48 hours', 'A-grade stock restocked automatically', 'Photos on every rejected item'] },
+      { k: 'ret', name: 'Returns handling (flat monthly fee)', rate: 150, title: 'Add returns handling?', lead: 'Returned parcels come back to us, get graded and go straight back on sale. You see every result in the dashboard.', addLabel: 'Add returns', points: ['Inspected and graded within 48 hours', 'A-grade stock restocked automatically', 'Photos on every rejected item', 'Branded returns portal for your buyers'] },
       { k: 'imp', name: 'Import & customs', price: 'Quoted per shipment', title: 'Importing from outside the EU?', lead: 'We book the freight and clear customs into Poland. Cost depends on the value, origin and route of each shipment, so we quote every one before it moves.', addLabel: 'Add import & customs', points: ['Air, sea and road freight booked for you', 'Customs clearance, duty and import VAT handled', 'CE and EU labelling checks before goods ship', 'Every milestone tracked in your dashboard'] }
     ];
 
@@ -1809,8 +2046,8 @@ class Component extends DCLogic {
     const onOff = (v, yes) => (v ? yes || 'Included' : 'Not in plan');
     const planRows = pc ? [
       { k: 'Space', v: this.m2fmt(this.planM2(pc)) + ' m²' },
-      { k: 'E-commerce fulfillment', v: onOff(pc.pkgs && pc.pkgs.ful) },
-      { k: 'Returns handling', v: onOff(pc.pkgs && pc.pkgs.ret) },
+      { k: 'E-commerce fulfillment', v: pc.pkgs && pc.pkgs.payg ? 'As you go (a handling fee per order)' : onOff(pc.pkgs && pc.pkgs.ful) },
+      { k: 'Returns handling', v: pc.pkgs && pc.pkgs.retp ? 'As you go (a fee per return)' : onOff(pc.pkgs && pc.pkgs.ret) },
       { k: 'Import & customs', v: onOff(pc.pkgs && pc.pkgs.imp, 'Quoted per shipment') },
       { k: '.pl storefront', v: onOff(pc.storeOn) },
       this.MARKET_ENABLED && { k: '2ACE Market', v: onOff(pc.marketOn, this.mkRange() + ' per sale') }
@@ -1845,7 +2082,6 @@ class Component extends DCLogic {
     const EMPTY = {
       imports: { tab: 'Imports', title: 'No imports yet', text: 'Your shipments appear here after you book an inbound delivery: milestones, customs documents and landed cost, live.', cta: 'Book your first inbound', go: goTab('inbound') },
       tracking: { tab: 'Shipment tracking', title: 'No shipments to track', text: 'Live tracking starts as soon as a shipment is booked with us.', cta: 'Book inbound', go: goTab('inbound') },
-      returns: { tab: 'Returns', title: 'No returns yet', text: 'Returns appear here, graded and with their outcome, once you have orders and returns handling in your plan.', cta: 'Back to overview', go: goTab('overview') },
       growth: pc && pc.storeOn
         ? { tab: 'Storefront', title: s.domainName ? 'Your store at ' + s.domainName : 'Your .pl storefront', text: 'We are preparing your store. We email you when the first draft is ready to review.', cta: 'Back to overview', go: goTab('overview') }
         : { tab: 'Storefront', title: 'No storefront in your plan', text: 'Add a designed and hosted .pl store to your plan: 199 zł a month plus 2 950 zł setup.', cta: 'Change plan', go: this.startChange },
@@ -1855,7 +2091,7 @@ class Component extends DCLogic {
       team: { tab: 'Team', title: 'Your team', text: 'You are the account owner (' + (s.userEmail || 'your email') + '). Inviting colleagues with their own roles for operations, finance and marketing is opening soon.', cta: 'Ask for team access', go: () => this.openContact('team') }
     };
     const em = EMPTY[s.tab];
-    return Object.assign(X, {
+    return Object.assign(X, this.returnVals(s), {
       contactOpen: s.contactOpen, contactDone: s.contactDone, contactFormShow: !s.contactDone, contactErr: !!s.contactErr, contactErrText: s.contactErr,
       contactTopics: this.CONTACT_TOPICS.map((t) => ({ k: t.k, label: t.label })), contactSubject: s.contactSubject, onContactSubject: this.onContactSubject,
       contactMsg: s.contactMsg, onContactMsg: (e) => this.setState({ contactMsg: e.target.value, contactErr: '' }),
@@ -1897,10 +2133,21 @@ class Component extends DCLogic {
         pendDisplay: ch.status === 'pending' ? 'block' : 'none', pendText: ch.summary || '', onCancelReq: () => this.whCancelRequest(ch.id), rejDisplay: ch.status === 'rejected' ? 'block' : 'none', rejText: ch.decision_note || 'Declined',
         ...(() => {
           const open = s.shOpen === o.id, can = ['new', 'held', 'allocated', 'picking', 'packed'].includes(o.status), caps = open ? s.shCaps : null, l = open && s.shInfo ? s.shInfo.own_label : null;
-          const intro = !open ? '' : s.shBusy && !caps ? 'Checking…' : !caps ? '' : caps.mode === 'full' ? 'On your Fulfilment plan we choose the carrier and buy the label when your order is packed. If you already have a label for this order, add it here instead.' : caps.mode === 'payg' ? 'On Fulfilment as you go you prepare the label yourself. Buying a label with 2ACE is coming soon; for now, add your own label here.' : 'Your plan does not include fulfilment, so we do not ship orders for you. Add Fulfilment to your plan to use this.';
-          return { shipDisplay: can ? 'inline-block' : 'none', shipLabel: open ? 'Hide shipping' : o.label_source === 'own' ? 'Shipping (own label added)' : 'Shipping', onShip: () => this.shToggle(o.id),
+          const bl = open && s.shInfo ? s.shInfo.bought_label : null, canBuy = !!(open && caps && caps.buy_label), money = (n) => Number(n).toFixed(2).replace('.', ',') + ' zł';
+          const BR = { dhl: ['DHL', '#FFCC00', '#D40511'], dpd: ['DPD', '#DC0032', '#FFFFFF'], ups: ['UPS', '#351C15', '#FFB500'], fedex: ['FedEx', '#4D148C', '#FFFFFF'], inpost: ['InPost', '#FFCD00', '#1A1A1A'], gls: ['GLS', '#061AB1', '#FFFFFF'], poczta: ['Poczta', '#D6001C', '#FFFFFF'], orlen: ['Orlen', '#E30613', '#FFFFFF'] };
+          const brand = (c) => { const k = Object.keys(BR).find((x) => String(c || '').toLowerCase().includes(x)); return k ? BR[k] : [String(c || '?').slice(0, 3).toUpperCase(), '#E5E3DE', '#0B0C0E']; };
+          const intro = !open ? '' : s.shBusy && !caps ? 'Checking…' : !caps ? '' : caps.mode === 'full' ? 'On your Fulfilment plan we choose the carrier and buy the label when your order is packed. If you already have a label for this order, add it here instead.' : caps.mode === 'payg' ? (caps.buy_label ? 'On Fulfilment as you go you prepare the label yourself: buy it here with 2ACE, or add your own.' : 'On Fulfilment as you go you prepare the label yourself. Buying a label with 2ACE is coming soon; for now, add your own label here.') : 'Your plan does not include fulfilment, so we do not ship orders for you. Add Fulfilment to your plan to use this.';
+          return { shipDisplay: can ? 'inline-block' : 'none', shipLabel: open ? 'Hide shipping' : o.label_source === 'own' ? 'Shipping (own label added)' : o.label_source === '2ace' ? 'Shipping (label bought)' : 'Shipping', onShip: () => this.shToggle(o.id),
             panelDisplay: open ? 'flex' : 'none', shIntro: intro, shErr: open ? s.shErr : '', shErrDisplay: open && s.shErr ? 'block' : 'none', shNote: open ? s.shNote : '', shNoteDisplay: open && s.shNote ? 'block' : 'none',
-            shOwnDisplay: open && caps && caps.own_label ? 'flex' : 'none', hasLabelDisplay: l ? 'block' : 'none',
+            shOwnDisplay: open && caps && caps.own_label && !bl ? 'flex' : 'none',
+            shBuyDisplay: canBuy && !(l && !bl) ? 'flex' : 'none', shBoughtDisplay: bl ? 'flex' : 'none', shPrepDisplay: canBuy && !bl ? 'flex' : 'none',
+            shBoughtText: bl ? (bl.state === 'buying' ? 'We are confirming this label with the carrier. Please do not buy it again.' : 'Label bought: ' + [bl.service || bl.carrier, (bl.tracking_numbers || []).length ? 'tracking ' + bl.tracking_numbers.join(', ') : '', money(bl.bill_net) + ' + VAT'].filter(Boolean).join(' · ')) : '',
+            onShLabel: () => this.shLabel(), shSuggestNote: open ? s.shSuggestNote : '',
+            shKg: open ? s.shKg : '', shL: open ? s.shL : '', shW: open ? s.shW : '', shH: open ? s.shH : '',
+            onShKg: (e) => this.setState({ shKg: e.target.value, shOffers: [], shErr: '' }), onShL: (e) => this.setState({ shL: e.target.value, shOffers: [], shErr: '' }), onShW: (e) => this.setState({ shW: e.target.value, shOffers: [], shErr: '' }), onShH: (e) => this.setState({ shH: e.target.value, shOffers: [], shErr: '' }),
+            onShQuote: () => this.shQuote(), shQuoteLabel: open && s.shQuoting ? 'Asking the carriers…' : 'Get prices',
+            shOffersDisplay: open && (s.shOffers.length || s.shOffersNote) ? 'flex' : 'none', shOffersNote: open ? s.shOffersNote : '',
+            shOffers: open ? s.shOffers.map((q) => { const b = brand(q.carrier); return { name: q.name, badge: b[0], bg: b[1], fg: b[2], price: money(q.bill_net) + ' + VAT', onBuy: () => this.shBuyOffer(q) }; }) : [], hasLabelDisplay: l ? 'block' : 'none',
             shLabelText: l ? [l.filename || 'tracking only', l.carrier, (l.tracking_numbers || []).join(', ')].filter(Boolean).join(' · ') : '',
             shCarrier: open ? s.shCarrier : '', onShCarrier: (e) => this.setState({ shCarrier: e.target.value }), shTracking: open ? s.shTracking : '', onShTracking: (e) => this.setState({ shTracking: e.target.value }),
             onShFile: (e) => { this.shInput = e.target; this.shFile = e.target.files && e.target.files[0]; this.setState({ shFileName: this.shFile ? this.shFile.name : '', shErr: '' }); },
@@ -2005,14 +2252,14 @@ class Component extends DCLogic {
         this.showToast('Set to ' + n + ' m².');
       },
 
-      svcList: svcDefs.map((d) => {
+      svcList: svcDefs.filter((d) => !['ful', 'ret'].includes(d.k) || s.pkgs[d.k] || !!(s.curPlan && s.curPlan.config && s.curPlan.config.pkgs && s.curPlan.config.pkgs[d.k])).map((d) => {
         const on = !!s.pkgs[d.k];
         return {
           name: d.name, lead: d.lead, points: d.points.map((t) => ({ t })),
-          price: d.rate ? '+ ' + this.fmt(d.rate) + ' / m² · ' + this.fmt(s.qty * d.rate) + ' / month' : d.price,
+          price: d.rate ? '+ ' + this.fmt(d.rate) + ' / m² · ' + this.fmt(s.qty * d.rate) + ' / month' : d.price === '__PAYG__' ? this.tariffText('payg') : d.price === '__RETP__' ? this.tariffText('retp') : d.price,
           bd: on ? '#0B0C0E' : 'rgba(11,12,14,0.12)',
           label: on ? 'Added ✓  Tap to remove' : d.addLabel, bg: on ? '#0B0C0E' : '#E39A2B', fg: on ? '#F5F4F1' : '#0B0C0E',
-          toggle: () => this.setState({ pkgs: Object.assign({}, s.pkgs, { [d.k]: !on }) })
+          toggle: () => this.setState({ pkgs: Object.assign({}, s.pkgs, { [d.k]: !on }, !on && d.k === 'payg' ? { ful: false } : {}, !on && d.k === 'ful' ? { payg: false } : {}, !on && d.k === 'retp' ? { ret: false } : {}, !on && d.k === 'ret' ? { retp: false } : {}) })
         };
       }),
 
@@ -2056,12 +2303,53 @@ class Component extends DCLogic {
     });
   }
 
+  // Everything the Returns tab shows. The plan decides the fee (a flat monthly price or a fee per return); here the customer announces a return, issues the label
+  // (addressed to our warehouse) and follows it.
+  returnVals(s) {
+    const money = (n) => Number(n).toFixed(2).replace('.', ',') + ' zł';
+    const ST = { announced: ['Announced. Issue the label, or wait for the parcel.', '#8A5A10'], label_issued: ['Label issued, on its way to us', '#8A5A10'], received: ['Received, being inspected', '#8A5A10'], graded: ['Done', '#1F5C3D'], cancelled: ['Cancelled', 'rgba(11,12,14,0.5)'] };
+    const BR = { dhl: ['DHL', '#FFCC00', '#D40511'], dpd: ['DPD', '#DC0032', '#FFFFFF'], ups: ['UPS', '#351C15', '#FFB500'], fedex: ['FedEx', '#4D148C', '#FFFFFF'], inpost: ['InPost', '#FFCD00', '#1A1A1A'], gls: ['GLS', '#061AB1', '#FFFFFF'], poczta: ['Poczta', '#D6001C', '#FFFFFF'], orlen: ['Orlen', '#E30613', '#FFFFFF'] };
+    const brand = (c) => { const k = Object.keys(BR).find((x) => String(c || '').toLowerCase().includes(x)); return k ? BR[k] : [String(c || '?').slice(0, 3).toUpperCase(), '#E5E3DE', '#0B0C0E']; };
+    const shipped = s.whOrders.filter((o) => o.status === 'shipped'), chosen = s.whOrders.find((o) => o.id === s.rtOrder);
+    const KIND = { label: 'Shipping label', adjustment: 'Shipping adjustment', handling: 'Handling fee', return_handling: 'Return handling fee', return_label: 'Return label', credit: 'Credit' };
+    const CST = { pending: 'On your next invoice', queued: 'On your invoice', invoiced: 'On your invoice', paid: 'Paid', test: 'Test, not billed', void: 'Cancelled' };
+    return {
+      tabReturns: s.tab === 'returns', rtFormShow: s.rtOpen, rtBtnLabel: s.rtOpen ? 'Cancel' : 'New return', rtToggle: () => this.rtToggle(),
+      rtIntro: 'Your buyer sends goods back to our warehouse. You announce the return here, issue the return label yourself (the carrier price plus a small fee, on your invoice), and we inspect, grade and restock within 48 hours. ' + this.tariffText('retp').replace(/^No monthly fee\. /, 'On Returns as you go: '),
+      rtOrderOpts: [{ v: '', label: shipped.length ? 'Choose a shipped order' : 'No shipped orders yet' }].concat(shipped.map((o) => ({ v: o.id, label: o.ref + ' · ' + o.ship_name + ', ' + o.ship_city }))), rtOrderV: s.rtOrder, onRtOrder: (e) => this.rtPickOrder(e.target.value),
+      rtDetailsShow: !!chosen, rtNameV: s.rtName, onRtName: (e) => this.setState({ rtName: e.target.value, rtErr: '' }), rtPhoneV: s.rtPhone, onRtPhone: (e) => this.setState({ rtPhone: e.target.value, rtErr: '' }), rtEmailV: s.rtEmail, onRtEmail: (e) => this.setState({ rtEmail: e.target.value }),
+      rtLine1V: s.rtLine1, onRtLine1: (e) => this.setState({ rtLine1: e.target.value, rtErr: '' }), rtPostalV: s.rtPostal, onRtPostal: (e) => this.setState({ rtPostal: e.target.value, rtErr: '' }), rtCityV: s.rtCity, onRtCity: (e) => this.setState({ rtCity: e.target.value, rtErr: '' }),
+      rtCountryV: s.rtCountry, onRtCountry: (e) => this.setState({ rtCountry: e.target.value.toUpperCase().slice(0, 2), rtErr: '' }), rtReasonV: s.rtReason, onRtReason: (e) => this.setState({ rtReason: e.target.value }),
+      rtLineRows: chosen ? (chosen.order_lines || []).map((l) => ({ label: l.products.sku + ' · ' + l.products.name + ' (ordered ' + l.qty + ')', qty: s.rtQty[l.product_id] || '', onQty: (e) => this.setState({ rtQty: Object.assign({}, s.rtQty, { [l.product_id]: e.target.value }), rtErr: '' }) })) : [],
+      rtErrShow: !!s.rtErr, rtErrText: s.rtErr, rtSave: () => this.rtSubmit(), rtSaveLabel: s.rtBusy ? 'Saving…' : 'Announce the return',
+      rtEmpty: !s.whReturns.length && !s.rtOpen && s.whLoaded, rtListShow: s.whReturns.length > 0,
+      returnRows: s.whReturns.map((r) => {
+        const open = s.rtSel === r.id, info = open ? s.rtInfo : null, lab = info ? info.label : null, caps = open ? s.rtCaps : null, canBuy = !!(open && caps && caps.buy_return_label && r.status === 'announced' && !lab), st = ST[r.status] || [r.status, '#0B0C0E'];
+        const grade = (l) => l.received_qty == null ? '' : Number(l.received_qty) === 0 ? 'nothing came back' : l.grade === 'A' ? Number(l.received_qty) + ' back on your shelf' : Number(l.received_qty) + ' set aside (damaged, not sellable)' + (l.note ? ': ' + l.note : '');
+        return {
+          ref: r.ref, status: st[0], color: st[1], who: r.buyer_name + ', ' + r.buyer_city + ' · ' + new Date(r.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }), items: (r.return_lines || []).map((l) => l.products.sku + ' × ' + l.qty).join(', '),
+          outcomeShow: r.status === 'graded' ? 'block' : 'none', outcome: r.status === 'graded' ? (r.return_lines || []).map((l) => l.products.sku + ': ' + grade(l)).join('. ') + '.' + (r.fee_mode === 'payg' ? ' A handling fee for this return is on your next invoice.' : '') : '',
+          cancelDisplay: r.status === 'announced' ? 'inline-block' : 'none', onCancel: () => this.rtCancel(r),
+          labelDisplay: ['announced', 'label_issued'].includes(r.status) ? 'inline-block' : 'none', labelBtn: open ? 'Hide label' : r.status === 'label_issued' ? 'Return label' : 'Issue the return label', onLabel: () => this.rtToggleLabel(r.id),
+          panelDisplay: open ? 'flex' : 'none', pErrShow: open && s.rtPErr ? 'block' : 'none', pErr: open ? s.rtPErr : '', pNoteShow: open && s.rtPNote ? 'block' : 'none', pNote: open ? s.rtPNote : '',
+          pBoughtShow: lab ? 'flex' : 'none', pBoughtText: lab ? (lab.state === 'buying' ? 'We are confirming this label with the carrier. Please do not buy it again.' : 'Return label bought: ' + [lab.service || lab.carrier, (lab.tracking_numbers || []).length ? 'tracking ' + lab.tracking_numbers.join(', ') : '', money(lab.bill_net) + ' + VAT'].filter(Boolean).join(' · ')) : '', onDownload: () => this.rtDownload(),
+          pBuyShow: canBuy ? 'flex' : 'none', pHint: open && caps && !caps.buy_return_label && r.status === 'announced' ? 'Return labels are not open for your account yet. Ask us, or send the goods back yourself.' : '',
+          pKg: open ? s.rtKg : '', pL: open ? s.rtL : '', pW: open ? s.rtW : '', pH: open ? s.rtH : '',
+          onKg: (e) => this.setState({ rtKg: e.target.value, rtOffers: [], rtPErr: '' }), onL: (e) => this.setState({ rtL: e.target.value, rtOffers: [], rtPErr: '' }), onW: (e) => this.setState({ rtW: e.target.value, rtOffers: [], rtPErr: '' }), onH: (e) => this.setState({ rtH: e.target.value, rtOffers: [], rtPErr: '' }),
+          onQuote: () => this.rtQuote(), quoteLabel: open && s.rtQuoting ? 'Asking the carriers…' : 'Get prices', offersShow: open && (s.rtOffers.length || s.rtOffersNote) ? 'flex' : 'none', offersNote: open ? s.rtOffersNote : '',
+          offers: open ? s.rtOffers.map((q) => { const b = brand(q.carrier); return { name: q.name, badge: b[0], bg: b[1], fg: b[2], price: money(q.bill_net) + ' + VAT', onBuy: () => this.rtBuyOffer(q) }; }) : [],
+        };
+      }),
+      chargeShow: s.whCharges.length > 0,
+      chargeRows: s.whCharges.slice(0, 30).map((c) => ({ when: new Date(c.at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }), what: (KIND[c.kind] || c.kind) + (c.size_class && c.size_class !== 'oversize' ? ' (class ' + c.size_class + ')' : '') + (c.note ? ': ' + c.note : '') + (c.order_ref || c.return_ref ? ' · ' + (c.order_ref || c.return_ref) : ''), price: money(c.net) + ' + VAT', status: CST[c.status] || c.status })),
+    };
+  }
   extraVals(s, P, customer, cc, tabSet) {
     const chLiveDelta = s.curPlan ? P.monthly - s.curPlan.monthly : 0;
     const chLiveKind = chLiveDelta > 0 ? 'upgrade' : chLiveDelta < 0 ? 'downgrade' : 'same';
     // Market (commission per sale) and Import & customs (quoted) have no monthly price: the plan can change while the price stays.
     const cc0 = (s.curPlan && s.curPlan.config) || {};
-    const chCfgDiff = !!s.curPlan && (Number(s.qty) !== this.planM2(cc0) || !!s.pkgs.ful !== !!(cc0.pkgs && cc0.pkgs.ful) || !!s.pkgs.ret !== !!(cc0.pkgs && cc0.pkgs.ret) || !!s.pkgs.imp !== !!(cc0.pkgs && cc0.pkgs.imp) || !!s.storeOn !== !!cc0.storeOn || !!s.marketOn !== !!cc0.marketOn);
+    const chCfgDiff = !!s.curPlan && (Number(s.qty) !== this.planM2(cc0) || !!s.pkgs.ful !== !!(cc0.pkgs && cc0.pkgs.ful) || !!s.pkgs.payg !== !!(cc0.pkgs && cc0.pkgs.payg) || !!s.pkgs.ret !== !!(cc0.pkgs && cc0.pkgs.ret) || !!s.pkgs.retp !== !!(cc0.pkgs && cc0.pkgs.retp) || !!s.pkgs.imp !== !!(cc0.pkgs && cc0.pkgs.imp) || !!s.storeOn !== !!cc0.storeOn || !!s.marketOn !== !!cc0.marketOn);
     const chKind = s.chPrev ? s.chPrev.kind : chLiveKind;
     const fld = (k) => (e) => this.setState({ [k]: e.target.value });
     const bd = (bad) => bad ? '#B4442E' : 'rgba(11,12,14,0.2)';

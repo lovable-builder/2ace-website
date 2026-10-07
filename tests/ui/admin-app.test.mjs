@@ -36,7 +36,7 @@ ok('wrong code is refused with a message', /did not work/.test(s.app()) && !s.lo
 input.value = '123456'; [...document.querySelectorAll('button')].find((b) => b.textContent === 'Continue').click(); await tick(120);
 ok('right code verifies, refreshes the token and loads the panel', s.log.includes('verify:f1:123456') && s.log.includes('refresh') && /boss@2ace\.pl/.test(s.app()), s.log.join(' > '));
 const navTxt = [...document.querySelectorAll('.side a')].map((a) => a.textContent).join('|');
-ok('admin menu has every section', navTxt === 'Overview|Customers|Requests|Appointments|Domains|Approvals|Orders|Inbound|Stock|Products|Discrepancies|Locations|Shipping|Staff|Audit log|Help|Scan app ↗', navTxt);
+ok('admin menu has every section', navTxt === 'Overview|Customers|Requests|Appointments|Domains|Approvals|Orders|Returns|Inbound|Stock|Products|Discrepancies|Locations|Shipping|Staff|Audit log|Help|Scan app ↗', navTxt);
 
 // 1b. the menu on a phone: a drawer with a Menu button
 {
@@ -67,5 +67,5 @@ ok('non-staff sees "No access" and nothing else', /No access/.test(s.app()) && !
 
 // 4. warehouse works without MFA and sees only its own area
 s = await scenario('a4', { role: 'warehouse', factors: { totp: [], all: [] }, meResponses: [{ status: 200, body: { id: 'u4', role: 'warehouse', email: 'floor@2ace.pl' } }] });
-ok('warehouse gets in without a second factor and sees only the warehouse screens (no customers, requests, staff, audit, shipping)', /floor@2ace\.pl/.test(s.app()) && [...document.querySelectorAll('.side a')].map((a) => a.textContent).join('|') === 'Overview|Approvals|Orders|Inbound|Stock|Products|Discrepancies|Locations|Help|Scan app ↗' && !s.log.includes('enroll'), [...document.querySelectorAll('.side a')].map((a) => a.textContent).join('|'));
+ok('warehouse gets in without a second factor and sees only the warehouse screens (no customers, requests, staff, audit, shipping)', /floor@2ace\.pl/.test(s.app()) && [...document.querySelectorAll('.side a')].map((a) => a.textContent).join('|') === 'Overview|Approvals|Orders|Returns|Inbound|Stock|Products|Discrepancies|Locations|Help|Scan app ↗' && !s.log.includes('enroll'), [...document.querySelectorAll('.side a')].map((a) => a.textContent).join('|'));
 console.log(`\n${pass} passed, ${fail} failed`); process.exit(fail ? 1 : 0);

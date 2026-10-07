@@ -5,7 +5,7 @@ Object.defineProperty(globalThis, 'navigator', { value: dom.window.navigator, co
 Object.assign(globalThis, { window: dom.window, document: dom.window.document, Node: dom.window.Node });
 globalThis.crypto ??= (await import('node:crypto')).webcrypto;
 const base = 'file://' + ROOT + '/assets/admin/';
-const mods = {}; for (const n of ['home', 'locations', 'products', 'inbound', 'stock', 'discrepancies', 'approvals', 'orders', 'shipping']) mods[n] = await import(base + n + '.js');
+const mods = {}; for (const n of ['home', 'locations', 'products', 'inbound', 'stock', 'discrepancies', 'approvals', 'orders', 'shipping', 'returns']) mods[n] = await import(base + n + '.js');
 let pass = 0, fail = 0; const ok = (n, c, x = '') => { c ? pass++ : fail++; console.log((c ? 'PASS ' : 'FAIL ') + n + (c || !x ? '' : '  -> ' + x)); };
 const tick = (ms = 25) => new Promise((r) => setTimeout(r, ms));
 const root = () => document.getElementById('root'); const text = () => root().textContent.replace(/\s+/g, ' ');
@@ -474,6 +474,85 @@ await mount('home', 'warehouse'); ok('warehouse overview shows 4 warehouse cards
   await mount('orders', 'warehouse', ['fx1']); ok('once a label is bought the details are locked, with the reason', !/Edit details/.test(text()) && /already bought for these details/.test(text()));
   DB.shipments = []; DB.orders = [mkO({ status: 'shipped' })]; await mount('orders', 'warehouse', ['fx1']); ok('a shipped order cannot be edited', !/Edit details/.test(text()) && !/will not pass/.test(text()));
   DB.orders = [mkO()]; await mount('orders', 'support', ['fx1']); ok('support sees the problems but has no buttons to change anything', /will not pass the shipping label/.test(text()) && !/Edit details/.test(text()) && !/Ask the customer/.test(text()));
+  sb.rpc = baseRpc;
+}
+
+// ---- a label the customer bought themselves (Fulfilment as you go) ----
+{
+  const baseRpc = sb.rpc; sb.rpc = async (n, a) => { if (n === 'order_ship_problems') return { data: [], error: null }; if (n === 'accept_label_mismatch') { rpcs.push([n, a]); return { data: { ok: true }, error: null }; } return baseRpc(n, a); };
+  const mkO = (over) => ({ id: 'cb1', org_id: 'o1', ref: 'ORD-000060', external_ref: null, channel: 'manual', status: 'packed', hold_reason: null, ship_name: 'Jan Kowalski', ship_company: null, ship_line1: 'Prosta 12', ship_line2: null, ship_postal: '00-001', ship_city: 'Warszawa', ship_country: 'PL', ship_email: null, ship_phone: '608180946', created_at: '2026-10-05T10:00:00Z', allocated_at: null, notes: null, label_flag: null, label_flag_note: null, ...over });
+  const mkS = { id: 's9', order_id: 'cb1', org_id: 'o1', status: 'purchased', buyer_role: 'customer', carrier: 'dpd', service_name: 'DPD · package', tracking_numbers: ['WB777'], cost_net: 10, cost_gross: 12.3, bill_net: 13, bill_gross: 15.99, markup_percent: 30, billing_status: 'pending', env: 'sandbox', parcels: [{ weight_g: 1800, length_cm: 30, width_cm: 20, height_cm: 15 }], created_at: '2026-10-06T09:00:00Z', purchased_at: '2026-10-06T09:01:00Z' };
+  DB.order_lines = []; DB.allocations = []; DB.parcels = []; DB.change_requests = []; DB.own_labels = []; DB.shipments = [mkS];
+  DB.orders = [mkO({ status: 'allocated' })]; await mount('orders', 'warehouse', ['cb1']);
+  ok('an order whose label the customer bought says so, with the parcel it was bought for, before it is even packed', /Bought by\s*The customer/.test(text()) && /1\.8 kg, 30 × 20 × 15 cm/.test(text()) && /WB777/.test(text()) && !!btn('Download label') && !btn('Mark shipped'), text().slice(0, 300));
+  DB.orders = [mkO()]; await mount('orders', 'warehouse', ['cb1']);
+  ok('once packed with a matching parcel, it can be marked shipped', !!btn('Mark shipped') && !/does not match the label/.test(text()));
+  DB.orders = [mkO({ label_flag: 'mismatch', label_flag_note: 'Parcel 1 weighs 2600 g, the label was bought for 1800 g.' })]; await mount('orders', 'warehouse', ['cb1']);
+  ok('a parcel that does not match is flagged with the numbers, and cannot be shipped until accepted', /The parcel does not match the label/.test(text()) && /weighs 2600 g, the label was bought for 1800 g/.test(text()) && !btn('Mark shipped') && !!btn('Accept the parcel'));
+  ok('warehouse staff can accept but cannot add a charge', !btn('Accept and charge extra…'));
+  rpcs.length = 0; btn('Accept the parcel').click(); await tick(60);
+  ok('accepting tells the database, with no extra charge', rpcs.some(([n, a]) => n === 'accept_label_mismatch' && a.p_order === 'cb1' && a.p_adjustment_net === null));
+  await mount('orders', 'admin', ['cb1']); ok('an admin can also add what the carrier charges extra', !!btn('Accept and charge extra…'));
+  btn('Accept and charge extra…').click(); await tick(40);
+  { const m = document.querySelector('.modal'); const [amt, note] = [...m.querySelectorAll('input')]; amt.value = '0'; rpcs.length = 0; [...m.querySelectorAll('button')].find((b) => b.textContent === 'Accept and add the charge').click(); await tick(50);
+    ok('an amount of nothing is refused in the form', /between 0.01 and 500/.test(m.textContent) && !rpcs.some(([n]) => n === 'accept_label_mismatch'));
+    amt.value = '6.5'; note.value = 'DPD weight surcharge'; [...m.querySelectorAll('button')].find((b) => b.textContent === 'Accept and add the charge').click(); await tick(60); }
+  ok('the extra charge and the reason are sent to the database', rpcs.some(([n, a]) => n === 'accept_label_mismatch' && a.p_adjustment_net === 6.5 && a.p_note === 'DPD weight surcharge'), JSON.stringify(rpcs));
+  DB.shipments = [{ ...mkS, buyer_role: 'staff', parcels: null }]; DB.orders = [mkO()]; await mount('orders', 'warehouse', ['cb1']);
+  ok('a label bought by our staff says so and shows no customer parcel line', /Bought by\s*2ACE staff/.test(text()) && !/Label bought for:/.test(text()));
+  sb.rpc = baseRpc;
+}
+
+// ---- the handling fee tariff (Shipping page) ----
+{
+  const baseRpc = sb.rpc; sb.rpc = async (n, a) => { if (n === 'set_handling_tiers') { rpcs.push([n, a]); return rpcFail ? { data: null, error: { message: rpcFail } } : { data: null, error: null }; } return baseRpc(n, a); };
+  DB.handling_tiers = [{ size_class: 'XS', sort: 1, max_weight_g: 500, max_side_cm: 35, handling_net: 3.2, return_net: 4.8 }, { size_class: 'S', sort: 2, max_weight_g: 1000, max_side_cm: 40, handling_net: 4.2, return_net: 6.3 }];
+  DB.billing_rates = [{ key: 'handling_extra_parcel', value: 0.6 }, { key: 'return_extra_parcel', value: 0.9 }];
+  await mount('shipping', 'admin'); await tick(60);
+  const vals = () => [...root().querySelectorAll('.card tbody input')].map((i) => i.value);
+  ok('the tariff is shown with every class, its limits and both prices, and the extra-parcel fees', /Handling fee tariff/.test(text()) && vals().join() === 'XS,500,35,3.2,4.8,S,1000,40,4.2,6.3' && [...root().querySelectorAll('input')].some((i) => i.value === '0.6') && [...root().querySelectorAll('input')].some((i) => i.value === '0.9'), vals().join());
+  { const inputs = [...root().querySelectorAll('.card tbody input')]; inputs[3].value = '3.5'; inputs[3].dispatchEvent(new window.Event('input')); rpcs.length = 0; btn('Save the tariff').click(); await tick(60); }
+  const sv = rpcs.find(([n]) => n === 'set_handling_tiers');
+  ok('saving sends every class (numbers as numbers, names trimmed) and the two extra fees', sv && sv[1].p_tiers.length === 2 && sv[1].p_tiers[0].size_class === 'XS' && sv[1].p_tiers[0].handling_net === 3.5 && sv[1].p_tiers[1].max_weight_g === 1000 && sv[1].p_rates.handling_extra_parcel === 0.6 && sv[1].p_rates.return_extra_parcel === 0.9, JSON.stringify(sv));
+  btn('+ Add a class').click(); await tick(20); ok('a class can be added, starting a little above the last one', vals().length === 15 && vals().slice(10, 12).join() === ',2000');
+  rpcFail = 'Class 3: give it a short name'; btn('Save the tariff').click(); await tick(60); ok('a refusal from the database is shown under the tariff', /give it a short name/.test(text())); rpcFail = null;
+  btn('Remove') && [...root().querySelectorAll('button')].filter((b) => b.textContent === 'Remove')[2].click(); await tick(20); ok('a class can be removed', vals().length === 10);
+  await mount('shipping', 'support'); await tick(60); ok('staff who are not admins can read the tariff but not change it', /Handling fee tariff/.test(text()) && !btn('Save the tariff') && !btn('+ Add a class') && [...root().querySelectorAll('.card tbody input')].every((i) => i.disabled));
+  sb.rpc = baseRpc;
+}
+
+// ---- returns (warehouse) ----
+{
+  const baseRpc = sb.rpc; let gradeRes = { replayed: false, finished: false };
+  sb.rpc = async (n, a) => { if (['receive_return', 'grade_return_line', 'cancel_return'].includes(n)) { rpcs.push([n, a]); if (rpcFail) return { data: null, error: { message: rpcFail } }; return { data: n === 'grade_return_line' ? gradeRes : null, error: null }; } return baseRpc(n, a); };
+  const RT = (over) => ({ id: 'rt1', ref: 'RET-000001', org_id: 'o1', order_id: null, status: 'label_issued', fee_mode: 'payg', reason: 'Too small', buyer_name: 'Anna Nowak', buyer_company: null, buyer_email: 'a@x.pl', buyer_phone: '600100200', buyer_line1: 'Lipowa 5', buyer_line2: null, buyer_postal: '31-000', buyer_city: 'Krakow', buyer_country: 'PL', created_at: '2026-10-06T09:00:00Z', received_at: null, graded_at: null, notified_at: null, weight_g: null, side_cm: null, return_lines: [{ qty: 2, products: { sku: 'MUG-BLUE' } }], ...over });
+  DB.returns = [RT(), RT({ id: 'rt2', ref: 'RET-000002', status: 'graded' }), RT({ id: 'rt3', ref: 'RET-000003', status: 'cancelled' })];
+  DB.return_lines = [{ id: 'l1', return_id: 'rt1', qty: 2, received_qty: null, grade: null, note: null, products: { sku: 'MUG-BLUE', name: 'Blue mug' } }, { id: 'l2', return_id: 'rt1', qty: 1, received_qty: null, grade: null, note: null, products: { sku: 'MUG-RED', name: 'Red mug' } }];
+  DB.shipments = [{ return_id: 'rt1', status: 'purchased', carrier: 'dpd', service_name: 'DPD · package', tracking_numbers: ['WB5'], created_at: 'x' }]; DB.shipping_charges = [];
+  await mount('returns', 'warehouse'); await tick(60);
+  ok('the list shows returns to handle with their items and status, and the others under their own tabs', /RET-000001/.test(text()) && /MUG-BLUE × 2/.test(text()) && /label issued, on its way/.test(text()) && !/RET-000002/.test(text()) && /To handle \(1\)/.test(text()) && /Graded \(1\)/.test(text()) && /Cancelled \(1\)/.test(text()), text().slice(0, 300));
+  btn('Graded (1)').click(); await tick(20); ok('the graded tab shows graded returns', /RET-000002/.test(text()));
+  await mount('returns', 'warehouse', ['rt1']); await tick(60);
+  ok('the detail shows the buyer, the reason, the label and the goods', /Anna Nowak/.test(text()) && /Too small/.test(text()) && /WB5/.test(text()) && /MUG-BLUE · Blue mug/.test(text()) && /2 are coming back/.test(text()) && /Pay as you go: a handling fee per return/.test(text()));
+  ok('before the parcel is received no line can be graded, only receiving is offered', !!btn('Receive the parcel') && !btn('Save grade') && /Receive the parcel first/.test(text()));
+  { const [w, sd] = [...root().querySelectorAll('input[aria-label="Weight in grams"], input[aria-label="Longest side in cm"]')]; set(w, '0'); set(sd, '33'); rpcs.length = 0; rpcFail = 'Enter the weight of the parcel, from 1 g to 70 kg'; btn('Receive the parcel').click(); await tick(60);
+    ok('a refusal from the database is shown, and nothing else happens', /Enter the weight of the parcel/.test(text()) && rpcs.length === 1); rpcFail = null; set(w, '600'); btn('Receive the parcel').click(); await tick(60); }
+  ok('receiving sends the return, the weight and the longest side as numbers', rpcs.some(([n, a]) => n === 'receive_return' && a.p_return === 'rt1' && a.p_weight_g === 600 && a.p_side_cm === 33), JSON.stringify(rpcs));
+  DB.returns = [RT({ status: 'received', weight_g: 600, side_cm: 33, received_at: '2026-10-07T08:00:00Z' })]; await mount('returns', 'warehouse', ['rt1']); await tick(60);
+  ok('once received the parcel size is shown and each line has a grade form', /600 g, longest side 33 cm/.test(text()) && [...root().querySelectorAll('button')].filter((b) => b.textContent === 'Save grade').length === 2 && !btn('Receive the parcel'));
+  { const sels = [...root().querySelectorAll('select[aria-label="Grade"]')], qs = [...root().querySelectorAll('input[aria-label="Came back"]')]; sels[0].value = 'A'; sels[0].dispatchEvent(new window.Event('change')); qs[0].value = '2'; rpcs.length = 0; apis.length = 0; [...root().querySelectorAll('button')].filter((b) => b.textContent === 'Save grade')[0].click(); await tick(60); }
+  const gr = rpcs.find(([n]) => n === 'grade_return_line'); ok('grading sends the line, how many came back and the grade', gr && gr[1].p_line === 'l1' && gr[1].p_received === 2 && gr[1].p_grade === 'A', JSON.stringify(gr));
+  ok('the customer is not emailed until the last line is graded', !apis.some(([a]) => a === 'return.notify'));
+  gradeRes = { replayed: false, finished: true }; DB.__api = { 'return.notify': { ok: true } };
+  { const sels = [...root().querySelectorAll('select[aria-label="Grade"]')]; sels[sels.length - 1].value = 'B'; sels[sels.length - 1].dispatchEvent(new window.Event('change')); apis.length = 0; [...root().querySelectorAll('button')].filter((b) => b.textContent === 'Save grade').pop().click(); await tick(80); }
+  ok('grading the last line finishes the return and tells the customer', apis.some(([a, p]) => a === 'return.notify' && p.id === 'rt1'));
+  DB.returns = [RT({ status: 'graded', weight_g: 600, side_cm: 33, graded_at: 'x', notified_at: 'x' })]; DB.return_lines = [{ id: 'l1', return_id: 'rt1', qty: 2, received_qty: 2, grade: 'A', note: 'like new', products: { sku: 'MUG-BLUE', name: 'Blue mug' } }, { id: 'l2', return_id: 'rt1', qty: 1, received_qty: 0, grade: 'C', note: null, products: { sku: 'MUG-RED', name: 'Red mug' } }];
+  DB.shipping_charges = [{ return_id: 'rt1', kind: 'return_handling', net: 6.3, status: 'waived', size_class: 'S', note: 'Return RET-000001, class S' }]; await mount('returns', 'warehouse', ['rt1']); await tick(60);
+  ok('a graded return shows each outcome, the handling fee with its class, and that a test fee is never invoiced', /2 of 2 came back/.test(text()) && /A: sellable, back on the shelf/.test(text()) && /0 of 1 came back/.test(text()) && /6,30 zł \+ VAT/.test(text()) && /Test, never invoiced/.test(text()) && /Class\s*S/.test(text()));
+  DB.returns = [RT({ status: 'announced' })]; DB.shipments = []; DB.shipping_charges = []; await mount('returns', 'warehouse', ['rt1']); await tick(60); rpcs.length = 0; btn('Cancel return').click(); await tick(60);
+  ok('a return with no label can be cancelled', rpcs.some(([n, a]) => n === 'cancel_return' && a.p_return === 'rt1'));
+  DB.returns = [RT({ status: 'received', received_at: 'x', weight_g: 5, side_cm: 5 })]; DB.return_lines = [{ id: 'l1', return_id: 'rt1', qty: 2, received_qty: null, grade: null, note: null, products: { sku: 'MUG-BLUE', name: 'Blue mug' } }];
+  await mount('returns', 'support', ['rt1']); await tick(60); ok('support can look at a return but not receive or grade it', /RET-000001/.test(text()) && !btn('Save grade') && !btn('Receive the parcel') && !btn('Cancel return'));
   sb.rpc = baseRpc;
 }
 

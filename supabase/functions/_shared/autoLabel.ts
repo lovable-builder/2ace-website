@@ -22,9 +22,10 @@ export interface AutoDeps {
 const tryNext = (e: ShipError) => e.status === 422 || (e.status === 400 && /not available/i.test(e.message));
 
 export async function autoLabel(d: AutoDeps): Promise<AutoResult> {
-  if (!d.enabled) return { status: 'skipped', reason: 'off', message: 'Automatic labels are switched off.' };
+  // An order that already has a label (the customer's own, or one the customer bought) is said so first, whether or not automatic labels are on.
   if (await d.hasOwnLabel()) return { status: 'skipped', reason: 'own_label', message: "The customer provided their own label, so none is bought." };
-  if (await d.hasActiveShipment()) return { status: 'skipped', reason: 'has_label', message: 'This order already has a label.' };
+  if (await d.hasActiveShipment()) return { status: 'skipped', reason: 'has_label', message: 'This order already has a label bought for it.' };
+  if (!d.enabled) return { status: 'skipped', reason: 'off', message: 'Automatic labels are switched off.' };
   const list = [...(await d.candidates())].filter((q) => q.available).sort((a, b) => a.cost_net - b.cost_net).slice(0, AUTO_MAX_TRIES);
   if (!list.length) return { status: 'needs_person', message: 'No carrier can take this parcel automatically. Check the prices and buy a label by hand.', tried: [] };
   const tried: string[] = [];

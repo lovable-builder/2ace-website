@@ -47,6 +47,14 @@ function receiverName(name: unknown): string | undefined {
 }
 
 // The shipment as Furgonetka wants it. Sizes go to whole centimetres rounded UP, weight in kilograms.
+// Sizes go to whole centimetres rounded UP, weight in kilograms, whatever the shipment.
+const parcelList = (parcels: ParcelRow[], description: string) => parcels.map((p) => ({
+  type: 'package',
+  width: Math.max(1, Math.ceil(Number(p.width_cm))), depth: Math.max(1, Math.ceil(Number(p.length_cm))), height: Math.max(1, Math.ceil(Number(p.height_cm))),
+  weight: Math.max(0.01, Math.round((p.weight_g / 1000) * 100) / 100),
+  description,
+}));
+
 export function buildPackage(o: OrderShip, parcels: ParcelRow[], serviceId?: number, sender = SENDER) {
   if (!parcels.length) throw new Error('This order has no parcels recorded');
   return compact({
@@ -59,12 +67,23 @@ export function buildPackage(o: OrderShip, parcels: ParcelRow[], serviceId?: num
       email: clean(o.ship_email), phone: normalizePhone(o.ship_phone, String(o.ship_country)),
     }),
     user_reference_number: o.ref,
-    parcels: parcels.map((p) => ({
-      type: 'package',
-      width: Math.max(1, Math.ceil(Number(p.width_cm))), depth: Math.max(1, Math.ceil(Number(p.length_cm))), height: Math.max(1, Math.ceil(Number(p.height_cm))),
-      weight: Math.max(0.01, Math.round((p.weight_g / 1000) * 100) / 100),
-      description: 'E-commerce goods',
-    })),
+    parcels: parcelList(parcels, 'E-commerce goods'),
+  });
+}
+
+// A return: the buyer sends the goods back to us. The buyer is the sender (pickup) and our warehouse is the receiver. The buyer's name and phone follow the same rules as any receiver.
+export type ReturnShip = { ref: string; buyer_name: string; buyer_company?: string | null; buyer_line1: string; buyer_line2?: string | null; buyer_postal: string; buyer_city: string; buyer_country: string; buyer_email?: string | null; buyer_phone?: string | null };
+export function buildReturnPackage(r: ReturnShip, parcels: ParcelRow[], serviceId?: number, warehouse = SENDER) {
+  if (!parcels.length) throw new Error('This return has no parcel recorded');
+  return compact({
+    service_id: serviceId,
+    pickup: compact({
+      name: receiverName(r.buyer_name), company: clean(r.buyer_company), street: [clean(r.buyer_line1), clean(r.buyer_line2)].filter(Boolean).join(' '),
+      postcode: clean(r.buyer_postal), city: clean(r.buyer_city), country_code: String(r.buyer_country).toUpperCase(), email: clean(r.buyer_email), phone: normalizePhone(r.buyer_phone, String(r.buyer_country)),
+    }),
+    receiver: { ...warehouse },
+    user_reference_number: r.ref,
+    parcels: parcelList(parcels, 'Returned goods'),
   });
 }
 

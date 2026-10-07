@@ -16,6 +16,7 @@ export interface CsDeps {
   download(path: string): Promise<Uint8Array | null>;
   removeFile(path: string): Promise<void>;
   rpc(name: string, args: Record<string, unknown>): Promise<{ data: unknown; error: { message: string } | null }>;
+  shipment?(orderId: string): Promise<{ status: string; carrier: string | null; service_name: string | null; tracking_numbers: string[]; bill_net: number; bill_gross: number; package_id: string | null; purchased_at: string | null; created_at: string; error: string | null; buyer_role: string } | null>;
   ownLabel(orderId: string): Promise<{ filename: string | null; storage_path: string | null; tracking_numbers: string[]; carrier_name: string | null; created_at: string } | null>;
 }
 
@@ -36,7 +37,10 @@ export async function capabilities(d: CsDeps) {
 export async function status(d: CsDeps, orderId: unknown) {
   const o = await ownOrder(d, orderId);
   const l = await d.ownLabel(o.id);
-  return { order: { id: o.id, ref: o.ref, status: o.status }, label_source: o.label_source, own_label: l ? { filename: l.filename, has_file: !!l.storage_path, path: l.storage_path, tracking_numbers: l.tracking_numbers, carrier: l.carrier_name, added_at: l.created_at } : null };
+  const sh = d.shipment ? await d.shipment(o.id) : null;
+  // A label we bought for this customer: only what the customer is meant to see (their price, never our cost or markup).
+  const bought = sh && (sh.status === 'purchased' || sh.status === 'buying') ? { state: sh.status, carrier: sh.carrier, service: sh.service_name, tracking_numbers: sh.tracking_numbers ?? [], bill_net: Number(sh.bill_net), bill_gross: Number(sh.bill_gross), by: sh.buyer_role, purchased_at: sh.purchased_at } : null;
+  return { order: { id: o.id, ref: o.ref, status: o.status }, label_source: o.label_source, bought_label: bought, own_label: l ? { filename: l.filename, has_file: !!l.storage_path, path: l.storage_path, tracking_numbers: l.tracking_numbers, carrier: l.carrier_name, added_at: l.created_at } : null };
 }
 
 // The customer uploaded a PDF to their folder (the storage rules already limit where) and now registers it on an order.

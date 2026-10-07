@@ -3,10 +3,21 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
 import { sendEmail, layout, esc } from '../_shared/email.ts';
 import { createDomainOrder } from '../_shared/domainOrder.ts';
 import { recurringMonthlyPLN } from '../_shared/stripeTotals.ts';
+import { onInvoiceCreated, onInvoiceEvent, type UsageDeps } from '../_shared/usageBilling.ts';
 
 const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY')!);
 const secret = Deno.env.get('STRIPE_WEBHOOK_SECRET')!;
 const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+
+// Usage charges (labels, handling fees, returns) join the customer's monthly invoice. Off until USAGE_BILLING_ENABLED=true.
+const usage: UsageDeps = {
+  enabled: Deno.env.get('USAGE_BILLING_ENABLED') === 'true',
+  orgByCustomer: async (cus) => { const { data } = await db.from('organizations').select('id').eq('stripe_customer_id', cus).maybeSingle(); return (data?.id as string) ?? null; },
+  prepare: async (org, inv) => { const { data, error } = await db.rpc('usage_prepare_invoice', { p_org: org, p_invoice: inv }); if (error) throw new Error(error.message); return data as never; },
+  createItem: async (p) => { await stripe.invoiceItems.create({ customer: p.customer, invoice: p.invoice, amount: p.amount, currency: p.currency, description: p.description, metadata: p.metadata, tax_behavior: 'exclusive' }, { idempotencyKey: p.idempotencyKey }); },
+  event: async (inv, ev) => { const { data, error } = await db.rpc('usage_invoice_event', { p_invoice: inv, p_event: ev }); if (error) throw new Error(error.message); return Number(data ?? 0); },
+  alert: async (subject, html) => { try { await sendEmail({ to: Deno.env.get('LEAD_NOTIFY_TO') ?? 'hello@2ace.pl', subject, html: layout(subject, html) }); } catch (_e) { /* the log has it */ } },
+};
 
 async function setOrg(orgId: string | undefined | null, status: string) {
   if (orgId) await db.from('organizations').update({ status }).eq('id', orgId);
@@ -77,9 +88,13 @@ Deno.serve(async (req) => {
       case 'customer.subscription.deleted':
         await syncSub(event.data.object as Stripe.Subscription);
         break;
+      case 'invoice.created': { const inv = event.data.object as Stripe.Invoice; await onInvoiceCreated(usage, { id: inv.id as string, customer: typeof inv.customer === 'string' ? inv.customer : inv.customer?.id ?? null, status: inv.status, billing_reason: inv.billing_reason }); break; }
+      case 'invoice.finalized':
+      case 'invoice.voided': await onInvoiceEvent(usage, event.type, (event.data.object as Stripe.Invoice).id as string); break;
       case 'invoice.paid':
       case 'invoice.payment_failed': {
         const inv = event.data.object as Stripe.Invoice & { subscription?: string | null };
+        if (event.type === 'invoice.paid') await onInvoiceEvent(usage, 'invoice.paid', inv.id as string);
         const subId = inv.subscription ?? (inv as unknown as { parent?: { subscription_details?: { subscription?: string } } }).parent?.subscription_details?.subscription;
         if (subId) await syncSub(await stripe.subscriptions.retrieve(subId));
         if (inv.customer_email) {

@@ -28,7 +28,7 @@ async function productFor(label: string): Promise<string> {
 
 // Two configs are "the same plan" only if every choice matches. Market (a commission per sale) and Import & customs (quoted per shipment)
 // carry no monthly price, so adding or removing them changes the plan without changing the price.
-const sig = (c: PlanConfig) => JSON.stringify([storageM2(c), !!c.pkgs?.ful, !!c.pkgs?.ret, !!c.pkgs?.imp, !!c.storeOn, !!c.marketOn, c.tt ?? 'off', c.meta ?? 'off']);
+const sig = (c: PlanConfig) => JSON.stringify([storageM2(c), !!c.pkgs?.ful, !!c.pkgs?.payg, !!c.pkgs?.ret, !!c.pkgs?.retp, !!c.pkgs?.imp, !!c.storeOn, !!c.marketOn, c.tt ?? 'off', c.meta ?? 'off']);
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders(req) });

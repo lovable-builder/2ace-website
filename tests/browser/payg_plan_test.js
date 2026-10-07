@@ -1,0 +1,31 @@
+const fs = require('fs');
+global.window = { addEventListener(){}, removeEventListener(){}, scrollTo(){}, matchMedia: () => ({ matches: false }) };
+global.localStorage = { getItem: () => null, setItem(){}, removeItem(){} };
+global.location = { search: '', pathname: '/platform', href: '' }; global.history = { pushState(){}, replaceState(){} };
+class DCLogic { constructor(){ this.props = {}; } setState(u){ const n = typeof u === 'function' ? u(this.state) : u; this.state = Object.assign({}, this.state, n); } }
+const Component = new Function('DCLogic', 'StreamableLogic', 'React', fs.readFileSync(require('path').join(__dirname, '..', '.cache', 'comp.js'), 'utf8') + '\nreturn Component;')(DCLogic, class {}, {});
+const c = new Component();
+let pass = 0, fail = 0; const ok = (n, x, e = '') => { x ? pass++ : fail++; console.log((x ? 'PASS ' : 'FAIL ') + n + (x ? '' : ' -> ' + e)); };
+const list = () => c.renderVals().svcList, svc = (name) => list().find((x) => x.name === name);
+const TARIFF = { tiers: [{ size_class: 'XS', max_weight_g: 500, max_side_cm: 35, handling_net: 3.2, return_net: 4.8 }, { size_class: 'XL', max_weight_g: 30000, max_side_cm: 120, handling_net: 12.9, return_net: 19.35 }], extra_parcel: 0.6, return_extra_parcel: 0.9 };
+c.state = Object.assign({}, c.state, { view: 'build', step: 1, qty: 10, pkgs: { ful: false, payg: false, ret: false, retp: false, imp: false }, storeOn: false, marketOn: false, curPlan: null, tariff: TARIFF });
+ok('a new customer is offered the pay-as-you-go options, not the flat monthly ones', !!svc('Fulfilment as you go') && !!svc('Returns as you go') && !svc('E-commerce fulfillment (flat monthly fee)') && !svc('Returns handling (flat monthly fee)') && !!svc('Import & customs'), list().map((x) => x.name).join());
+ok('the cards state the real packing prices from the tariff and the ceiling per m²', /No monthly fee\. 3,20 zł to 12,90 zł per order by parcel size, never more than 350 zł per m² a month/.test(svc('Fulfilment as you go').price) && /4,80 zł to 19,35 zł per return by parcel size, never more than 150 zł per m² a month/.test(svc('Returns as you go').price), svc('Fulfilment as you go').price + ' | ' + svc('Returns as you go').price);
+c.state.tariff = null; ok('without the tariff the cards still say it is a fee per order, with no numbers invented', /A fee per order by parcel size, never more than 350 zł per m² a month/.test(svc('Fulfilment as you go').price) && !/\d,\d\d zł to/.test(svc('Fulfilment as you go').price)); c.state.tariff = TARIFF;
+ok('the explanation covers the handling fee and the labels', svc('Fulfilment as you go').points.some((p) => /handling fee per order/.test(p.t)) && svc('Fulfilment as you go').points.some((p) => /Never more than 350/.test(p.t)) && svc('Returns as you go').points.some((p) => /Issue return labels/.test(p.t)));
+const base = c.renderVals().monthlyFmt;
+svc('Fulfilment as you go').toggle(); svc('Returns as you go').toggle();
+ok('adding both turns them on', c.state.pkgs.payg === true && c.state.pkgs.retp === true);
+ok('and they cost nothing a month: the total is still just the storage (10 m² x 300)', c.renderVals().monthlyFmt === base && base === '3 000 zł', c.renderVals().monthlyFmt);
+svc('Fulfilment as you go').toggle(); ok('each can be taken off again', c.state.pkgs.payg === false && c.state.pkgs.retp === true);
+// a customer on today's flat plan keeps seeing the flat options, and they exclude the new ones
+const cur = { config: { m2: 10, pkgs: { ful: true, ret: true, imp: false }, storeOn: false, marketOn: false }, monthly: 8000 };
+c.state = Object.assign({}, c.state, { view: 'dash', tab: 'overview', activated: true, curPlan: cur, userEmail: 'a@b.pl' }); c.startChange();
+ok('a customer on the flat plan still sees their flat options next to the new ones', !!svc('E-commerce fulfillment (flat monthly fee)') && !!svc('Returns handling (flat monthly fee)') && !!svc('Fulfilment as you go') && c.renderVals().monthlyFmt === '8 000 zł', c.renderVals().monthlyFmt);
+svc('Fulfilment as you go').toggle(); ok('choosing as-you-go replaces the flat fulfilment fee, and the monthly price falls by 3 500', c.state.pkgs.payg === true && c.state.pkgs.ful === false && c.renderVals().monthlyFmt === '4 500 zł', c.renderVals().monthlyFmt);
+svc('Returns as you go').toggle(); ok('and the same for returns (down to the storage price)', c.state.pkgs.retp === true && c.state.pkgs.ret === false && c.renderVals().monthlyFmt === '3 000 zł', c.renderVals().monthlyFmt);
+ok('the change counts as a plan change, and a cheaper one', /Downgrade/.test(String(c.renderVals().chBadgeLive)), String(c.renderVals().chBadgeLive));
+c.state = Object.assign({}, c.state, { changeMode: false, view: 'dash', curPlan: { config: { m2: 10, pkgs: { payg: true, retp: true }, storeOn: false, marketOn: false }, monthly: 3000 } });
+const rows = c.renderVals().planRows;
+ok('the plan summary says as you go for both, naming the fee', rows.some((r) => r.k === 'E-commerce fulfillment' && /As you go \(a handling fee per order\)/.test(r.v)) && rows.some((r) => r.k === 'Returns handling' && /As you go \(a fee per return\)/.test(r.v)), JSON.stringify(rows));
+console.log(`\n${pass} passed, ${fail} failed`); process.exit(fail ? 1 : 0);

@@ -233,6 +233,26 @@ const actions: Record<string, { roles?: StaffRole[]; run: (s: StaffCtx, b: Recor
     return { ok: true, to: owner.email };
   } },
 
+  // ---------- returns ----------
+  // Tells the customer's owner how a return was graded (once). Sent when the last line has been graded.
+  'return.notify': { roles: ['admin', 'warehouse'], run: async (s, b) => {
+    if (!isUuid(b.id)) throw new Bad('Invalid return');
+    const { data: r } = await admin.from('returns').select('id, ref, org_id, status, notified_at, fee_mode').eq('id', b.id).maybeSingle();
+    if (!r) throw new Bad('Return not found', 404);
+    if (r.status !== 'graded') throw new Bad('This return has not been fully graded yet');
+    if (r.notified_at) return { ok: true, already: true };
+    const owner = await ownerOf(r.org_id as string);
+    if (!owner?.email) throw new Bad('This customer has no owner email on file');
+    const { data: lines } = await admin.from('return_lines').select('qty, received_qty, grade, note, products(sku, name)').eq('return_id', b.id).order('id');
+    const outcome = (g: string | null, n: number) => n === 0 ? 'Nothing came back' : g === 'A' ? 'Back on your shelf, available again' : 'Set aside in quarantine (damaged, not sellable). Ask us if you want it sent back or disposed of';
+    const rows = (lines ?? []).map((l) => { const p = (l.products ?? {}) as { sku?: string; name?: string }; return `<tr><td style="padding:5px 12px 5px 0"><b>${esc(String(p.sku ?? ''))}</b> ${esc(String(p.name ?? ''))}</td><td style="padding:5px 12px 5px 0">${l.received_qty} of ${l.qty}</td><td style="padding:5px 0">${esc(outcome(l.grade as string | null, Number(l.received_qty ?? 0)))}${l.note ? ` <span style="color:#666">(${esc(String(l.note))})</span>` : ''}</td></tr>`; }).join('');
+    const html = layout(`Your return ${r.ref} is done`, `<p>Hello${owner.name ? ' ' + esc(owner.name.split(/\s+/)[0]) : ''},</p><p>We received and inspected return <b>${esc(String(r.ref))}</b>. Here is what happened:</p><table style="border-collapse:collapse;margin:8px 0 14px">${rows}</table>${r.fee_mode === 'payg' ? '<p style="font-size:14px;color:#555">The handling fee for this return is added to your monthly invoice.</p>' : ''}<p style="font-size:14px">You can see it under <a href="${SITE}/platform" style="color:#A8701A">Returns</a> in your account.</p>`);
+    if (!(await sendEmail({ to: owner.email, replyTo: TEAM_INBOX, subject: `Your return ${r.ref} is done | 2ACE`, html }))) throw new Bad('The email could not be sent. Check the email settings.', 502);
+    await admin.from('returns').update({ notified_at: new Date().toISOString() }).eq('id', b.id);
+    await audit(s, 'return.notify', 'returns', String(b.id), r.org_id as string, null, { to: owner.email });
+    return { ok: true };
+  } },
+
   // ---------- shipping labels ----------
   // Prices for a packed order from the main carriers. Free: nothing is created or charged. The customer price includes our markup.
   'shipping.quote': { roles: ['admin', 'warehouse'], run: async (_s, b) => {

@@ -26,8 +26,9 @@
   <div class="ex"><b>Example</b><p>Anna sells mugs and expects about 6,000 small items. She types 6,000 into "Not sure? Estimate from your stock", picks "Shoebox", and the builder suggests 18 m². She clicks <span class="ui">Use 18 m²</span>. Storage shows 5 400 zł a month. A month later she needs less, so she changes the plan to 12 m² and pays 3 600 zł.</p></div>
   <h3>Step 2: Services</h3>
   <ul>
-    <li><b>E-commerce fulfillment</b>: we pick, pack and ship your orders. 350 zł per m² of your space, per month.</li>
-    <li><b>Returns handling</b>: we receive, grade and restock returned items. 150 zł per m² of your space, per month.</li>
+    <li><b>Fulfilment as you go</b>: no monthly fee. We pick, pack and hand over every order, and charge a <b>handling fee per order</b> by the size of the packed parcel (a small parcel costs less than a big one, like on the marketplaces). The month's handling fees never add up to more than <b>350 zł per m² of your space</b>. You buy each shipping label in your dashboard, at the carrier price plus a small fee, or use your own label. The current prices are shown in the builder.</li>
+    <li><b>Returns as you go</b>: no monthly fee. Your buyer sends the goods back with a return label that you issue in your dashboard. We receive, grade and restock them, and charge a <b>handling fee per return</b>, never more than <b>150 zł per m² of your space</b> in a month.</li>
+    <li><i>Existing plans:</i> customers who already pay a flat 350 zł per m² for fulfilment or 150 zł per m² for returns keep their plan and can switch to the pay-as-you-go options at any time under Change plan.</li>
     <li><b>Import and customs</b>: sea, air and road freight with customs cleared into Poland. It is quoted for each shipment, so it adds nothing to the monthly price.</li>
   </ul>
   <h3>Step 3: Sell</h3>
@@ -69,7 +70,8 @@
     <tr><td>Inventory</td><td>See how many units of each product we hold.</td><td><span class="pill ok">Live</span></td></tr>
     <tr><td>Domain</td><td>Request your .pl domain.</td><td><span class="pill ok">Live</span></td></tr>
     <tr><td>Orders</td><td>Place orders by hand or from a CSV file, follow them from reserved to shipped, and add your own shipping label.</td><td><span class="pill ok">Live</span></td></tr>
-    <tr><td>Returns, Imports, Shipment tracking</td><td>Fill with real data as returns, imports and tracking open. Shipment tracking numbers will show here and on your orders.</td><td><span class="pill">Coming</span></td></tr>
+    <tr><td>Returns</td><td>Announce a return, issue the return label, follow it until it is graded, and see every usage charge (labels, handling fees, return fees) with its status.</td><td><span class="pill ok">Live</span></td></tr>
+    <tr><td>Imports, Shipment tracking</td><td>Fill with real data as imports and tracking open. Shipment tracking numbers will show here and on your orders.</td><td><span class="pill">Coming</span></td></tr>
     <tr><td>Storefront</td><td>Status of your online shop.</td><td><span class="pill">Coming</span></td></tr>
     <tr><td>Team</td><td>Give colleagues their own access. For now ask us from the Contact button.</td><td><span class="pill">Coming</span></td></tr>
   </table></div>
@@ -206,10 +208,24 @@
 
 <section id="c-shipping">
   <h2>8. Ship your orders</h2>
-  <p class="lead">Every order leaves with a shipping label. There are two ways to get it: we choose and buy it when we pack your order, or you give us your own.</p>
-  <h3>The normal way: we do it</h3>
+  <p class="lead">Every order leaves with a shipping label. Depending on your plan there are up to three ways to get it: we buy it when we pack your order (Fulfilment), you buy it yourself in your dashboard (Fulfilment as you go), or you give us your own.</p>
+  <h3>On a flat Fulfilment plan: we do it</h3>
+  <p>When our team has packed your order they weigh and measure the parcel, and we choose the carrier and create the label. You do nothing. Your order then shows <span class="pill ok">Shipped</span>. This is also what happens to any order for which you did not add a label.</p>
   <p>If a label cannot be created because of the delivery details (for example a phone number that is too short), we email you what to correct and show the same note on the order. Reply with the correct details and we fix the order. Nothing is charged for a failed attempt.</p>
-  <p>On <b>Fulfilment</b> you do nothing. When our team has packed your order they weigh and measure the parcel, and we choose the carrier and create the label. Your order then shows <span class="pill ok">Shipped</span>. This is also what happens to any order for which you did not add a label.</p>
+  <h3>What an order costs on Fulfilment as you go</h3>
+  <p>Two things, both excluding VAT, both on your monthly invoice: the <b>handling fee</b> (packing, one per order, by the size of the packed parcel; each extra parcel in the same order adds a small amount) and the <b>shipping label</b> (carrier price plus a small fee). The handling fee is charged when the order ships. You can see every charge, with its status, under <span class="ui">Returns</span> in <b>Usage charges on your account</b>. The month's handling fees never pass 350 zł per m² of your space: if they would, the invoice shows a credit line that cuts them back.</p>
+  <div class="ex"><b>Example</b><p>Acme has 10 m², so handling fees are capped at 3 500 zł a month. In October Acme ships 900 small orders (class XS, 3,20 zł) and 40 larger ones (class L, 8,50 zł): 2 880 + 340 = 3 220 zł, below the cap, so that is what is invoiced. If it had been 4 000 zł, the invoice would show 4 000 zł and a credit of 500 zł.</p></div>
+  <h3>On Fulfilment as you go: buy the label yourself</h3>
+  <p>You choose the carrier. The price is the carrier's price plus our small fee, shown before you buy, plus VAT, and it is added to your monthly invoice. There is no monthly fulfilment fee.</p>
+  <ol class="steps">
+    <li>Open <span class="ui">Orders</span> and click <span class="ui">Shipping</span> under a reserved order.</li>
+    <li>Under <b>Ship with 2ACE</b> check the parcel: weight in kilograms and length, width and height in centimetres. It starts from the sizes you entered for your products. Weigh and measure the packed parcel if you can.</li>
+    <li>Click <span class="ui">Get prices</span>. You see each carrier that can take the parcel (InPost, DPD, DHL, GLS and others) with its price before VAT.</li>
+    <li>Click <span class="ui">Buy</span> on the one you want and confirm the price. If the price changed meanwhile, you are told and nothing is bought.</li>
+    <li>The panel now shows the label with its tracking number. Click <span class="ui">Download the label</span> if you want a copy. We print it and stick it on the parcel when we pack.</li>
+  </ol>
+  <div class="ex"><b>Example</b><p>Anna's order ORD-000031 is two blue mugs. The panel suggests 1,75 kg and 12 × 10 × 36 cm from her product sizes. She gets prices: DPD 13,00 zł + VAT, InPost courier 14,50 zł + VAT. She buys DPD, and the label with tracking WB123 appears on the order. At the end of the month her invoice includes 13,00 zł + VAT for it.</p></div>
+  <div class="rule"><b>Good to know</b><p>When we pack the order we weigh and measure the real parcel. If it is clearly bigger or heavier than you entered, the carrier may charge extra: we add that to your invoice, with the reason. Declare the real parcel to avoid it. A label bought here cannot be cancelled in the dashboard: write to us. You cannot cancel an order that already has a bought label. Only owner, operations and staff members can buy. For safety we limit the number of labels per day and the total not yet invoiced; if you reach a limit, the screen says so. If buying is not open for your account yet, the panel offers only your own label.</p></div>
   <h3>Or use your own label</h3>
   <p>If you already have a label for an order (from Allegro, InPost, Amazon or your own carrier contract), give it to us. We print it, put it on the parcel and hand it to the courier. We do not charge for shipping when you bring the label.</p>
   <ol class="steps">
@@ -224,8 +240,29 @@
   <div class="rule"><b>Good to know</b><p>Only owner, operations and staff members of your company can add labels. The file must be a real PDF. If your plan does not include fulfilment, the Shipping panel says so and we do not ship your orders. A label from you replaces ours for that order only; we never buy a second label for an order that has yours.</p></div>
 </section>
 
+<section id="c-returns">
+  <h2>9. Returns</h2>
+  <p class="lead">When your buyer sends something back, you announce it here and issue the return label yourself. We receive the parcel, inspect it, put good goods back on your shelf and tell you what happened.</p>
+  <h3>Announce a return and issue the label</h3>
+  <ol class="steps">
+    <li>Open <span class="ui">Returns</span> and click <span class="ui">New return</span>.</li>
+    <li>Choose the shipped order the goods came from. The buyer's name, phone and address are filled in from the order: check them, because the carrier collects from this address. Enter how many of each product are coming back and, if you like, the reason. Click <span class="ui">Announce the return</span>.</li>
+    <li>On the new return click <span class="ui">Issue the return label</span>, enter the weight and size of the parcel, click <span class="ui">Get prices</span> and <span class="ui">Buy</span> the carrier you want after confirming the price. The label is made for a carrier pickup from your buyer's address to our warehouse.</li>
+    <li>Click <span class="ui">Download the label</span> and send it to your buyer.</li>
+  </ol>
+  <h3>What happens next</h3>
+  <ul>
+    <li>When the parcel arrives we weigh it and check every line. A line that is fine goes back on your shelf (grade A) and is available again. A line that is damaged or not sellable (grade B or C) is set aside in quarantine, with a note, and we ask you what to do with it.</li>
+    <li>You see the result on the return and receive an email. We aim to finish within 48 hours of arrival.</li>
+    <li>On <b>Returns as you go</b> we charge one handling fee per return, by the size of the parcel that arrived, on your next invoice. On a flat returns plan there is no per-return fee.</li>
+    <li>You can cancel a return until its label is bought. A return label you bought cannot be cancelled in the dashboard: write to us.</li>
+  </ul>
+  <div class="ex"><b>Example</b><p>Anna's buyer wants to return 2 blue mugs from ORD-000014. Anna announces RET-000003, issues a DPD return label for 13,00 zł + VAT and sends it to the buyer. A week later the parcel arrives: one mug is fine and goes back on her shelf, one is cracked and is set aside. Anna sees "1 back on your shelf, 1 set aside (damaged)" and a handling fee of 6,30 zł + VAT for the return on her next invoice.</p></div>
+  <div class="rule"><b>Good to know</b><p>Only owner, operations and staff members can announce returns and buy labels. The buyer's name must be a first name and surname and the phone a real number, or the carrier refuses the label. If return labels are not open for your account yet, the panel says so and you can send the goods back yourself.</p></div>
+</section>
+
 <section id="c-change">
-  <h2>9. Change your plan</h2>
+  <h2>10. Change your plan</h2>
   <p class="lead">You can upgrade or downgrade yourself. We show the difference first and you confirm once.</p>
   <ol class="steps">
     <li>Click <span class="ui">Build plan</span> in the top bar. A banner says "You already have an active plan". Click <span class="ui">Change plan</span>. The same button is on the Overview and the Storefront tab. The builder opens with your current plan.</li>
@@ -246,7 +283,7 @@
 </section>
 
 <section id="c-domain">
-  <h2>10. Get a .pl domain</h2>
+  <h2>11. Get a .pl domain</h2>
   <p class="lead">If your active plan has no domain yet, a <span class="pill">New</span> badge appears on the Domain tab.</p>
   <ol class="steps">
     <li>Open <span class="ui">Domain</span>. Type the name you want, without <code>.pl</code>, and click <span class="ui">Check</span>. We check it against the Polish registry.</li>
@@ -259,7 +296,7 @@
 </section>
 
 <section id="c-billing">
-  <h2>11. Invoices and payments</h2>
+  <h2>12. Invoices and payments</h2>
   <ul>
     <li><b>Every payment</b> sends you an email with a link to the invoice and a PDF.</li>
     <li><b>Your invoices</b> are listed under <span class="ui">Account</span> → <span class="ui">Billing and invoices</span>, each with a link to view or download it.</li>
@@ -271,7 +308,7 @@
 </section>
 
 <section id="c-contact">
-  <h2>12. Contact us</h2>
+  <h2>13. Contact us</h2>
   <p>Prefer to talk? <b>Book a call</b> at <code>2ace.pl/book</code>, in English, Chinese or Arabic. You do not need an account, so guests can book too: pick the language of the meeting, a day and a time (shown in your own time zone), enter your name and email, and confirm. You get an email with a calendar invitation and the meeting link, and reminders 24 hours and 1 hour before. The email has a link to move or cancel the booking. If the meeting link is not ready yet, we email it before the call.</p>
   <p>Use the <span class="ui">Contact us</span> button in your dashboard. A form opens with a topic list that pre-fills a helpful template. You can also write to <code>hello@2ace.pl</code> or call <code>+48 608 180 946</code>.</p>
   <div class="tw"><table>
@@ -286,7 +323,7 @@
 </section>
 
 <section id="c-faq">
-  <h2>13. Questions and fixes</h2>
+  <h2>14. Questions and fixes</h2>
   <div class="tw"><table>
     <tr><th>Problem</th><th>What to do</th></tr>
     <tr><td>I did not get the confirmation email.</td><td>Check spam. If it is not there, try Create account again with the same email, or contact us.</td></tr>
@@ -296,6 +333,8 @@
     <tr><td>I cannot delete a product.</td><td>It has been used. Request a switch off instead.</td></tr>
     <tr><td>The price after a plan change looks the same.</td><td>Import and customs has no monthly price. See the "No price change" example.</td></tr>
     <tr><td>Stock shows "awaiting put-away".</td><td>Those goods were not on your booking, or were damaged. We contact you about them. Good goods from a booked delivery are available immediately.</td></tr>
+    <tr><td>I cannot issue a return label.</td><td>The return must still be "announced" (no label yet), you must be an owner, operations or staff member, and return labels must be open for your account. The panel says which. The buyer's name and phone must be complete, or the carrier refuses.</td></tr>
+    <tr><td>I do not understand a charge on my account.</td><td>Open <span class="ui">Returns</span> and look at <b>Usage charges on your account</b>: each line names the order or return, the kind (label, handling fee, return fee, credit) and where it is on your invoice. A credit line is the monthly ceiling cutting your handling fees back. Write to us if something looks wrong.</td></tr>
     <tr><td>I cannot add a shipping label to an order.</td><td>The order must not be shipped or cancelled yet, you need to be an owner, operations or staff member, and your plan must include fulfilment. The Shipping panel says which one applies. The file must be a PDF of at most 2 MB.</td></tr>
     <tr><td>My order says Packed, not Shipped.</td><td>It is boxed and waiting for its label. With your own label we mark it shipped as soon as it is handed over; otherwise it turns Shipped when we have bought the label. If it stays Packed for more than a working day, use the Contact button.</td></tr>
     <tr><td>Payment failed.</td><td>Update your card under Account → Manage payment method and subscription.</td></tr>
