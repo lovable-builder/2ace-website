@@ -114,7 +114,7 @@
   const $ = (id) => document.getElementById(id);
   const NEXT = (() => {
     const n = new URLSearchParams(location.search).get('next');
-    return n && /^\/[a-z0-9_-]+(\/[a-z0-9_-]+)*\/?(\?[a-z0-9=&_-]*)?$/i.test(n) ? n : '/platform?view=dash';   // same-site paths only, e.g. /account or /app/dashboard/orders
+    return n && /^\/[a-z0-9_-]+(\/[a-z0-9_-]+)*\/?(\?[a-z0-9=&_-]*)?$/i.test(n) ? n : '/app/dashboard';   // same-site paths only, e.g. /account or /app/dashboard/orders
   })();
   const say = (el, text, kind) => { el.textContent = text; el.className = 'msg ' + (kind || ''); };
   const busy = (form, on) => form.querySelectorAll('button').forEach((b) => { b.disabled = on; });

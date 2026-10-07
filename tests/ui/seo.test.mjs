@@ -2,7 +2,7 @@ import { ROOT } from '../lib/root.mjs';
 import { JSDOM } from 'jsdom'; import fs from 'node:fs';
 let pass = 0, fail = 0; const ok = (n, c, x = '') => { c ? pass++ : fail++; console.log((c ? 'PASS ' : 'FAIL ') + n + (c || !x ? '' : ' -> ' + x)); };
 const root = ROOT;
-const pub = ['/', '/platform', '/about', '/book', '/help', '/terms', '/privacy', '/news', '/news/open-a-company-in-poland-pesel-trusted-profile', '/news/eu-3-euro-customs-duty-small-parcels', '/news/eu-packaging-regulation-ppwr-epr-online-sellers', '/news/selling-electronics-in-the-eu-ce-rohs-weee-checklist'];
+const pub = ['/', '/about', '/book', '/help', '/terms', '/privacy', '/news', '/news/open-a-company-in-poland-pesel-trusted-profile', '/news/eu-3-euro-customs-duty-small-parcels', '/news/eu-packaging-regulation-ppwr-epr-online-sellers', '/news/selling-electronics-in-the-eu-ce-rohs-weee-checklist'];
 const seen = { title: new Set(), desc: new Set(), img: new Set() };
 for (const p of pub) {
   const html = await (await fetch('http://localhost:8000' + p, { redirect: 'follow' })).text(); const d = new JSDOM(html).window.document;
@@ -42,7 +42,8 @@ for (const f of ['/llms.txt', '/site.webmanifest', '/favicon.ico', '/assets/icon
   ok('the home page structured data and meta do not mention Market', !/2ACE Market|marketplace/i.test(home.match(/<head>[\s\S]*?<\/head>/)[0]));
   const llms = await (await fetch('http://localhost:8000/llms.txt')).text(); ok('llms.txt does not mention Market and says storage is per m²', !/2ACE Market|\/market/i.test(llms) && /300 zł per m² per month/.test(llms) && !/shelf bin/i.test(llms));
   ok('the sitemap does not list /market', !/\/market</.test(sm));
-  const plat = await (await fetch('http://localhost:8000/platform')).text(); ok('the plan builder page says storage is per m², not bins or pallets', /300 zł per m²/.test(plat) && !/Shelf bins from 90/.test(plat));
+  const plat = await fetch('http://localhost:8000/platform?checkout=success', { redirect: 'manual' }); ok('the old plan builder address opens the customer app, keeping its link', plat.status === 302 && plat.headers.get('location') === '/app/?checkout=success', plat.status + ' ' + plat.headers.get('location'));
+  ok('the old plan builder page is gone', !fs.existsSync(ROOT + '/platform.html'));
   const news = await (await fetch('http://localhost:8000/news/')).text(); ok('the news pages have no Market link', !/href="\/#market"/.test(news));
   ok('the Market page file is still in the repository', fs.existsSync(ROOT + '/market.html') && fs.statSync(ROOT + '/market.html').size > 5000);
 }

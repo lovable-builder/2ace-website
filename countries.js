@@ -1,4 +1,4 @@
-// Shared by login.html and account.html. Same list and tax-ID labels as platform.html.
+// Shared by login.html and account.html. Same list and tax-ID labels as the customer app (web/src/lib/countries.ts).
 window.COUNTRIES = [
   ['PL', 'Poland', 'NIP', '1234567890'], ['DE', 'Germany', 'USt-IdNr. (VAT)', 'DE123456789'], ['CZ', 'Czechia', 'DIČ (VAT)', 'CZ12345678'],
   ['SK', 'Slovakia', 'IČ DPH (VAT)', 'SK1234567890'], ['LT', 'Lithuania', 'PVM code (VAT)', 'LT123456789'], ['NL', 'Netherlands', 'BTW-id (VAT)', 'NL123456789B01'],

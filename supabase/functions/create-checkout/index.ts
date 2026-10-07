@@ -99,8 +99,8 @@ Deno.serve(withMonitoring('create-checkout', async (req) => {
     billing_address_collection: 'required',
     tax_id_collection: { enabled: true },
     ...(AUTO_TAX ? { automatic_tax: { enabled: true } } : {}),
-    success_url: `${SITE}/platform.html?checkout=success`,
-    cancel_url: `${SITE}/platform.html?checkout=cancelled`,
+    success_url: `${SITE}/app/?checkout=success`,
+    cancel_url: `${SITE}/app/?checkout=cancelled`,
     integration_identifier: `2ace-checkout-${rand}`,
   } as Stripe.Checkout.SessionCreateParams);
 

@@ -3,7 +3,7 @@ RedirectMatch 404 /\.(?!well-known)
 RedirectMatch 404 ^/(supabase|node_modules|content|scripts|tests|web)(/|$)
 RedirectMatch 404 ^/skills-lock\.json$
 
-# Clean URLs: /platform instead of /platform.html, / instead of /index.html
+# Clean URLs: /about instead of /about.html, / instead of /index.html
 RewriteEngine On
 # One address for the site: www goes to the bare domain, so search engines and link previews see a single canonical host.
 RewriteCond %{HTTP_HOST} ^www\.2ace\.pl$ [NC]
@@ -13,9 +13,9 @@ RewriteRule ^market(\.html)?/?$ / [R=302,L]
 # The customer app (built from web/ into app/): every /app/... address is the same page, and the app shows the right screen.
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteRule ^app(/.*)?$ /app/index.html [L]
-# Switch-over: when the new app has been checked on the live backend, uncomment the next line. /platform (and the
-# ?checkout= / ?domain= / ?view= links Stripe and the emails use) then opens the new app; platform.html stays for rollback.
-RewriteRule ^platform(\.html)?$ /app/ [R=302,L,QSA]
+# The old plan builder (/platform) is gone: its address, and the ?checkout= / ?domain= / ?view= links Stripe and older emails
+# use, open the customer app, which reads those links and shows the right screen.
+RewriteRule ^platform(\.html)?/?$ /app/ [R=302,L,QSA]
 RewriteCond %{THE_REQUEST} \s/+index(\.html)?[\s?] [NC]
 RewriteRule ^ / [R=301,L]
 RewriteCond %{THE_REQUEST} \s/+([^\s?]+?)\.html[\s?] [NC]

@@ -10,7 +10,6 @@ const attr = (s) => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').rep
 import { MARKET_ENABLED } from './features.mjs';
 const pages = [
   { f: 'index.html', url: '/', title: '2ACE | Warehousing and fulfillment in Poland', preload: '/assets/seq/b000.webp', desc: 'Dedicated storage from 300 zł per m² a month, fulfillment, returns, import and customs and a .pl storefront. One plan, priced online.', ld: true },
-  { f: 'platform.html', url: '/platform', title: 'Build your plan | 2ACE', desc: 'Choose your space, services and storefront and watch the monthly price update. Storage from 300 zł per m², no minimum term. Sign and pay online.' },
   ...(MARKET_ENABLED ? [{ f: 'market.html', url: '/market', title: '2ACE Market | Sell in Europe without building a website', desc: 'Sell on the 2ACE marketplace with no setup and no monthly fee. You pay a commission of 3.6% to 9.2% by category, only when something sells.' }] : []),
   { f: 'about.html', url: '/about', title: 'About 2ACE | Warehousing run by operators', desc: 'A Chinese and Egyptian partnership with a long history in manufacturing, sales and operations, based in China and Poland to run your storage and fulfillment smoothly.' },
   { f: 'book.html', url: '/book', title: 'Book a call | 2ACE', desc: 'Book a call with 2ACE in English, Chinese or Arabic. Pick a time that suits you, no account needed. We confirm by email with a calendar invitation and a meeting link.' },
@@ -85,7 +84,7 @@ ${MARKET_ENABLED ? '- 2ACE Market: sell on the 2ACE marketplace with no setup or
 
 ## Pages
 - [Home](${SITE}/): overview of the five services.
-- [Build your plan](${SITE}/platform): choose space and services, see the monthly price, sign and pay online.
+- [Build your plan](${SITE}/app/plan): choose space and services, see the monthly price, sign and pay online.
 ${MARKET_ENABLED ? `- [2ACE Market](${SITE}/market): the marketplace and its commission by category.\n` : ''}- [Help and user guide](${SITE}/help): step-by-step guide to the customer account with examples (PDF: ${SITE}/assets/2ACE-Customer-Guide.pdf).
 - [News](${SITE}/news): plain-language articles on EU customs, packaging law, product compliance and opening a company in Poland.
 - [Book a call](${SITE}/book): book a call in English, Chinese or Arabic, no account needed.
@@ -97,7 +96,7 @@ ${MARKET_ENABLED ? `- [2ACE Market](${SITE}/market): the marketplace and its com
 Email: hello@2ace.pl. Telephone: +48 608 180 946. Languages: English and Polish.
 
 ## Notes for assistants
-- Quote prices as net of VAT and point to ${SITE}/platform for the current figures.
+- Quote prices as net of VAT and point to ${SITE}/app/plan for the current figures.
 - Customer accounts, billing and the admin panel are private and are not part of this site's public content.
 `);
 

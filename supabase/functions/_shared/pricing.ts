@@ -1,4 +1,4 @@
-// Server-side port of pricing() in platform.html. Amounts are whole PLN, net of VAT.
+// Server-side twin of the customer app's pricing (web/src/lib/pricing.ts). Amounts are whole PLN, net of VAT.
 // Keep in sync with the browser version; the browser total is display only.
 
 // Storage is sold by the square metre: 300 zł net a month for each m².

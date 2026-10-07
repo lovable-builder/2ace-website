@@ -4,7 +4,7 @@ import { ROOT } from '../lib/root.mjs';
 // come from, and the packing station they move to), so any embedded `locations(...)` on allocations is ambiguous and the real
 // database refuses it. Every such query must name the bin: locations!location_id(...).
 let pass = 0, fail = 0; const ok = (n, c, x = '') => { c ? pass++ : fail++; console.log((c ? 'PASS ' : 'FAIL ') + n + (c || !x ? '' : ' -> ' + x)); };
-const files = [...fs.readdirSync(ROOT + '/assets/admin').filter((f) => f.endsWith('.js')).map((f) => 'assets/admin/' + f), 'platform.html', 'scan.html'];
+const files = [...fs.readdirSync(ROOT + '/assets/admin').filter((f) => f.endsWith('.js')).map((f) => 'assets/admin/' + f), 'scan.html', ...fs.readdirSync(ROOT + '/web/src', { recursive: true }).filter((f) => /\.tsx?$/.test(f)).map((f) => 'web/src/' + f)];
 const bad = [], good = [];
 for (const f of files) {
   const src = fs.readFileSync(ROOT + '/' + f, 'utf8');

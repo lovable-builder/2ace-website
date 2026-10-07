@@ -72,8 +72,8 @@ Deno.serve(withMonitoring('domain-checkout', async (req) => {
     billing_address_collection: 'required',
     tax_id_collection: { enabled: true },
     ...(AUTO_TAX ? { automatic_tax: { enabled: true } } : {}),
-    success_url: `${SITE}/platform?domain=success`,
-    cancel_url: `${SITE}/platform?domain=cancelled`,
+    success_url: `${SITE}/app/?domain=success`,
+    cancel_url: `${SITE}/app/?domain=cancelled`,
     integration_identifier: `2ace-domain-${rand}`,
   } as Stripe.Checkout.SessionCreateParams);
   return json(req, { url: session.url });
