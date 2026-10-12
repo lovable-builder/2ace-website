@@ -9,7 +9,7 @@ const attr = (s) => String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').rep
 
 import { MARKET_ENABLED } from './features.mjs';
 const pages = [
-  { f: 'index.html', url: '/', title: '2ACE | Warehousing and fulfillment in Poland', preload: '/assets/seq/b000.webp', desc: 'Dedicated storage from 300 zł per m² a month, fulfillment, returns, import and customs and a .pl storefront. One plan, priced online.', ld: true },
+  { f: 'index.html', url: '/', title: '2ACE | Warehousing and fulfillment in Poland', preload: '/assets/seq/b000.webp', desc: 'Warehousing in Poland at or below market prices: pallets and shelf space from 35 zł a month, packing from 2.89 zł, no monthly minimum. Import, customs and a .pl storefront.', ld: true },
   ...(MARKET_ENABLED ? [{ f: 'market.html', url: '/market', title: '2ACE Market | Sell in Europe without building a website', desc: 'Sell on the 2ACE marketplace with no setup and no monthly fee. You pay a commission of 3.6% to 9.2% by category, only when something sells.' }] : []),
   { f: 'about.html', url: '/about', title: 'About 2ACE | Warehousing run by operators', desc: 'A Chinese and Egyptian partnership with a long history in manufacturing, sales and operations, based in China and Poland to run your storage and fulfillment smoothly.' },
   { f: 'book.html', url: '/book', title: 'Book a call | 2ACE', desc: 'Book a call with 2ACE in English, Chinese or Arabic. Pick a time that suits you, no account needed. We confirm by email with a calendar invitation and a meeting link.' },
@@ -38,11 +38,13 @@ const graph = (lang) => ({
     {
       '@type': 'Service', '@id': SITE + '/#service', name: 'Warehousing and fulfillment in Poland', serviceType: 'Warehousing, e-commerce fulfillment, returns handling, import and customs',
       provider: { '@id': SITE + '/#org' }, areaServed: [{ '@type': 'Country', name: 'Poland' }, { '@type': 'Place', name: 'European Union' }],
-      description: 'Dedicated storage, sized in square metres, in a warehouse in Poland, with fulfillment, returns, import and customs help and a hosted .pl storefront. Monthly plans with no minimum term, priced online.',
+      description: 'Pallet and shelf storage in a warehouse in Poland at or below market prices, with fulfillment, returns, import and customs help, company set-up in Poland and a hosted .pl storefront. No monthly minimum, no minimum term, priced online.',
       hasOfferCatalog: {
         '@type': 'OfferCatalog', name: '2ACE services and prices (net of VAT)',
         itemListElement: [
-          offer('Storage', 'Space in square metres dedicated to your products, resized month to month.', unit(300, 'per m² per month')),
+          offer('Pallet storage', 'A pallet place (120 × 80 cm) for your goods, resized month to month.', unit(35, 'per pallet place per month')),
+          offer('Shelf storage', 'Shelf space for small items picked one by one, sold by the m³.', unit(35, 'per m³ per month')),
+          offer('E-commerce fulfillment', 'Pick, pack and same-day dispatch, by parcel size.', unit(2.89, 'per order, from')),
           offer('.pl storefront', 'A designed and hosted .pl online shop, domain included.', [unit(199, 'per month'), unit(2950, 'one-time setup')]),
           ...(MARKET_ENABLED ? [{ '@type': 'Offer', itemOffered: { '@type': 'Service', name: '2ACE Market', description: 'Sell on the 2ACE marketplace with no setup or monthly fee. A commission of 3.6% to 9.2% applies by category, only when something sells.' } }] : []),
           { '@type': 'Offer', itemOffered: { '@type': 'Service', name: 'Import and customs', description: 'Freight and customs clearance into Poland, quoted per shipment.' } },
@@ -72,19 +74,21 @@ for (const p of pages) {
 // llms.txt: a short, plain-language profile for AI assistants (https://llmstxt.org).
 fs.writeFileSync(file('llms.txt'), `# 2ACE
 
-> 2ACE is a warehousing and fulfillment company in Warsaw, Poland. Brands (especially overseas sellers) rent dedicated storage space by the square metre, import goods into the EU, and have orders picked, packed, shipped and returned from one hub. Everything is priced online as a monthly plan with no minimum term, and run from one customer dashboard.
+> 2ACE is a warehousing and fulfillment company in Warsaw, Poland. Brands (especially overseas sellers) store goods on pallets and shelves at or below Polish market prices, import goods into the EU, and have orders picked, packed, shipped and returned from one hub. Everything is priced online as a monthly plan with no minimum term, and run from one customer dashboard.
 
 ## What 2ACE offers (prices in PLN, net of VAT)
-- Storage: 300 zł per m² per month, sized in square metres and resized month to month.
-- E-commerce fulfillment: pay as you go, no monthly fee. A handling fee per order, set by the size of the parcel. Same-day dispatch for orders before 15:00. Shipping labels at the carrier price plus a small fee.
-- Returns: pay as you go, no monthly fee. A handling fee per return, by parcel size. The customer issues the return label in their dashboard. Items graded within 48 hours.
+- Storage: 35 zł per pallet place per month and 35 zł per m³ of shelf space per month, at or below the Polish market. No monthly minimum.
+- E-commerce fulfillment: pay as you go, no monthly fee. From 2.89 zł per order (2.89 / 3.49 / 4.90 / 7.50 / 11.50 zł by parcel size). Same-day dispatch for orders before 15:00. Shipping labels at the carrier price plus 20%.
+- Returns: pay as you go, no monthly fee. From 3.90 zł per return (3.90 / 4.70 / 6.60 / 10.10 / 15.50 zł by parcel size). The customer issues the return label in their dashboard. Items graded within 48 hours.
 - Import and customs: freight and customs clearance into Poland, quoted per shipment.
 - .pl storefront: 199 zł per month plus 2,950 zł one-time setup, domain included.
+- Company set-up and compliance in Poland (company, VAT, EORI, packaging EPR, KSeF e-invoicing): quoted per case.
+- Included: support in Chinese, Polish and English, photo reports on damaged goods, one monthly invoice.
 ${MARKET_ENABLED ? '- 2ACE Market: sell on the 2ACE marketplace with no setup or monthly fee. Commission 3.6% to 9.2% by category, only when something sells.\n' : ''}- Plans are monthly, billed in advance, cancel or resize with 30 days notice. VAT: 23% for Polish companies, reverse charge for EU companies with a VAT number.
 
 ## Pages
-- [Home](${SITE}/): overview of the five services.
-- [Build your plan](${SITE}/app/plan): choose space and services, see the monthly price, sign and pay online.
+- [Home](${SITE}/): overview of the services and prices.
+- [Build your plan](${SITE}/app/plan): choose pallet places, shelf space and services, see the monthly price, sign and pay online.
 ${MARKET_ENABLED ? `- [2ACE Market](${SITE}/market): the marketplace and its commission by category.\n` : ''}- [Help and user guide](${SITE}/help): step-by-step guide to the customer account with examples (PDF: ${SITE}/assets/2ACE-Customer-Guide.pdf).
 - [News](${SITE}/news): plain-language articles on EU customs, packaging law, product compliance and opening a company in Poland.
 - [Book a call](${SITE}/book): book a call in English, Chinese or Arabic, no account needed.
