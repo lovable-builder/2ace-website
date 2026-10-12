@@ -1,14 +1,16 @@
 // What a plan costs, shown live while it is built. Whole PLN, net of VAT. The server prices it again
 // (supabase/functions/_shared/pricing.ts) and that is what is charged: keep the two in step.
-export const STORAGE = { price: 300, min: 1, max: 1000, step: 1 };
+// Storage is sold as pallet places and shelf space, at or below the Polish market: 35 zł a month per pallet place and per m³ of
+// shelf space, no monthly minimum. Old plans were sold by the m² (300 zł per m²) and keep that price (`m2` in their config).
+export const STORAGE = { pallet: 35, shelf: 35, maxPallets: 500, maxShelf: 500, legacyPerM2: 300 };
 
 export type Pkgs = { imp?: boolean };
-export type PlanConfig = { m2?: number; pkgs?: Pkgs; storeOn?: boolean; domain?: string; tt?: string; meta?: string; marketOn?: boolean };
-export type PlanInput = { qty: number; pkgs: Pkgs; storeOn: boolean; domain: string; marketOn: boolean };
+export type PlanConfig = { pallets?: number; shelfM3?: number; m2?: number; pkgs?: Pkgs; storeOn?: boolean; domain?: string; tt?: string; meta?: string; marketOn?: boolean };
+export type PlanInput = { pallets: number; shelf: number; pkgs: Pkgs; storeOn: boolean; domain: string; marketOn: boolean };
 
 // The words on the price lines below, translated where they are shown.
 // i18n
-export const PRICE_TEXT = ['Storage', '{m2} m² at {price} / m²', 'Import & customs', 'Quoted per shipment', 'Storefront {domain}.pl', 'Hosting and care', '2ACE Market', '{range} commission on market sales'];
+export const PRICE_TEXT = ['Pallet storage', '{n} pallet places at {price} each', 'Shelf storage', '{n} m³ at {price} per m³', 'Import & customs', 'Quoted per shipment', 'Storefront {domain}.pl', 'Hosting and care', '2ACE Market', '{range} commission on market sales'];
 
 export type PriceLine = {
   key: string;
@@ -28,13 +30,25 @@ export const mkRange = () => { const r = MK_CATS.map((c) => c.rate); return Math
 
 export const STOREFRONT = { monthly: 199, once: 2950 };
 
-// The area of a saved plan, in m² to one decimal. Plans sold per bin or pallet were saved as their area too.
-export const planM2 = (c: PlanConfig | null | undefined) => (c ? Math.round(Number(c.m2 || 0) * 10) / 10 : 0);
+const half = (n: number) => Math.round(n * 2) / 2;
+// The storage a saved plan reserves. An old plan sold by the m² has only `legacyM2`.
+export function planStorage(c: PlanConfig | null | undefined) {
+  const pallets = Math.max(0, Math.round(Number(c?.pallets) || 0)), shelf = Math.max(0, half(Number(c?.shelfM3) || 0));
+  const legacyM2 = !pallets && !shelf && Number(c?.m2) > 0 ? Math.round(Number(c?.m2) * 10) / 10 : null;
+  return { pallets, shelf, legacyM2 };
+}
+// What a plan being changed starts from: an old m² plan becomes the pallet places that area held (a pallet took 1.2 m²).
+export function startingStorage(c: PlanConfig | null | undefined) {
+  const s = planStorage(c);
+  return s.legacyM2 !== null ? { pallets: Math.max(1, Math.round(s.legacyM2 / 1.2)), shelf: 0 } : { pallets: s.pallets, shelf: s.shelf };
+}
 
 export function pricing(p: PlanInput) {
   const lines: PriceLine[] = [];
-  const storage = Math.round(p.qty * STORAGE.price);
-  lines.push({ key: 'storage', label: 'Storage', detail: '{m2} m² at {price} / m²', monthly: storage, once: 0 });
+  const pallets = Math.round(p.pallets * STORAGE.pallet), shelf = Math.round(p.shelf * STORAGE.shelf);
+  if (p.pallets) lines.push({ key: 'pallets', label: 'Pallet storage', detail: '{n} pallet places at {price} each', vars: { n: String(p.pallets), price: String(STORAGE.pallet) }, monthly: pallets, once: 0 });
+  if (p.shelf) lines.push({ key: 'shelf', label: 'Shelf storage', detail: '{n} m³ at {price} per m³', vars: { n: String(p.shelf), price: String(STORAGE.shelf) }, monthly: shelf, once: 0 });
+  const storage = pallets + shelf;
   if (p.pkgs.imp) lines.push({ key: 'imp', label: 'Import & customs', detail: 'Quoted per shipment', monthly: 0, once: 0, quote: true });
   if (p.storeOn) lines.push({ key: 'store', label: 'Storefront {domain}.pl', vars: { domain: p.domain || 'yourbrand' }, detail: 'Hosting and care', monthly: STOREFRONT.monthly, once: STOREFRONT.once });
   if (p.marketOn) lines.push({ key: 'market', label: '2ACE Market', detail: '{range} commission on market sales', vars: { range: mkRange() }, monthly: 0, once: 0, commission: true });
@@ -46,12 +60,14 @@ export function pricing(p: PlanInput) {
   };
 }
 
-// The m² an amount of stock needs: units per pallet place by product size, a pallet place takes about 1.2 m².
-export const UNITS_PER_PLACE = { small: 1200, medium: 400, large: 120 } as const;
-export type EstSize = keyof typeof UNITS_PER_PLACE;
-export function estimateM2(units: number, size: EstSize) {
-  const places = Math.max(1, Math.ceil((Number(units) || 0) / UNITS_PER_PLACE[size]));
-  return Math.min(STORAGE.max, Math.max(STORAGE.min, Math.ceil(places * 1.2)));
+// The storage an amount of stock needs. Small items go on shelves (about 800 a m³); shoebox-sized and bulky goods on pallets
+// (about 400 and 120 a pallet place).
+export type EstSize = 'small' | 'medium' | 'large';
+export const UNITS_PER = { small: 800, medium: 400, large: 120 } as const;
+export function estimateStorage(units: number, size: EstSize): { pallets: number; shelf: number } {
+  const n = Math.max(0, Number(units) || 0);
+  if (size === 'small') return { pallets: 0, shelf: Math.min(STORAGE.maxShelf, Math.max(0.5, Math.ceil((n / UNITS_PER.small) * 2) / 2)) };
+  return { pallets: Math.min(STORAGE.maxPallets, Math.max(1, Math.ceil(n / UNITS_PER[size]))), shelf: 0 };
 }
 
 // VAT on the first invoice, by the country the company is registered in.

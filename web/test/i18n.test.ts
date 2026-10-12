@@ -28,15 +28,15 @@ describe('switching language', async () => {
   it('changes the screen at once and is remembered', async () => {
     mockFetch(baseRoutes());
     const { user, unmount } = renderApp('/plan');
-    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('How many square metres do you need?');
+    expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent('How much storage do you need?');
     await user.selectOptions(screen.getByRole('combobox', { name: 'Language' }), 'pl');
-    expect(await screen.findByRole('heading', { level: 2, name: 'Ilu metrów kwadratowych potrzebujesz?' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 2, name: 'Ile miejsca w magazynie potrzebujesz?' })).toBeInTheDocument();
     expect(localStorage.getItem('ace_lang')).toBe('pl');
     unmount();
     renderApp('/plan');
-    expect(await screen.findByRole('heading', { level: 2, name: 'Ilu metrów kwadratowych potrzebujesz?' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 2, name: 'Ile miejsca w magazynie potrzebujesz?' })).toBeInTheDocument();
     await user.selectOptions(screen.getByRole('combobox', { name: 'Język' }), 'zh');
-    expect(await screen.findByRole('heading', { level: 2, name: '您需要多少平方米？' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { level: 2, name: '您需要多少仓储空间？' })).toBeInTheDocument();
     expect(document.documentElement.lang).toBe('zh-Hans');
   });
 });

@@ -97,7 +97,7 @@ const fee = async (oid) => (await one(`select kind, net, status, env, size_class
 
 // ---- the tariff ----
 const tariff = (await asAnon(`select public.handling_tariff() t`)).rows?.[0]?.t;
-ok('the tariff is public (it is shown when choosing a plan) and lists five classes with a fee per extra parcel', tariff?.tiers?.length === 5 && tariff.tiers[0].size_class === 'XS' && Number(tariff.tiers[0].handling_net) === 3.2 && Number(tariff.extra_parcel) === 0.6, JSON.stringify(tariff));
+ok('the tariff is public (it is shown when choosing a plan) and lists five classes with a fee per extra parcel', tariff?.tiers?.length === 5 && tariff.tiers[0].size_class === 'XS' && Number(tariff.tiers[0].handling_net) === 2.89 && Number(tariff.extra_parcel) === 0.6, JSON.stringify(tariff));
 ok('customers and visitors cannot read the tariff tables directly, staff can', (await asAnon(`select count(*)::int n from public.handling_tiers`)).err !== undefined || (await asAnon(`select count(*)::int n from public.handling_tiers`)).rows[0].n === 0);
 ok('staff can read the tariff table, a customer sees none of it', (await W(`select count(*)::int n from public.handling_tiers`)).rows[0].n === 5 && (await call(ua, 'aal1', `select count(*)::int n from public.handling_tiers`)).rows[0].n === 0);
 const T5 = JSON.stringify([{ size_class: 'S', max_weight_g: 1000, max_side_cm: 40, handling_net: 4, return_net: 6 }, { size_class: 'M', max_weight_g: 5000, max_side_cm: 60, handling_net: 6, return_net: 9 }]);
@@ -107,18 +107,18 @@ ok('an unknown extra rate is refused', /Unknown rate/.test((await call(admin, 'a
 ok('the tariff has not changed after refusals', (await W(`select count(*)::int n from public.handling_tiers`)).rows[0].n === 5);
 
 // ---- the fee when an order ships ----
-const sizes = [['XS: 400 g, 30 cm', [[400, 30, 20, 10]], 'XS', 3.2], ['S: 600 g (just over XS)', [[600, 30, 20, 10]], 'S', 4.2], ['S: light but 36 cm long (the longest side counts)', [[300, 36, 10, 10]], 'S', 4.2], ['exactly the XS limit stays XS', [[500, 35, 20, 10]], 'XS', 3.2],
-  ['M: 2 kg, 50 cm', [[2000, 50, 30, 20]], 'M', 5.9], ['L: 8 kg', [[8000, 70, 40, 30]], 'L', 8.5], ['XL: 25 kg, 110 cm', [[25000, 110, 50, 40]], 'XL', 12.9]];
+const sizes = [['XS: 400 g, 30 cm', [[400, 30, 20, 10]], 'XS', 2.89], ['S: 600 g (just over XS)', [[600, 30, 20, 10]], 'S', 3.49], ['S: light but 36 cm long (the longest side counts)', [[300, 36, 10, 10]], 'S', 3.49], ['exactly the XS limit stays XS', [[500, 35, 20, 10]], 'XS', 2.89],
+  ['M: 2 kg, 50 cm', [[2000, 50, 30, 20]], 'M', 4.9], ['L: 8 kg', [[8000, 70, 40, 30]], 'L', 7.5], ['XL: 25 kg, 110 cm', [[25000, 110, 50, 40]], 'XL', 11.5]];
 for (const [name, parcels, cls, net] of sizes) { const o = await mkOrd('H-' + name); await shipIt(o.id, parcels); const f = await fee(o.id); ok('handling fee, ' + name, f && f.size_class === cls && Number(f.net) === net, JSON.stringify(f)); }
-{ const o = await mkOrd('H-two'); await shipIt(o.id, [[400, 30, 20, 10], [600, 30, 20, 10]]); const f = await fee(o.id); ok('two parcels: the dearest class once (S 4.20) plus 0.60 for the extra parcel', Number(f.net) === 4.8 && f.size_class === 'S' && /2 parcel/.test(f.note), JSON.stringify(f)); }
+{ const o = await mkOrd('H-two'); await shipIt(o.id, [[400, 30, 20, 10], [600, 30, 20, 10]]); const f = await fee(o.id); ok('two parcels: the dearest class once (S 3.49) plus 0.60 for the extra parcel', Number(f.net) === 4.09 && f.size_class === 'S' && /2 parcel/.test(f.note), JSON.stringify(f)); }
 { const o = await mkOrd('H-big'); await shipIt(o.id, [[35000, 130, 60, 50]]); const f = await fee(o.id); ok('a parcel bigger than the biggest class has no tariff: 0, "oversize", waived, with a note to set it by hand', f && f.size_class === 'oversize' && Number(f.net) === 0 && f.status === 'waived' && /by hand/.test(f.note), JSON.stringify(f)); }
 { const o = await mkOrd('H-test'); await shipIt(o.id, [[400, 30, 20, 10]]); const f = await fee(o.id); ok('for a customer not marked live the fee is recorded as waived (test), never billed', f.status === 'waived' && f.env === 'sandbox'); }
 await setOrg({ live: true });
-{ const o = await mkOrd('H-live'); await shipIt(o.id, [[400, 30, 20, 10]]); const f = await fee(o.id); ok('for a live customer the fee is pending, to be invoiced', f.status === 'pending' && f.env === 'production' && Number(f.net) === 3.2, JSON.stringify(f)); }
+{ const o = await mkOrd('H-live'); await shipIt(o.id, [[400, 30, 20, 10]]); const f = await fee(o.id); ok('for a live customer the fee is pending, to be invoiced', f.status === 'pending' && f.env === 'production' && Number(f.net) === 2.89, JSON.stringify(f)); }
 await setOrg({ live: true, adj: -10 });
-{ const o = await mkOrd('H-disc'); await shipIt(o.id, [[400, 30, 20, 10]]); ok('a customer discount applies to the tariff (-10%: 3.20 becomes 2.88)', Number((await fee(o.id)).net) === 2.88); }
+{ const o = await mkOrd('H-disc'); await shipIt(o.id, [[400, 30, 20, 10]]); ok('a customer discount applies to the tariff (-10%: 2.89 becomes 2.60)', Number((await fee(o.id)).net) === 2.6); }
 await setOrg({ live: true, adj: 25 });
-{ const o = await mkOrd('H-sur'); await shipIt(o.id, [[400, 30, 20, 10]]); ok('a surcharge applies too (+25%: 3.20 becomes 4.00)', Number((await fee(o.id)).net) === 4); }
+{ const o = await mkOrd('H-sur'); await shipIt(o.id, [[400, 30, 20, 10]]); ok('a surcharge applies too (+25%: 2.89 becomes 3.61)', Number((await fee(o.id)).net) === 3.61); }
 await setOrg({ mode: 'storage', live: true });
 { const o = await mkOrd('H-nomode'); await direct(`insert into public.parcels (order_id, org_id, seq, weight_g, length_cm, width_cm, height_cm) values ($1,$2,1,400,30,20,10)`, [o.id, orgA]); await direct(`select public.wms_write_handling('${o.id}')`); ok('an order of a customer without pay-as-you-go (no plan) is charged no handling fee', (await fee(o.id)) === undefined && (await one(`select fulfil_mode from public.orders where id=$1`, [o.id]))[0].fulfil_mode === 'storage'); }
 await setOrg({ mode: 'payg', live: true });

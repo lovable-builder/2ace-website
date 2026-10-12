@@ -4,7 +4,7 @@ import { useT, type T } from '../i18n';
 import { useAccount } from '../state/account';
 import { usePlan, type DomainStatus, type PlanState } from '../state/plan';
 import { usePrefill } from '../state/prefill';
-import { estimateM2, mkRange, planM2, pricing, STORAGE, STOREFRONT, type EstSize } from '../lib/pricing';
+import { estimateStorage, mkRange, planStorage, pricing, STORAGE, STOREFRONT, type EstSize } from '../lib/pricing';
 import { COUNTRIES, countryOf } from '../lib/countries';
 import { fmt, m2fmt } from '../lib/format';
 import { errText, fn } from '../lib/api';
@@ -66,7 +66,7 @@ export function Builder() {
   const [chPrev, setChPrev] = useState<Preview | null>(null);
   const [chBusy, setChBusy] = useState(false);
   const [chErr, setChErr] = useState('');
-  const snap = JSON.stringify([p.qty, p.pkgs, p.storeOn, p.domain, p.marketOn]);
+  const snap = JSON.stringify([p.pallets, p.shelf, p.pkgs, p.storeOn, p.domain, p.marketOn]);
   const snapRef = useRef(snap); snapRef.current = snap;
   const lastSnap = useRef(snap);
   useEffect(() => {   // any change to the plan makes the old price stale
@@ -74,7 +74,7 @@ export function Builder() {
     lastSnap.current = snap;
     setChPrev(null); setChErr('');
   }, [snap]);
-  const chConfig = () => ({ m2: p.qty, pkgs: p.pkgs, storeOn: p.storeOn, domain: addingStore && !a.hasDomain ? p.domain : '', tt: 'off', meta: 'off', marketOn: p.marketOn });
+  const chConfig = () => ({ pallets: p.pallets, shelfM3: p.shelf, pkgs: p.pkgs, storeOn: p.storeOn, domain: addingStore && !a.hasDomain ? p.domain : '', tt: 'off', meta: 'off', marketOn: p.marketOn });
   const chCall = async (preview: boolean) => {
     if (!a.session) { leave.to(loginUrl('/app/dashboard')); throw new Error(MSG.signedOut); }
     return fn<Preview>('change-plan', { config: chConfig(), preview });
@@ -107,6 +107,7 @@ export function Builder() {
   };
 
   const next = () => {
+    if (step === 0 && !p.pallets && !p.shelf) return;   // the Space step says what is missing
     if (step === 2 && needDomain && p.domainStatus !== 'free' && p.domainStatus !== 'unknown') {
       const s: DomainStatus = p.domain.length < 2 ? 'empty' : p.domainStatus === 'taken' || p.domainStatus === 'checking' || p.domainStatus === 'invalid' ? p.domainStatus : 'unchecked';
       update({ domainStatus: s });
@@ -126,7 +127,7 @@ export function Builder() {
   const liveDelta = cur ? P.monthly - cur.monthly : 0;
   const liveKind = liveDelta > 0 ? 'upgrade' : liveDelta < 0 ? 'downgrade' : 'same';
   const cc0 = cur?.config ?? {};
-  const cfgDiff = !!cur && (Number(p.qty) !== planM2(cc0) || !!p.pkgs.imp !== !!cc0.pkgs?.imp || !!p.storeOn !== !!cc0.storeOn || !!p.marketOn !== !!cc0.marketOn);
+  const cfgDiff = !!cur && (p.pallets !== planStorage(cc0).pallets || p.shelf !== planStorage(cc0).shelf || !!p.pkgs.imp !== !!cc0.pkgs?.imp || !!p.storeOn !== !!cc0.storeOn || !!p.marketOn !== !!cc0.marketOn);
   const liveBadge = liveKind === 'upgrade' ? t('Upgrade +{price}', { price: fmt(Math.abs(liveDelta)) }) : liveKind === 'downgrade' ? t('Downgrade −{price}', { price: fmt(Math.abs(liveDelta)) }) : cfgDiff ? t('No price change') : t('No change');
   const badgeBg = liveKind === 'upgrade' ? '#2F7D55' : liveKind === 'downgrade' ? '#8A5A12' : '#6B6E73';
   const monthly = a.activated && cur && !changeMode ? cur.monthly : P.monthly;
@@ -158,7 +159,7 @@ export function Builder() {
 
       <div className="with-aside">
         <div className="body">
-          {step === 0 ? <SpaceStep p={p} update={update} t={t} onEstimate={(n) => toast(t('Set to {n} m².', { n }))} /> : null}
+          {step === 0 ? <SpaceStep p={p} update={update} t={t} onEstimate={(text) => toast(text)} /> : null}
           {step === 1 ? <ServicesStep p={p} update={update} t={t} /> : null}
           {step === 2 ? <SellStep p={p} update={update} t={t} checkDomain={checkDomain} needDomain={!changeMode || needDomain} haveDomain={haveDomain} /> : null}
           {step === 3 ? (
@@ -237,37 +238,26 @@ export function OwnedNotice() {
 
 type StepProps = { p: PlanState; update: (x: Partial<PlanState>) => void; t: T };
 
-function SpaceStep({ p, update, t, onEstimate }: StepProps & { onEstimate: (n: number) => void }) {
-  const [draft, setDraft] = useState<string | null>(null);
-  const filled = Math.min(80, Math.max(1, Math.round(p.qty)));   // each square is 1 m²; the picture is full at 80 m²
-  const est = estimateM2(Number(p.estUnits) || 0, p.estSize);
-  const commit = () => {
-    const v = Number(draft);
-    const q = draft == null || draft === '' || !v ? p.qty : Math.min(STORAGE.max, Math.max(STORAGE.min, Math.round(v)));
-    update({ qty: q }); setDraft(null);
-  };
+function SpaceStep({ p, update, t, onEstimate }: StepProps & { onEstimate: (text: string) => void }) {
+  const est = estimateStorage(Number(p.estUnits) || 0, p.estSize);
+  const estText = est.pallets ? t('{n} pallet places', { n: est.pallets }) : t('{n} m³ of shelf space', { n: m2fmt(est.shelf) });
+  const storage = Math.round(p.pallets * STORAGE.pallet + p.shelf * STORAGE.shelf);
   return (
     <div className="stack">
       <div>
-        <h2 className="h2">{t('How many square metres do you need?')}</h2>
-        <p className="sub">{t('Pay 300 zł per m² for the space you use. Scale up or down month to month.')}</p>
+        <h2 className="h2">{t('How much storage do you need?')}</h2>
+        <p className="sub">{t('{pallet} a month per pallet place, {shelf} per m³ of shelf space. At or below the market, no monthly minimum. Change it any month.', { pallet: fmt(STORAGE.pallet), shelf: fmt(STORAGE.shelf) })}</p>
       </div>
-      <div className="card">
-        <div className="qty">
-          <label htmlFor="qty" className="label">{t('Square metres (m²)')}</label>
-          <span className="row">
-            <input id="qty" type="number" min={STORAGE.min} max={STORAGE.max} value={draft ?? String(p.qty)}
-              onChange={(e) => { const raw = e.target.value, v = Number(raw); setDraft(raw); if (raw !== '' && v >= STORAGE.min && v <= STORAGE.max) update({ qty: Math.round(v) }); }}
-              onBlur={commit} onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }} />
-            <span className="mono">m²</span>
-          </span>
-        </div>
-        <input type="range" aria-label={t('Square metres (m²)')} min={STORAGE.min} max={STORAGE.max} step={STORAGE.step} value={p.qty} onChange={(e) => { setDraft(null); update({ qty: Number(e.target.value) }); }} />
-        <div className="cells" aria-hidden="true">{Array.from({ length: 80 }, (_, i) => <span key={i} className={i < filled ? 'on' : ''} />)}</div>
+      <div className="card stack-sm">
+        <Amount id="pallets" label={t('Pallet places')} hint={t('For cartons and bulk stock on a pallet (120 × 80 cm).')} unit={t('pallets')} value={p.pallets} max={STORAGE.maxPallets} step={1}
+          onChange={(v) => update({ pallets: v })} t={t} />
+        <Amount id="shelf" label={t('Shelf space (m³)')} hint={t('For small items picked one by one. 1 m³ holds about 800 small items.')} unit="m³" value={p.shelf} max={STORAGE.maxShelf} step={0.5}
+          onChange={(v) => update({ shelf: v })} t={t} />
         <div className="spread small">
-          <span>{t('{m2} m² reserved · 300 zł / m² storage · each square is 1 m²', { m2: m2fmt(p.qty) })}</span>
-          <strong className="mono" style={{ color: '#0B0C0E' }}>{t('{price} / month', { price: fmt(Math.round(p.qty * STORAGE.price)) })}</strong>
+          <span>{t('{pallets} pallet places · {shelf} m³ shelf space', { pallets: p.pallets, shelf: m2fmt(p.shelf) })}</span>
+          <strong className="mono" style={{ color: '#0B0C0E' }}>{t('{price} / month', { price: fmt(storage) })}</strong>
         </div>
+        {!p.pallets && !p.shelf ? <ErrLine text={t('Choose at least one pallet place or some shelf space.')} /> : null}
       </div>
       <div className="card stack-sm">
         <span className="h3" style={{ fontSize: 17 }}>{t('Not sure? Estimate from your stock')}</span>
@@ -279,10 +269,33 @@ function SpaceStep({ p, update, t, onEstimate }: StepProps & { onEstimate: (n: n
           ))}
         </div>
         <div className="spread">
-          <span>{t('That is roughly')} <strong>{est} m²</strong>.</span>
-          <button className="btn ghost small" onClick={() => { update({ qty: est }); setDraft(null); onEstimate(est); }}>{t('Use {n} m²', { n: est })}</button>
+          <span>{t('That is roughly')} <strong>{estText}</strong>.</span>
+          <button className="btn ghost small" onClick={() => { update(est); onEstimate(t('Set to {what}.', { what: estText })); }}>{t('Use this')}</button>
         </div>
       </div>
+    </div>
+  );
+}
+
+// A number of pallet places or m³: typed, or stepped with − and +.
+function Amount({ id, label, hint, unit, value, max, step, onChange, t }: { id: string; label: string; hint: string; unit: string; value: number; max: number; step: number; onChange: (v: number) => void; t: T }) {
+  const [draft, setDraft] = useState<string | null>(null);
+  const clamp = (v: number) => Math.min(max, Math.max(0, Math.round(v / step) * step));
+  const commit = () => { if (draft !== null && draft !== '' && Number.isFinite(Number(draft))) onChange(clamp(Number(draft))); setDraft(null); };
+  return (
+    <div className="qty">
+      <span className="stack-sm" style={{ gap: 2 }}>
+        <label htmlFor={id} className="label">{label}</label>
+        <span className="small">{hint}</span>
+      </span>
+      <span className="row">
+        <button type="button" className="btn ghost small" aria-label={t('Less')} disabled={value <= 0} onClick={() => { setDraft(null); onChange(clamp(value - step)); }}>−</button>
+        <input id={id} type="number" min={0} max={max} step={step} value={draft ?? String(value)}
+          onChange={(e) => { const raw = e.target.value, v = Number(raw); setDraft(raw); if (raw !== '' && v >= 0 && v <= max) onChange(clamp(v)); }}
+          onBlur={commit} onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }} />
+        <button type="button" className="btn ghost small" aria-label={t('More')} disabled={value >= max} onClick={() => { setDraft(null); onChange(clamp(value + step)); }}>+</button>
+        <span className="mono">{unit}</span>
+      </span>
     </div>
   );
 }
@@ -405,7 +418,7 @@ function ReviewLines({ p, t }: { p: PlanState; t: T }) {
         {P.lines.map((l) => (
           <div className="line" key={l.key}>
             <span>{t(l.label, l.vars)}</span>
-            <span>{t(l.detail, { m2: m2fmt(p.qty), price: fmt(STORAGE.price), ...l.vars })}</span>
+            <span>{t(l.detail, { ...l.vars, n: m2fmt(l.vars?.n ?? ''), price: fmt(Number(l.vars?.price ?? 0)) })}</span>
             <span>{l.commission ? t('{range} / sale', { range: mkRange() }) : l.quote ? t('On quote') : l.monthly ? fmt(l.monthly) : '—'}</span>
             <span>{l.once ? fmt(l.once) : '—'}</span>
           </div>

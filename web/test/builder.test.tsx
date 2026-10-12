@@ -6,34 +6,42 @@ const priceBox = () => screen.getByRole('complementary', { name: 'Your plan' });
 const monthly = () => priceBox().querySelector('.big')?.textContent;
 
 describe('plan builder', () => {
-  it('starts at 15 m² for 4 500 zł and updates the price as the area changes', async () => {
-    mockFetch(baseRoutes());
-    renderApp('/plan');
-    expect(monthly()).toBe('4 500 zł');
-    const box = screen.getByRole('spinbutton', { name: 'Square metres (m²)' });
-    fireEvent.change(box, { target: { value: '12' } });
-    expect(monthly()).toBe('3 600 zł');
-    expect(text()).toContain('12 m² reserved');
-    fireEvent.change(screen.getByRole('slider'), { target: { value: '100' } });
-    expect(monthly()).toBe('30 000 zł');
-  });
-
-  it('a typed size out of range snaps back on leaving the box', async () => {
-    mockFetch(baseRoutes());
-    renderApp('/plan');
-    const box = screen.getByRole('spinbutton', { name: 'Square metres (m²)' });
-    fireEvent.change(box, { target: { value: '5000' } });
-    fireEvent.blur(box);
-    expect(monthly()).toBe('300 000 zł');
-  });
-
-  it('the estimator sets the area', async () => {
+  it('starts at 5 pallet places and 2 m³ of shelves for 245 zł, and updates the price as they change', async () => {
     mockFetch(baseRoutes());
     const { user } = renderApp('/plan');
-    expect(text()).toContain('roughly 18 m²');
-    await user.click(screen.getByRole('button', { name: 'Use 18 m²' }));
-    expect(monthly()).toBe('5 400 zł');
-    expect(text()).toContain('Set to 18 m².');
+    expect(monthly()).toBe('245 zł');
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Pallet places' }), { target: { value: '12' } });
+    expect(monthly()).toBe('490 zł');
+    expect(text()).toContain('12 pallet places · 2 m³ shelf space');
+    await user.click(screen.getAllByRole('button', { name: 'More' })[1]);
+    expect(monthly()).toBe('508 zł');   // 2.5 m³: 87.50 zł rounds to 88
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Shelf space (m³)' }), { target: { value: '0' } });
+    expect(monthly()).toBe('420 zł');
+  });
+
+  it('a typed amount out of range snaps back on leaving the box; no storage at all cannot continue', async () => {
+    mockFetch(baseRoutes());
+    const { user } = renderApp('/plan');
+    const box = screen.getByRole('spinbutton', { name: 'Pallet places' });
+    fireEvent.change(box, { target: { value: '5000' } });
+    fireEvent.blur(box);
+    expect(monthly()).toBe('17 570 zł');   // 500 pallets + 2 m³
+    fireEvent.change(box, { target: { value: '0' } });
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Shelf space (m³)' }), { target: { value: '0' } });
+    expect(text()).toContain('Choose at least one pallet place or some shelf space.');
+    await user.click(screen.getAllByRole('button', { name: 'Continue to services' })[0]);
+    expect(where).toBe('/plan');
+  });
+
+  it('the estimator suggests pallets for boxed goods and shelves for small items', async () => {
+    mockFetch(baseRoutes());
+    const { user } = renderApp('/plan');
+    expect(text()).toContain('roughly 15 pallet places');
+    await user.click(screen.getByRole('button', { name: 'Use this' }));
+    expect(monthly()).toBe('525 zł');
+    expect(text()).toContain('Set to 15 pallet places.');
+    await user.click(screen.getByRole('button', { name: 'Small' }));
+    expect(text()).toContain('roughly 7.5 m³ of shelf space');
   });
 
   it('services: pay as you go with the real tariff; import & customs adds nothing monthly', async () => {
@@ -43,7 +51,7 @@ describe('plan builder', () => {
     expect(text()).toContain('9,00 zł to 22,50 zł per return');
     await user.click(screen.getByRole('button', { name: 'Add import & customs' }));
     expect(within(priceBox()).getByText('On quote')).toBeInTheDocument();
-    expect(monthly()).toBe('4 500 zł');
+    expect(monthly()).toBe('245 zł');
   });
 
   it('without the tariff it still explains the fees, with no numbers invented', async () => {
@@ -89,11 +97,11 @@ describe('plan builder', () => {
   it('keeps the plan in the browser, and restores it on the next visit', async () => {
     mockFetch(baseRoutes());
     const first = renderApp('/plan');
-    fireEvent.change(screen.getByRole('spinbutton', { name: 'Square metres (m²)' }), { target: { value: '22' } });
-    await until(() => expect(JSON.parse(localStorage.getItem('ace_plan') || '{}').plan?.qty).toBe(22));
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Pallet places' }), { target: { value: '22' } });
+    await until(() => expect(JSON.parse(localStorage.getItem('ace_plan') || '{}').plan?.pallets).toBe(22));
     first.unmount();
     renderApp('/plan');
-    expect(monthly()).toBe('6 600 zł');
+    expect(monthly()).toBe('840 zł');
   });
 
   it('steps are links, so the browser Back button walks the wizard', async () => {
@@ -116,20 +124,21 @@ describe('changing an active plan', () => {
       ...baseRoutes(),
       'POST /functions/v1/change-plan': (c) => {
         if (!c.body.preview) { applied = true; return { kind: 'upgrade', newMonthly: 3600, delta: 600, todayEstimate: 300 }; }
-        return c.body.config.m2 === 12 ? { kind: 'upgrade', newMonthly: 3600, delta: 600, todayEstimate: 300 } : { kind: 'downgrade', newMonthly: 2700, delta: -300, todayEstimate: -150 };
+        return c.body.config.pallets === 12 ? { kind: 'upgrade', newMonthly: 3600, delta: 600, todayEstimate: 300 } : { kind: 'downgrade', newMonthly: 2700, delta: -300, todayEstimate: -150 };
       },
-      'GET /rest/v1/plans': () => [applied ? { ...{ config: { m2: 12 }, monthly_pln: 3600 } } : { config: { m2: 10, pkgs: {} }, monthly_pln: 3000 }],
+      'GET /rest/v1/plans': () => [applied ? { ...{ config: { pallets: 12 }, monthly_pln: 420 } } : { config: { m2: 12, pkgs: {} }, monthly_pln: 3600 }],
     });
     const { user } = renderApp('/plan?change=1');
     await until(() => expect(text()).toContain('Changing your plan.'));
-    expect(screen.getByRole('spinbutton', { name: 'Square metres (m²)' })).toHaveValue(10);
-    fireEvent.change(screen.getByRole('spinbutton', { name: 'Square metres (m²)' }), { target: { value: '12' } });
-    expect(text()).toContain('Upgrade +600 zł');
+    expect(screen.getByRole('spinbutton', { name: 'Pallet places' })).toHaveValue(10);   // the old 12 m² plan, as pallet places
+    expect(screen.getByRole('spinbutton', { name: 'Shelf space (m³)' })).toHaveValue(0);
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Pallet places' }), { target: { value: '12' } });
+    expect(text()).toContain('Downgrade −3 180 zł');
     await user.click(screen.getByRole('link', { name: /04\s*Review/ }));
     await until(() => expect(screen.getAllByRole('button', { name: 'Confirm upgrade' })[0]).toBeInTheDocument());
     const previews = () => callsTo(calls, 'POST /functions/v1/change-plan').filter((c) => c.body.preview);
     expect(previews()).toHaveLength(1);
-    expect(previews()[0].body.config).toMatchObject({ m2: 12, tt: 'off', meta: 'off' });
+    expect(previews()[0].body.config).toMatchObject({ pallets: 12, shelfM3: 0, tt: 'off', meta: 'off' });
     expect(text()).toContain('Charged today: about 300 zł');
     await new Promise((r) => setTimeout(r, 50));
     expect(previews()).toHaveLength(1);   // no request storm while idle
@@ -152,12 +161,12 @@ describe('changing an active plan', () => {
 
   it('a new customer\'s saved plan is not touched by a change', async () => {
     signIn();
-    localStorage.setItem('ace_plan', JSON.stringify({ v: 2, t: Date.now(), plan: { qty: 40 } }));
+    localStorage.setItem('ace_plan', JSON.stringify({ v: 2, t: Date.now(), plan: { pallets: 40 } }));
     mockFetch({ ...baseRoutes(), 'POST /functions/v1/change-plan': () => ({ kind: 'same', newMonthly: 3000, delta: 0, todayEstimate: 0 }) });
     renderApp('/plan?change=1');
     await until(() => expect(text()).toContain('Changing your plan.'));
-    fireEvent.change(screen.getByRole('spinbutton', { name: 'Square metres (m²)' }), { target: { value: '11' } });
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Pallet places' }), { target: { value: '11' } });
     await act(() => new Promise((r) => setTimeout(r, 500)));
-    expect(JSON.parse(localStorage.getItem('ace_plan')!).plan.qty).toBe(40);
+    expect(JSON.parse(localStorage.getItem('ace_plan')!).plan.pallets).toBe(40);
   });
 });

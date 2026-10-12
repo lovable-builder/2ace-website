@@ -48,7 +48,7 @@ export function Checkout() {
   const signed = accept && signName.trim().length > 2;
   const errs = [signedIn ? '' : t('Log in or create an account to continue.'), signed ? '' : t('Accept the agreement and type your full name to sign.'), ''];
   const go = (i: number) => { setTried(false); nav('/checkout' + (SLUGS[i] ? '/' + SLUGS[i] : '')); scrollTop(); };
-  const toLogin = () => { savePlan({ qty: p.qty, pkgs: p.pkgs, storeOn: p.storeOn, domain: p.domain, tt: 'off', meta: 'off', marketOn: p.marketOn, company: p.company, country: p.country, vat: p.vat }); leave.to(loginUrl('/app/checkout')); };
+  const toLogin = () => { savePlan({ pallets: p.pallets, shelf: p.shelf, pkgs: p.pkgs, storeOn: p.storeOn, domain: p.domain, tt: 'off', meta: 'off', marketOn: p.marketOn, company: p.company, country: p.country, vat: p.vat }); leave.to(loginUrl('/app/checkout')); };
 
   const pay = async () => {
     if (paying) return;
@@ -57,7 +57,7 @@ export function Checkout() {
     setPaying(true); setPayErr('');
     try {
       const r = await callFn<{ url?: string }>('create-checkout', {
-        config: { m2: p.qty, pkgs: p.pkgs, storeOn: p.storeOn, domain: p.domain, tt: 'off', meta: 'off', marketOn: p.marketOn },
+        config: { pallets: p.pallets, shelfM3: p.shelf, pkgs: p.pkgs, storeOn: p.storeOn, domain: p.domain, tt: 'off', meta: 'off', marketOn: p.marketOn },
         company, country: p.country, vatId: p.vat, signName: signName.trim(),
       });
       if (!r.ok || !r.data.url) throw new Error(r.status === 401 ? t('Your session expired. Please log in again.') : r.status === 409 ? t('You already have an active plan. Manage it from Account > Billing.') : (r.data.error || t('Could not start the payment')));
@@ -84,7 +84,7 @@ export function Checkout() {
   const terms = [
     ['Provider', '2ACE sp. z o.o., ul. Ostrobramska 101A lok. 301, 04-041 Warszawa. NIP 1133212948. Tel. +48 608 180 946.'],
     ['Term', 'Monthly, rolling. Cancel or resize with 30 days notice.'],
-    ['Billing', 'Space billed on reserved m² in advance on the 1st. Add-ons from the day they start.'],
+    ['Billing', 'Storage (pallet places and shelf m³) billed monthly in advance. Packing, returns and labels billed per use at the end of the month. No monthly minimum. Add-ons from the day they start.'],
     ['Service levels', 'Orders before 15:00 ship the same day. Returns graded within 48 h. 99.5% stock accuracy.'],
     ['Insurance', 'Goods on our floor insured at declared purchase value.'],
     ['Customs', 'We act as your indirect customs representative for imports into Poland.'],

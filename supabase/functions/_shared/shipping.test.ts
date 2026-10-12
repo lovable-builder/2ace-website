@@ -65,12 +65,12 @@ Deno.test('extractTracking collects waybill numbers once', () => {
   eq(extractTracking({ package_no: 'A1', parcels: [{ package_no: 'A1' }, { package_no: 'B2' }, { waybill_number: 'C3' }, {}] }), ['A1', 'B2', 'C3'], 'unique'); eq(extractTracking({}), [], 'none');
 });
 
-Deno.test('a customer\'s own markup wins; otherwise the default (30, or the server setting)', () => {
+Deno.test('a customer\'s own markup wins; otherwise the default (20, or the server setting)', () => {
   const none = () => undefined, set40 = (k: string) => ({ SHIPPING_MARKUP_PERCENT: '40' } as Record<string, string>)[k];
-  eq(markupFor(null, none), 30, 'no setting: 30'); eq(markupFor(undefined, none), 30, 'undefined'); eq(markupFor('', none), 30, 'empty text');
+  eq(markupFor(null, none), 20, 'no setting: 20'); eq(markupFor(undefined, none), 20, 'undefined'); eq(markupFor('', none), 20, 'empty text');
   eq(markupFor(15, none), 15, 'their own'); eq(markupFor('12.5', none), 12.5, 'numeric text from the database'); eq(markupFor(0, none), 0, 'zero is a real choice: no markup');
   eq(markupFor(null, set40), 40, 'the server default can change'); eq(markupFor(15, set40), 15, 'their own beats the server default');
-  eq(markupFor(501, none), 30, 'an absurd value falls back to the default'); eq(markupFor(-5, none), 30, 'negative falls back'); eq(markupFor('abc', none), 30, 'text falls back');
+  eq(markupFor(501, none), 20, 'an absurd value falls back to the default'); eq(markupFor(-5, none), 20, 'negative falls back'); eq(markupFor('abc', none), 20, 'text falls back');
 });
 
 Deno.test('the sender name has letters only, as Furgonetka requires', () => {

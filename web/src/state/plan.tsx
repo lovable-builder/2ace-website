@@ -1,13 +1,14 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { callFn } from '../lib/api';
 import { clearPlan, restorePlan, savePlan } from '../lib/planStore';
-import { planM2, STORAGE, type EstSize, type PlanConfig, type Pkgs } from '../lib/pricing';
+import { startingStorage, type EstSize, type PlanConfig, type Pkgs } from '../lib/pricing';
 import { COUNTRIES } from '../lib/countries';
 
 export type DomainStatus = 'checking' | 'free' | 'taken' | 'empty' | 'unchecked' | 'invalid' | 'unknown' | 'limited';
 
 export type PlanState = {
-  qty: number;
+  pallets: number;          // pallet places
+  shelf: number;            // shelf space, m³
   pkgs: Pkgs;
   storeOn: boolean;
   domain: string;
@@ -27,7 +28,7 @@ export type PlanState = {
 };
 
 export const NEW_PLAN: PlanState = {
-  qty: 15, pkgs: { imp: false }, storeOn: false, domain: '', marketOn: false, domainStatus: null, domainAlts: [],
+  pallets: 5, shelf: 2, pkgs: { imp: false }, storeOn: false, domain: '', marketOn: false, domainStatus: null, domainAlts: [],
   theme: 'mono', langs: { Polish: true, English: true, German: false, Czech: false },
   pays: { BLIK: true, Przelewy24: true, Cards: true, 'Apple Pay': false, PayPo: false },
   company: '', country: 'DE', vat: '', email: '', estUnits: 6000, estSize: 'medium', tried: false,
@@ -35,7 +36,7 @@ export const NEW_PLAN: PlanState = {
 
 // A plan being changed starts from what the customer has now.
 export function fromCurrent(c: PlanConfig, base: PlanState): PlanState {
-  return { ...base, qty: planM2(c), pkgs: c.pkgs || {}, storeOn: !!c.storeOn, marketOn: !!c.marketOn, domain: '', domainStatus: null, domainAlts: [] };
+  return { ...base, ...startingStorage(c), pkgs: c.pkgs || {}, storeOn: !!c.storeOn, marketOn: !!c.marketOn, domain: '', domainStatus: null, domainAlts: [] };
 }
 
 type Ctx = {
@@ -52,9 +53,9 @@ type Ctx = {
 const PlanContext = createContext<Ctx | null>(null);
 
 function restored(): PlanState {
-  const r = restorePlan(STORAGE.max);
+  const r = restorePlan();
   const s: PlanState = { ...NEW_PLAN };
-  if (r.qty !== undefined) s.qty = Number(r.qty);
+  if (r.pallets !== undefined || r.shelf !== undefined) { s.pallets = Number(r.pallets ?? 0); s.shelf = Number(r.shelf ?? 0); }
   if (r.pkgs) s.pkgs = r.pkgs;
   if (r.storeOn !== undefined) s.storeOn = !!r.storeOn;
   if (typeof r.domain === 'string') s.domain = r.domain;
@@ -71,11 +72,11 @@ export function PlanProvider({ children, fresh = false }: { children: ReactNode;
   const changeRef = useRef(change); changeRef.current = change;
 
   // Save the new-customer plan a moment after each change.
-  const persisted = JSON.stringify([draft.qty, draft.pkgs, draft.storeOn, draft.domain, draft.marketOn, draft.company, draft.country, draft.vat]);
+  const persisted = JSON.stringify([draft.pallets, draft.shelf, draft.pkgs, draft.storeOn, draft.domain, draft.marketOn, draft.company, draft.country, draft.vat]);
   const first = useRef(true);
   useEffect(() => {
     if (first.current) { first.current = false; return; }
-    const t = setTimeout(() => savePlan({ qty: draft.qty, pkgs: draft.pkgs, storeOn: draft.storeOn, domain: draft.domain, tt: 'off', meta: 'off', marketOn: draft.marketOn, company: draft.company, country: draft.country, vat: draft.vat }), 400);
+    const t = setTimeout(() => savePlan({ pallets: draft.pallets, shelf: draft.shelf, pkgs: draft.pkgs, storeOn: draft.storeOn, domain: draft.domain, tt: 'off', meta: 'off', marketOn: draft.marketOn, company: draft.company, country: draft.country, vat: draft.vat }), 400);
     return () => clearTimeout(t);
   }, [persisted]); // `persisted` covers every saved field of `draft`
 
