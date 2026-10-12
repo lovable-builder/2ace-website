@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { dateShort, fmt, m2fmt, money, num } from '../src/lib/format';
-import { estimateM2, mkRange, planM2, pricing, vatFor, STORAGE } from '../src/lib/pricing';
+import { estimateStorage, mkRange, planStorage, startingStorage, pricing, vatFor, STORAGE } from '../src/lib/pricing';
 import { csvToOrders, CsvError, parseCsv, CSV_TEMPLATE } from '../src/lib/csv';
 import { carrierBrand } from '../src/lib/carriers';
 import { clearPlan, restorePlan, savePlan } from '../src/lib/planStore';
@@ -9,7 +9,7 @@ import { fill, translate } from '../src/i18n';
 import { tariffText } from '../src/lib/tariff';
 
 const KEY = 'sb-proj-auth-token';
-const plan = (o = {}) => ({ qty: 15, pkgs: {}, storeOn: false, domain: '', marketOn: false, ...o });
+const plan = (o = {}) => ({ pallets: 5, shelf: 2, pkgs: {}, storeOn: false, domain: '', marketOn: false, ...o });
 
 describe('money and numbers', () => {
   it('writes złoty the Polish way in every language', () => {
@@ -29,35 +29,46 @@ describe('money and numbers', () => {
 });
 
 describe('pricing (must match supabase/functions/_shared/pricing.ts)', () => {
-  it('the default is 15 m², 4 500 zł a month', () => {
+  it('the default is 5 pallet places and 2 m³ of shelves, 245 zł a month', () => {
     const p = pricing(plan());
-    expect(p.monthly).toBe(4500); expect(p.once).toBe(0); expect(p.lines).toHaveLength(1);
+    expect(p.monthly).toBe(245); expect(p.once).toBe(0); expect(p.lines.map((l) => [l.key, l.monthly])).toEqual([['pallets', 175], ['shelf', 70]]);
   });
-  it('storage is 300 zł per m² across the whole range', () => {
-    for (const [m2, price] of [[1, 300], [12, 3600], [100, 30000], [1000, 300000]]) expect(pricing(plan({ qty: m2 })).monthly).toBe(price);
-    expect(STORAGE).toEqual({ price: 300, min: 1, max: 1000, step: 1 });
+  it('storage is 35 zł per pallet place and 35 zł per m³ of shelf space, at or below the market', () => {
+    for (const [pallets, shelf, price] of [[1, 0, 35], [0, 1, 35], [10, 4, 490], [0, 2.5, 88], [500, 500, 35000]]) expect(pricing(plan({ pallets, shelf })).monthly).toBe(price);
+    expect(STORAGE).toEqual({ pallet: 35, shelf: 35, maxPallets: 500, maxShelf: 500, legacyPerM2: 300 });
+    expect(pricing(plan({ pallets: 3, shelf: 0 })).lines).toHaveLength(1);
   });
   it('import & customs is quoted per shipment: it adds nothing monthly', () => {
-    const p = pricing(plan({ qty: 12, pkgs: { imp: true } }));
-    expect(p.monthly).toBe(3600); expect(p.lines[1]).toMatchObject({ key: 'imp', quote: true, monthly: 0 });
+    const p = pricing(plan({ pallets: 4, shelf: 0, pkgs: { imp: true } }));
+    expect(p.monthly).toBe(140); expect(p.lines[1]).toMatchObject({ key: 'imp', quote: true, monthly: 0 });
   });
   it('a storefront is 199 zł a month and 2 950 zł once, named after the domain', () => {
-    const p = pricing(plan({ qty: 10, storeOn: true, domain: 'acme' }));
-    expect([p.monthly, p.once]).toEqual([3199, 2950]);
+    const p = pricing(plan({ pallets: 4, shelf: 0, storeOn: true, domain: 'acme' }));
+    expect([p.monthly, p.once]).toEqual([339, 2950]);
     expect(p.lines[1].vars).toEqual({ domain: 'acme' });
   });
   it('Market (old plans only) is a commission, never a monthly price', () => {
     const p = pricing(plan({ marketOn: true }));
-    expect(p.monthly).toBe(4500); expect(p.lines[1]).toMatchObject({ commission: true });
+    expect(p.monthly).toBe(245); expect(p.lines[2]).toMatchObject({ commission: true });
     expect(mkRange()).toBe('3.6–9.2%');
   });
-  it('old bin and pallet plans are read as their area', () => {
-    expect(planM2({ m2: 14.4 })).toBe(14.4); expect(planM2(null)).toBe(0); expect(planM2({ m2: 0.3 })).toBe(0.3);
+  it('a saved plan is read as pallets and shelf m³; an old m² plan is shown as its area and changes into pallet places', () => {
+    expect(planStorage({ pallets: 3, shelfM3: 1.5 })).toEqual({ pallets: 3, shelf: 1.5, legacyM2: null });
+    expect(planStorage({ m2: 14.4 })).toEqual({ pallets: 0, shelf: 0, legacyM2: 14.4 });
+    expect(planStorage(null)).toEqual({ pallets: 0, shelf: 0, legacyM2: null });
+    expect(startingStorage({ m2: 12 })).toEqual({ pallets: 10, shelf: 0 });
+    expect(startingStorage({ pallets: 2, shelfM3: 3 })).toEqual({ pallets: 2, shelf: 3 });
   });
-  it('the estimator answers in m² (a pallet place is about 1.2 m²) and never below the minimum', () => {
-    expect(estimateM2(6000, 'medium')).toBe(18);
-    expect(estimateM2(0, 'small')).toBe(2);
-    expect(estimateM2(10_000_000, 'large')).toBe(1000);
+  it('the estimator puts small items on shelves and the rest on pallets, never below the minimum', () => {
+    expect(estimateStorage(6000, 'medium')).toEqual({ pallets: 15, shelf: 0 });
+    expect(estimateStorage(2000, 'small')).toEqual({ pallets: 0, shelf: 2.5 });
+    expect(estimateStorage(0, 'small')).toEqual({ pallets: 0, shelf: 0.5 });
+    expect(estimateStorage(0, 'large')).toEqual({ pallets: 1, shelf: 0 });
+    expect(estimateStorage(10_000_000, 'large')).toEqual({ pallets: 500, shelf: 0 });
+    expect(carrierBrand('InPost Paczkomaty').label).toBe('InPost');
+    expect(carrierBrand('DHL Parcel')).toEqual({ label: 'DHL', bg: '#FFCC00', fg: '#D40511' });
+    expect(carrierBrand('acme freight').label).toBe('ACM');
+    expect(carrierBrand(null).label).toBe('?');
   });
   it('VAT: 23% for Polish companies, reverse charge in the EU, none outside', () => {
     expect(vatFor('PL', 1000)).toEqual({ kind: 'pl', vat: 230 });
@@ -104,22 +115,24 @@ describe('carriers', () => {
   });
 });
 
-describe('the saved plan (same key and shape as /platform)', () => {
+describe('the saved plan', () => {
   it('saves and restores the choices, never the step or the old marketing channels', () => {
-    savePlan({ qty: 22, pkgs: { imp: true }, storeOn: true, domain: 'acme', tt: 'managed', meta: 'setup', company: 'Acme', country: 'PL', vat: '1234567890', step: 3 });
+    savePlan({ pallets: 6, shelf: 1.5, pkgs: { imp: true }, storeOn: true, domain: 'acme', tt: 'managed', meta: 'setup', company: 'Acme', country: 'PL', vat: '1234567890', step: 3 });
     const raw = JSON.parse(localStorage.getItem('ace_plan')!);
-    expect(raw.v).toBe(2); expect(raw.plan.qty).toBe(22);
-    expect(restorePlan(1000)).toEqual({ qty: 22, pkgs: { imp: true }, storeOn: true, domain: 'acme', company: 'Acme', country: 'PL', vat: '1234567890' });
+    expect(raw.v).toBe(2); expect(raw.plan.pallets).toBe(6);
+    expect(restorePlan()).toEqual({ pallets: 6, shelf: 1.5, pkgs: { imp: true }, storeOn: true, domain: 'acme', company: 'Acme', country: 'PL', vat: '1234567890' });
   });
-  it('reads a plan saved by /platform', () => {
+  it('reads a plan saved before storage was sold by the pallet: its m² become pallet places', () => {
     localStorage.setItem('ace_plan', JSON.stringify({ v: 2, t: Date.now(), plan: { qty: 9, orders: 1500, pkgs: {}, storeOn: false, domain: '', tt: 'off', meta: 'off', marketOn: false, company: 'X', country: 'DE', vat: '', step: 2 } }));
-    expect(restorePlan(1000)).toMatchObject({ qty: 9, company: 'X', country: 'DE' });
+    const r = restorePlan();
+    expect(r).toMatchObject({ pallets: 8, company: 'X', country: 'DE' }); expect(r.qty).toBeUndefined();
   });
-  it('drops an absurd size, and forgets a plan older than a day', () => {
-    savePlan({ qty: 5000 }); expect(restorePlan(1000).qty).toBeUndefined();
-    localStorage.setItem('ace_plan', JSON.stringify({ v: 2, t: Date.now() - 25 * 3600e3, plan: { qty: 9 } }));
-    expect(restorePlan(1000)).toEqual({}); expect(localStorage.getItem('ace_plan')).toBeNull();
-    savePlan({ qty: 3 }); clearPlan(); expect(restorePlan(1000)).toEqual({});
+  it('drops absurd amounts, and forgets a plan older than a day', () => {
+    savePlan({ pallets: 5000, shelf: -1 }); expect(restorePlan().pallets).toBeUndefined(); expect(restorePlan().shelf).toBeUndefined();
+    savePlan({ pallets: 2.5 }); expect(restorePlan().pallets).toBeUndefined();
+    localStorage.setItem('ace_plan', JSON.stringify({ v: 2, t: Date.now() - 25 * 3600e3, plan: { pallets: 9 } }));
+    expect(restorePlan()).toEqual({}); expect(localStorage.getItem('ace_plan')).toBeNull();
+    savePlan({ pallets: 3 }); clearPlan(); expect(restorePlan()).toEqual({});
   });
 });
 

@@ -2,7 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useLang, type T } from '../../i18n';
 import { useAccount } from '../../state/account';
 import { useWarehouse, type WhData } from '../../state/warehouse';
-import { planM2 } from '../../lib/pricing';
+import { planStorage } from '../../lib/pricing';
 import { dateLong, fmt, m2fmt, num } from '../../lib/format';
 
 // The journey of the customer's goods, from what is already loaded. Nothing is a number until it has loaded.
@@ -59,7 +59,8 @@ export function Overview({ customer, go }: { customer: string; go: (tab: string)
 
   const onOff = (v: unknown, yes?: string) => (v ? yes || t('Included') : t('Not in plan'));
   const planRows = pc ? [
-    [t('Space'), m2fmt(planM2(pc)) + ' m²'],
+    [t('Storage'), (() => { const st = planStorage(pc); return st.legacyM2 !== null ? m2fmt(st.legacyM2) + ' m²'
+      : [st.pallets ? t('{n} pallet places', { n: st.pallets }) : '', st.shelf ? t('{n} m³ of shelf space', { n: m2fmt(st.shelf) }) : ''].filter(Boolean).join(' · '); })()],
     [t('Fulfilment and returns'), t('Pay as you go')],
     [t('Import & customs'), onOff(pc.pkgs?.imp, t('Quoted per shipment'))],
     [t('.pl storefront'), onOff(pc.storeOn)],

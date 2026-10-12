@@ -13,7 +13,7 @@ export type Handler = (c: Call) => Answer | Promise<Answer>;
 export const status = (s: number, body: unknown = {}) => ({ __status: s, body });
 
 export const ORG = { org_id: 'o1', role: 'owner', organizations: { name: 'Acme sp. z o.o.', country: 'PL', vat_id: '1234567890', logo_path: null, status: 'active', domain_orders: [] as unknown[] } };
-export const PLAN = { config: { m2: 10, pkgs: { imp: false }, storeOn: false, marketOn: false }, monthly_pln: 3000, once_pln: 0 };
+export const PLAN = { config: { pallets: 10, shelfM3: 2, pkgs: { imp: false }, storeOn: false, marketOn: false }, monthly_pln: 420, once_pln: 0 };
 
 export function baseRoutes(o: { org?: unknown; plan?: unknown } = {}): Record<string, Handler> {
   return {

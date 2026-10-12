@@ -2,7 +2,7 @@ import Stripe from 'npm:stripe';
 import { withMonitoring, captureException } from '../_shared/monitor.ts';
 import { corsHeaders, json } from '../_shared/cors.ts';
 import { admin, caller } from '../_shared/auth.ts';
-import { priceConfig, comparePlans, prorate, storageM2, type PlanConfig } from '../_shared/pricing.ts';
+import { priceConfig, comparePlans, prorate, storageOf, type PlanConfig } from '../_shared/pricing.ts';
 import { validName, cleanName, rdapStatus } from '../_shared/domain.ts';
 import { createDomainOrder } from '../_shared/domainOrder.ts';
 import { recurringMonthlyPLN } from '../_shared/stripeTotals.ts';
@@ -29,7 +29,7 @@ async function productFor(label: string): Promise<string> {
 
 // Two configs are "the same plan" only if every choice matches. Market (a commission per sale) and Import & customs (quoted per shipment)
 // carry no monthly price, so adding or removing them changes the plan without changing the price.
-const sig = (c: PlanConfig) => JSON.stringify([storageM2(c),  !!c.pkgs?.imp, !!c.storeOn, !!c.marketOn, c.tt ?? 'off', c.meta ?? 'off']);
+const sig = (c: PlanConfig) => JSON.stringify([storageOf(c),  !!c.pkgs?.imp, !!c.storeOn, !!c.marketOn, c.tt ?? 'off', c.meta ?? 'off']);
 
 Deno.serve(withMonitoring('change-plan', async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders(req) });

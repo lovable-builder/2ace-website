@@ -1,15 +1,21 @@
 // Server-side twin of the customer app's pricing (web/src/lib/pricing.ts). Amounts are whole PLN, net of VAT.
 // Keep in sync with the browser version; the browser total is display only.
 
-// Storage is sold by the square metre: 300 zł net a month for each m².
-// Plans bought before this were sold per shelf bin (90 zł, 0.3 m²) or per pallet (360 zł, 1.2 m²). Both are exactly 300 zł per m²,
-// so an old plan is read as its area and costs exactly what it always did.
-export const PRICE_PER_M2 = 300;
-export const MIN_M2 = 1;           // smallest space a new plan can ask for
-export const MAX_M2 = 2000;
+// Storage is sold as pallet places and shelf space, priced at or below the Polish market: 35 zł net a month for each pallet place
+// and 35 zł for each m³ of shelf space. No monthly minimum.
+// Plans bought before this were sold by the square metre (300 zł per m², and before that per bin or pallet at the same rate). They keep
+// their price: a config with only `m2` is a legacy plan and is priced exactly as it always was.
+export const PALLET_PRICE = 35;       // per pallet place a month
+export const SHELF_M3_PRICE = 35;     // per m³ of shelf space a month
+export const MAX_PALLETS = 500;
+export const MAX_SHELF_M3 = 500;
+export const LEGACY_PRICE_PER_M2 = 300;
+const LEGACY_MAX_M2 = 2000;
 
 export type PlanConfig = {
-  m2?: number;                                    // the area, in square metres (current plans)
+  pallets?: number;                               // pallet places (whole numbers)
+  shelfM3?: number;                               // shelf space in m³, in half-m³ steps
+  m2?: number;                                    // legacy plans only: the area in square metres
   pkgs?: { imp?: boolean };                       // Import & customs is quoted per shipment. Fulfilment and returns are pay as you go for everyone: they are not part of the plan price.
   storeOn?: boolean;
   domain?: string;
@@ -19,24 +25,45 @@ export type PlanConfig = {
 };
 
 const round1 = (n: number) => Math.round(n * 10) / 10;
+const half = (n: number) => Math.round(n * 2) / 2;
+const given = (v: unknown) => v !== undefined && v !== null && v !== '';
 
-// The area of a plan in m², from either the current format or an old bin / pallet plan. Throws on anything that is not a sane amount.
-export function storageM2(c: PlanConfig): number {
-  if (c.m2 !== undefined && c.m2 !== null) {
-    const v = Number(c.m2);
-    if (!Number.isFinite(v) || v < MIN_M2 || v > MAX_M2) throw new Error('invalid m2');
-    return round1(v);
+export type Storage = { pallets: number; shelfM3: number; legacyM2: number | null };
+
+// The storage a plan reserves. Throws on anything that is not a sane amount, or on a plan with no storage at all.
+export function storageOf(c: PlanConfig): Storage {
+  if (given(c.pallets) || given(c.shelfM3)) {
+    const p = given(c.pallets) ? Number(c.pallets) : 0, m = given(c.shelfM3) ? Number(c.shelfM3) : 0;
+    if (!Number.isInteger(p) || p < 0 || p > MAX_PALLETS) throw new Error('invalid pallets');
+    if (!Number.isFinite(m) || m < 0 || m > MAX_SHELF_M3) throw new Error('invalid shelf space');
+    if (p === 0 && half(m) === 0) throw new Error('choose some storage');
+    return { pallets: p, shelfM3: half(m), legacyM2: null };
   }
-  throw new Error('invalid m2');
+  if (given(c.m2)) {
+    const v = Number(c.m2);
+    if (!Number.isFinite(v) || v < 1 || v > LEGACY_MAX_M2) throw new Error('invalid m2');
+    return { pallets: 0, shelfM3: 0, legacyM2: round1(v) };
+  }
+  throw new Error('choose some storage');
 }
-export const fmtM2 = (n: number) => String(round1(n)).replace(/\.0$/, '');
+export const fmtNum = (n: number) => String(round1(n)).replace(/\.0$/, '');
+
+export function storageLabel(s: Storage) {
+  if (s.legacyM2 !== null) return `Storage (${fmtNum(s.legacyM2)} m²)`;
+  const parts = [];
+  if (s.pallets) parts.push(`${s.pallets} pallet place${s.pallets === 1 ? '' : 's'}`);
+  if (s.shelfM3) parts.push(`${fmtNum(s.shelfM3)} m³ shelf space`);
+  return `Storage (${parts.join(', ')})`;
+}
+export function storagePrice(s: Storage) {
+  return s.legacyM2 !== null ? Math.round(s.legacyM2 * LEGACY_PRICE_PER_M2) : Math.round(s.pallets * PALLET_PRICE + s.shelfM3 * SHELF_M3_PRICE);
+}
 
 export type Line = { label: string; monthly: number; once: number };
 
 export function priceConfig(c: PlanConfig) {
-  const m2 = storageM2(c);
-  const lines: Line[] = [{ label: `Storage (${fmtM2(m2)} m²)`, monthly: Math.round(m2 * PRICE_PER_M2), once: 0 }];
-  const fp = m2;
+  const st = storageOf(c);
+  const lines: Line[] = [{ label: storageLabel(st), monthly: storagePrice(st), once: 0 }];
   // Import & customs is quoted per shipment: not billed here.
   if (c.storeOn) lines.push({ label: 'Storefront hosting and care', monthly: 199, once: 2950 });
   const channels: [keyof PlanConfig, string, number, number][] = [

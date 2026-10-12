@@ -56,7 +56,7 @@ Deno.test('suggest: sizes from the products, a little for the box, unknown sizes
 });
 Deno.test('quote: the customer sees the price with the markup and nothing else of ours', async () => {
   const r = rig(); const q = await quote(r.d, { order_id: OID, parcels: PARCELS });
-  const dpd = q.offers.find((x) => x.service_id === 7)!; eq([dpd.bill_net, dpd.bill_gross, dpd.available], [13, 15.99, true], '10 net + 30% = 13 net, 15,99 gross');
+  const dpd = q.offers.find((x) => x.service_id === 7)!; eq([dpd.bill_net, dpd.bill_gross, dpd.available], [12, 14.76, true], '10 net + 20% = 12 net, 14,76 gross');
   ok(!JSON.stringify(q).match(/cost|markup|margin|balance/i), 'no cost, markup or balance in the answer');
   ok(q.offers.find((x) => x.service_id === 9)!.available === false, 'locker services are never offered');
   const ups = q.offers.find((x) => x.service_id === 11)!; ok(ups.available === false && /limit/.test(ups.reason ?? ''), 'a label above the per-label limit (60 zł gross) is not offered: ' + ups.reason);
@@ -80,18 +80,18 @@ Deno.test('quote: a bad receiver name is explained, a carrier failure is calm, s
   await refuses(() => quote(rig({ api: { quote: async () => { throw new Error('Shipping is not set up yet. Missing server settings: FURGONETKA_PASSWORD'); } } }).d, { order_id: OID, parcels: PARCELS }), 422, /not available right now/);
 });
 Deno.test('buy: the steps run in the safe order, with the customer\'s price and parcels, and the answer has no cost', async () => {
-  const r = rig(); const out = await buy(r.d, { order_id: OID, service_id: 7, parcels: PARCELS, expected_bill_net: 13 });
+  const r = rig(); const out = await buy(r.d, { order_id: OID, service_id: 7, parcels: PARCELS, expected_bill_net: 12 });
   eq(out, { ok: true, shipment: { carrier: 'dpd', tracking_numbers: ['WB1'], bill_net: 13, bill_gross: 15.99 } }, 'result');
   eq(r.log, ['quote', 'balance', 'validate', 'create', 'order'], 'quote, balance, then the dry run, create and the charge');
   const b = r.rpcs.find(([n]) => n === 'cs_begin_shipment')![1];
-  eq([b.p_org, b.p_order, b.p_actor, b.p_env, b.p_service_id, b.p_cost_net, b.p_markup, b.p_parcels], [ORG, OID, USER, 'sandbox', 7, 10, 30, [{ weight_g: 1800, length_cm: 30, width_cm: 20, height_cm: 15 }]], 'recorded for the customer with the right figures');
+  eq([b.p_org, b.p_order, b.p_actor, b.p_env, b.p_service_id, b.p_cost_net, b.p_markup, b.p_parcels], [ORG, OID, USER, 'sandbox', 7, 10, 20, [{ weight_g: 1800, length_cm: 30, width_cm: 20, height_cm: 15 }]], 'recorded for the customer with the right figures');
   ok(r.rpcs.some(([n]) => n === 'cs_finish_shipment') && r.rpcs.some(([n]) => n === 'cs_save_package'), 'finished and package remembered'); ok(!JSON.stringify(out).match(/cost|markup/i), 'no cost in the answer');
 });
 Deno.test('buy: a price that went up is refused before any money moves, a price that went down is fine', async () => {
   const up = rig({ quote: offers([{ pricing: { price_net: 12, price_gross: 14.76, tax: 23 } }]) });
-  await refuses(() => buy(up.d, { order_id: OID, service_id: 7, parcels: PARCELS, expected_bill_net: 13 }), 409, /price changed to 15,60 zł \+ VAT/);
+  await refuses(() => buy(up.d, { order_id: OID, service_id: 7, parcels: PARCELS, expected_bill_net: 12 }), 409, /price changed to 14,40 zł \+ VAT/);
   noMoney(up);
-  const down = rig({ quote: offers([{ pricing: { price_net: 8, price_gross: 9.84, tax: 23 } }]) }); const out = await buy(down.d, { order_id: OID, service_id: 7, parcels: PARCELS, expected_bill_net: 13 });
+  const down = rig({ quote: offers([{ pricing: { price_net: 8, price_gross: 9.84, tax: 23 } }]) }); const out = await buy(down.d, { order_id: OID, service_id: 7, parcels: PARCELS, expected_bill_net: 12 });
   ok(out.ok, 'bought at the lower price'); eq(out.shipment!.bill_net, 13, 'recorded by the database (stubbed)');
 });
 Deno.test('buy: every guard refuses before money moves', async () => {
@@ -104,27 +104,27 @@ Deno.test('buy: every guard refuses before money moves', async () => {
     ['the database says no (exposure limit)', { begin: { error: 'Your shipping labels not invoiced yet are 300 zł. This one (13 zł) would pass your limit of 300 zł. Please contact us.' } }, 409, /would pass your limit/],
     ['the database says no (already bought)', { begin: { error: 'A label is already being bought or has been bought for this order' } }, 409, /already being bought/],
   ];
-  for (const [name, o, status, re] of cases) { const r = rig(o); try { await buy(r.d, { order_id: OID, service_id: 7, parcels: PARCELS, expected_bill_net: 13 }); throw new Error(name + ': should be refused'); } catch (e) { ok(e instanceof CsError && e.status === status && re.test(e.message), `${name}: got ${(e as Error).message}`); } ok(!r.log.includes('order') && !r.log.includes('create'), name + ': no money moved'); }
+  for (const [name, o, status, re] of cases) { const r = rig(o); try { await buy(r.d, { order_id: OID, service_id: 7, parcels: PARCELS, expected_bill_net: 12 }); throw new Error(name + ': should be refused'); } catch (e) { ok(e instanceof CsError && e.status === status && re.test(e.message), `${name}: got ${(e as Error).message}`); } ok(!r.log.includes('order') && !r.log.includes('create'), name + ': no money moved'); }
 });
 Deno.test('buy: what a customer reads never mentions our balance, Furgonetka or our limits in złoty', async () => {
-  for (const o of [{ balance: { balance: 5 } }, { spentAll: 495 }, { env: { SHIPPING_ENABLED: 'no' } }] as const) { const r = rig(o as never); try { await buy(r.d, { order_id: OID, service_id: 7, parcels: PARCELS, expected_bill_net: 13 }); } catch (e) { ok(!/balance|top up|furgonetka|SHIPPING_|DAILY_CAP|\d+,\d\d zł/i.test((e as Error).message), (e as Error).message); } }
+  for (const o of [{ balance: { balance: 5 } }, { spentAll: 495 }, { env: { SHIPPING_ENABLED: 'no' } }] as const) { const r = rig(o as never); try { await buy(r.d, { order_id: OID, service_id: 7, parcels: PARCELS, expected_bill_net: 12 }); } catch (e) { ok(!/balance|top up|furgonetka|SHIPPING_|DAILY_CAP|\d+,\d\d zł/i.test((e as Error).message), (e as Error).message); } }
 });
 Deno.test('buy: a carrier that refuses is explained calmly, the attempt is closed, nothing is charged', async () => {
   const r = rig({ api: { validate: async () => ({ ok: false, errors: ['/receiver/phone: Incorrect phone number'] }) } });
-  await refuses(() => buy(r.d, { order_id: OID, service_id: 7, parcels: PARCELS, expected_bill_net: 13 }), 422, /nothing was charged.*\/receiver\/phone/);
+  await refuses(() => buy(r.d, { order_id: OID, service_id: 7, parcels: PARCELS, expected_bill_net: 12 }), 422, /nothing was charged.*\/receiver\/phone/);
   ok(r.rpcs.some(([n]) => n === 'cs_fail_shipment') && !r.log.includes('order'), 'closed as failed, no charge');
   const c = rig({ api: { orderAndWait: async () => ({ status: 'error', orderedIds: [], errors: ['/packages/1: An error occurred while communicating with the carrier API'] }) } });
-  await refuses(() => buy(c.d, { order_id: OID, service_id: 7, parcels: PARCELS, expected_bill_net: 13 }), 422, /carrier API/);
+  await refuses(() => buy(c.d, { order_id: OID, service_id: 7, parcels: PARCELS, expected_bill_net: 12 }), 422, /carrier API/);
 });
 Deno.test('buy: an unknown outcome tells the customer not to buy again, alerts staff, and is not an error', async () => {
   const r = rig({ api: { orderAndWait: async () => { throw new OrderPending('u', 'waiting'); } } });
-  const out = await buy(r.d, { order_id: OID, service_id: 7, parcels: PARCELS, expected_bill_net: 13 }) as { ok: boolean; pending?: boolean; message?: string };
+  const out = await buy(r.d, { order_id: OID, service_id: 7, parcels: PARCELS, expected_bill_net: 12 }) as { ok: boolean; pending?: boolean; message?: string };
   ok(out.ok === false && out.pending === true && /do not buy it again/.test(out.message ?? ''), JSON.stringify(out)); ok(r.alerts.length === 1, 'staff were alerted'); ok(!r.rpcs.some(([n]) => n === 'cs_fail_shipment'), 'the attempt stays open for staff to check');
 });
 Deno.test('buy: input is checked', async () => {
-  await refuses(() => buy(rig().d, { order_id: OID, service_id: 'x', parcels: PARCELS, expected_bill_net: 13 }), 400, /Choose a carrier/);
+  await refuses(() => buy(rig().d, { order_id: OID, service_id: 'x', parcels: PARCELS, expected_bill_net: 12 }), 400, /Choose a carrier/);
   await refuses(() => buy(rig().d, { order_id: OID, service_id: 7, parcels: PARCELS, expected_bill_net: 0 }), 400, /Confirm the price/);
-  await refuses(() => buy(rig().d, { order_id: OID, service_id: 7, parcels: [{}], expected_bill_net: 13 }), 400, /weight/);
+  await refuses(() => buy(rig().d, { order_id: OID, service_id: 7, parcels: [{}], expected_bill_net: 12 }), 400, /weight/);
 });
 Deno.test('label: the file of a bought label, "not ready" is calm, no label is a 404, someone else\'s order is not found', async () => {
   const bought = { status: 'purchased', carrier: 'dpd', service_name: 'DPD', tracking_numbers: ['WB1'], bill_net: 13, bill_gross: 15.99, package_id: '555', purchased_at: 'x', created_at: 'x', error: null, buyer_role: 'customer' };

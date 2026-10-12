@@ -34,7 +34,8 @@ describe('overview', () => {
     expect(text()).toContain('1 order is on hold because some stock is missing.');
     const steps = document.querySelectorAll('.checklist .step.done');
     expect(steps).toHaveLength(3);   // plan active, products added, delivery booked
-    expect(text()).toContain('3 000 zł');
+    expect(text()).toContain('420 zł');
+    expect(text()).toContain('10 pallet places · 2 m³ of shelf space');
   });
 
   it('before anything loads the journey shows dashes, not made-up zeros; tapping a step opens its tab', async () => {

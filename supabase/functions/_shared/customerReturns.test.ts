@@ -39,11 +39,11 @@ Deno.test('the return package refuses what a carrier would refuse: one-word name
 });
 Deno.test('quote: the customer sees their price (markup in), no lockers, no cost, and it needs no Fulfilment plan', async () => {
   const r = rig({ mode: 'storage' }); const q = await returnQuote(r.d, { return_id: RID, parcels: P });
-  const dpd = q.offers.find((x) => x.service_id === 7)!; eq([dpd.bill_net, dpd.bill_gross, dpd.available], [13, 15.99, true], 'price'); ok(q.offers.find((x) => x.service_id === 9)!.available === false, 'locker not offered'); ok(!JSON.stringify(q).match(/cost|markup|margin|balance/i), 'nothing of ours');
+  const dpd = q.offers.find((x) => x.service_id === 7)!; eq([dpd.bill_net, dpd.bill_gross, dpd.available], [12, 14.76, true], 'price'); ok(q.offers.find((x) => x.service_id === 9)!.available === false, 'locker not offered'); ok(!JSON.stringify(q).match(/cost|markup|margin|balance/i), 'nothing of ours');
   const sent = r.sent[0] as { pickup: { name: string }; receiver: { company: string } }; ok(sent.pickup.name === 'Anna Nowak' && sent.receiver.company === SENDER.company, 'the quote is for a return, not an outgoing parcel');
 });
 Deno.test('quote and buy: guards first', async () => {
-  for (const f of [(d: CsReturnDeps) => returnQuote(d, { return_id: RID, parcels: P }), (d: CsReturnDeps) => returnBuy(d, { return_id: RID, service_id: 7, parcels: P, expected_bill_net: 13 })]) {
+  for (const f of [(d: CsReturnDeps) => returnQuote(d, { return_id: RID, parcels: P }), (d: CsReturnDeps) => returnBuy(d, { return_id: RID, service_id: 7, parcels: P, expected_bill_net: 12 })]) {
     await refuses(() => f(rig({ env: { CUSTOMER_LABELS_ENABLED: '' } }).d), 403, /not open yet/);
     await refuses(() => f(rig({ role: 'finance' }).d), 403, /role/);
     await refuses(() => f(rig({ settings: { label_buying_enabled: false, markup_percent: null, max_label_net: null } }).d), 403, /not switched on/);
@@ -57,17 +57,17 @@ Deno.test('quote and buy: guards first', async () => {
   await refuses(() => returnQuote(rig().d, { return_id: RID, parcels: [] }), 400, /1 to 3 parcels/);
 });
 Deno.test('buy: records the return label for the return, with the buyer as sender, and the answer has no cost', async () => {
-  const r = rig(); const out = await returnBuy(r.d, { return_id: RID, service_id: 7, parcels: P, expected_bill_net: 13 });
+  const r = rig(); const out = await returnBuy(r.d, { return_id: RID, service_id: 7, parcels: P, expected_bill_net: 12 });
   eq(out, { ok: true, shipment: { carrier: 'dpd', tracking_numbers: ['WB1'], bill_net: 13, bill_gross: 15.99 } }, 'result'); eq(r.log, ['quote', 'validate', 'create', 'order'], 'steps');
-  const b = r.rpcs.find(([n]) => n === 'cs_begin_return_shipment')![1]; eq([b.p_org, b.p_return, b.p_actor, b.p_service_id, b.p_markup, b.p_parcels], [ORG, RID, USER, 7, 30, [{ weight_g: 900, length_cm: 30, width_cm: 20, height_cm: 10 }]], 'begun for the return');
+  const b = r.rpcs.find(([n]) => n === 'cs_begin_return_shipment')![1]; eq([b.p_org, b.p_return, b.p_actor, b.p_service_id, b.p_markup, b.p_parcels], [ORG, RID, USER, 7, 20, [{ weight_g: 900, length_cm: 30, width_cm: 20, height_cm: 10 }]], 'begun for the return');
   ok(!('p_order' in b), 'not an order'); ok(r.rpcs.some(([n]) => n === 'cs_finish_return_shipment'), 'finished as a return label');
   const pkgs = r.sent.filter((x) => (x as { pickup?: unknown }).pickup) as { pickup: { name: string }; receiver: { company: string } }[]; ok(pkgs.length >= 2 && pkgs.every((p) => p.pickup.name === 'Anna Nowak' && p.receiver.company === SENDER.company), 'every package sent to the carrier service is a return');
   ok(!JSON.stringify(out).match(/cost|markup/i), 'no cost');
 });
 Deno.test('buy: a price that went up is refused before any money moves; an unknown outcome says not to buy again', async () => {
   const up = rig({ quote: { services_prices: [{ service_id: 7, service: 'dpd', available: true, pricing: { price_net: 12, price_gross: 14.76, tax: 23 }, shipment_type: 'package', delivery_type: 'door' }] } });
-  await refuses(() => returnBuy(up.d, { return_id: RID, service_id: 7, parcels: P, expected_bill_net: 13 }), 409, /price changed to 15,60 zł/); ok(!up.log.includes('order') && !up.log.includes('create'), 'no money');
-  const r = rig(); r.d.api.orderAndWait = async () => { throw new OrderPending('u', 'x'); }; const out = await returnBuy(r.d, { return_id: RID, service_id: 7, parcels: P, expected_bill_net: 13 }) as { ok: boolean; pending?: boolean; message?: string }; ok(out.pending === true && /do not buy it again/.test(out.message ?? ''), 'pending');
+  await refuses(() => returnBuy(up.d, { return_id: RID, service_id: 7, parcels: P, expected_bill_net: 12 }), 409, /price changed to 14,40 zł/); ok(!up.log.includes('order') && !up.log.includes('create'), 'no money');
+  const r = rig(); r.d.api.orderAndWait = async () => { throw new OrderPending('u', 'x'); }; const out = await returnBuy(r.d, { return_id: RID, service_id: 7, parcels: P, expected_bill_net: 12 }) as { ok: boolean; pending?: boolean; message?: string }; ok(out.pending === true && /do not buy it again/.test(out.message ?? ''), 'pending');
 });
 Deno.test('label and status: only the customer\'s own, calm when not ready', async () => {
   const bought = { status: 'purchased', carrier: 'dpd', service_name: 'DPD', tracking_numbers: ['WB1'], bill_net: 13, bill_gross: 15.99, package_id: '555' };

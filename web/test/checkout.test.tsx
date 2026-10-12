@@ -3,7 +3,7 @@ import { screen, within } from '@testing-library/react';
 import { baseRoutes, callsTo, mockFetch, ORG, renderApp, signIn, status, text, until, where } from './harness';
 
 const PENDING_ORG = { ...ORG, organizations: { ...ORG.organizations, status: 'pending' } };
-const save = (plan: object) => localStorage.setItem('ace_plan', JSON.stringify({ v: 2, t: Date.now(), plan: { qty: 10, pkgs: {}, storeOn: false, domain: '', company: 'Acme sp. z o.o.', country: 'PL', vat: '1234567890', ...plan } }));
+const save = (plan: object) => localStorage.setItem('ace_plan', JSON.stringify({ v: 2, t: Date.now(), plan: { pallets: 10, pkgs: {}, storeOn: false, domain: '', company: 'Acme sp. z o.o.', country: 'PL', vat: '1234567890', ...plan } }));
 
 describe('checkout', () => {
   it('a visitor is asked to log in, and comes back to checkout', async () => {
@@ -15,7 +15,7 @@ describe('checkout', () => {
     expect(text()).toContain('Log in or create an account to continue.');
     await user.click(screen.getByRole('button', { name: 'Log in or create account' }));
     expect(left.to).toHaveBeenCalledWith('/login?next=%2Fapp%2Fcheckout');
-    expect(JSON.parse(localStorage.getItem('ace_plan')!).plan.qty).toBe(10);
+    expect(JSON.parse(localStorage.getItem('ace_plan')!).plan.pallets).toBe(10);
   });
 
   it('signs, then sends the plan, company and signature to Stripe checkout', async () => {
@@ -33,11 +33,11 @@ describe('checkout', () => {
     expect(where).toBe('/checkout/payment');
     const order = screen.getByRole('complementary', { name: 'Your order' });
     expect(within(order).getByText('VAT 23%')).toBeInTheDocument();
-    expect(text()).toContain('3 690 zł');   // 3 000 net + 23% VAT
+    expect(text()).toContain('431 zł');   // 350 net + 23% VAT
     await user.click(screen.getByRole('button', { name: 'Continue to secure payment' }));
     await until(() => expect(left.to).toHaveBeenCalledWith('https://checkout.stripe.com/c/pay/x'));
     const body = callsTo(calls, 'POST /functions/v1/create-checkout')[0].body;
-    expect(body).toEqual({ config: { m2: 10, pkgs: { imp: true }, storeOn: false, domain: '', tt: 'off', meta: 'off', marketOn: false }, company: 'Acme sp. z o.o.', country: 'PL', vatId: '1234567890', signName: 'Ola Nowak' });
+    expect(body).toEqual({ config: { pallets: 10, shelfM3: 0, pkgs: { imp: true }, storeOn: false, domain: '', tt: 'off', meta: 'off', marketOn: false }, company: 'Acme sp. z o.o.', country: 'PL', vatId: '1234567890', signName: 'Ola Nowak' });
   });
 
   it('opening the payment step directly still requires signing first', async () => {

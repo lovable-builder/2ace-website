@@ -71,7 +71,7 @@
     <li><b>Company</b>: country, tax ID, address, voivodeship, phone, Stripe customer id, join date.</li>
     <li><b>People</b>: members and their roles.</li>
     <li><b>Plan</b>: the current plan, monthly and one-time amounts, and history of earlier plans.</li>
-    <li><b>Shipping and fulfilment</b> (the box right under Plan): the customer's fulfilment mode (pay as you go for every customer with an active plan), their shipping markup, whether they may buy labels themselves, the most unpaid shipping they may have at once, and the labels waiting to be invoiced. An <b>admin</b> clicks <span class="ui">Edit</span> to change these. The mode override is for testing only; normally it follows the plan. The markup is added to the carrier's net price (empty = the default of 30%).</li>
+    <li><b>Shipping and fulfilment</b> (the box right under Plan): the customer's fulfilment mode (pay as you go for every customer with an active plan), their shipping markup, whether they may buy labels themselves, the most unpaid shipping they may have at once, and the labels waiting to be invoiced. An <b>admin</b> clicks <span class="ui">Edit</span> to change these. The mode override is for testing only; normally it follows the plan. The markup is added to the carrier's net price (empty = the default of 20%).</li>
     <li><b>Subscription</b>: Stripe subscription id, status and renewal date.</li>
     <li><b>Invoices</b>: loaded live from Stripe.</li>
     <li><b>Signed agreements</b>: who signed, which version, from which IP and when. Domain customers also have a "hostinger-domain-registration" row. Keep this evidence at least 3 years, as Hostinger requires.</li>
@@ -168,7 +168,7 @@
     <li>Assign a bin or pallet to a customer: click <span class="ui">Assign</span> and choose the customer. The Customer column shows the company.</li>
     <li>Tick the locations you want and click <span class="ui">Print labels</span> (allow pop-ups). Print the page and stick the barcodes on the shelves.</li>
   </ol>
-  <div class="ex"><b>Example</b><p>Acme's plan is 15 m². You mark out that space in the park as pallet slots, create <code>PAL-01</code> to <code>PAL-12</code> and assign each to Acme Home. The plan is sold by the square metre; the bins and pallet slots are how you lay that space out. Without doing this, Acme's goods would still go into an automatic bin called <code>ACMEHOME-01</code>.</p></div>
+  <div class="ex"><b>Example</b><p>Acme's plan is 12 pallet places and 2 m³ of shelf space. You create <code>PAL-01</code> to <code>PAL-12</code> as pallet slots and assign each to Acme Home, plus shelf bins for the 2 m³. The plan is sold by pallet place and m³ of shelf space; the bins and pallet slots are how you lay that space out. Without doing this, Acme's goods would still go into an automatic bin called <code>ACMEHOME-01</code>.</p></div>
   <div class="rule"><b>Rules</b>
     <p>A bin or pallet belongs to one customer at a time, and the database refuses to put another company's stock in it.</p>
     <p>A location holding stock cannot be released, reassigned or switched off. Move the stock first.</p>

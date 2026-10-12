@@ -1,9 +1,13 @@
 import { el, clear, table, statusPill, fmtDate, fmtDay, zl, field, kv, askReason, modal, toast } from './ui.js';
 
 const REASONS = ['Support request', 'Billing check', 'Domain order', 'Onboarding help', 'Data correction', 'Other'];
-// Storage is sold by the square metre. Plans bought earlier per bin (0.3 m²) or pallet (1.2 m²) are shown as their area.
-const planM2 = (c) => Number(c.m2 || 0);
-const planSummary = (c) => { if (!c) return '-'; const on = [ c.pkgs && c.pkgs.imp && 'import', c.storeOn && 'storefront'].filter(Boolean); return `${String(planM2(c)).replace(/\.0$/, '')} m²` + (on.length ? ' + ' + on.join(', ') : ''); };
+// Storage is sold as pallet places and shelf space (m³). Plans sold earlier by the m² are shown as their area.
+const storageText = (c) => {
+  const p = Number(c.pallets || 0), m = Number(c.shelfM3 || 0);
+  if (!p && !m) return `${String(Number(c.m2 || 0)).replace(/\.0$/, '')} m²`;
+  return [p ? `${p} pallet${p === 1 ? '' : 's'}` : '', m ? `${String(m).replace(/\.0$/, '')} m³ shelves` : ''].filter(Boolean).join(' + ');
+};
+const planSummary = (c) => { if (!c) return '-'; const on = [ c.pkgs && c.pkgs.imp && 'import', c.storeOn && 'storefront'].filter(Boolean); return storageText(c) + (on.length ? ' + ' + on.join(', ') : ''); };
 
 export async function render(ctx, root, params) {
   if (params && params[0]) return detail(ctx, root, params[0]);
