@@ -1,11 +1,11 @@
 // What a plan costs, shown live while it is built. Whole PLN, net of VAT. The server prices it again
 // (supabase/functions/_shared/pricing.ts) and that is what is charged: keep the two in step.
 // Storage is sold as pallet places and shelf space, at or below the Polish market: 35 zł a month per pallet place and per m³ of
-// shelf space, no monthly minimum. Old plans were sold by the m² (300 zł per m²) and keep that price (`m2` in their config).
-export const STORAGE = { pallet: 35, shelf: 35, maxPallets: 500, maxShelf: 500, legacyPerM2: 300 };
+// shelf space, no monthly minimum.
+export const STORAGE = { pallet: 35, shelf: 35, maxPallets: 500, maxShelf: 500 };
 
 export type Pkgs = { imp?: boolean };
-export type PlanConfig = { pallets?: number; shelfM3?: number; m2?: number; pkgs?: Pkgs; storeOn?: boolean; domain?: string; tt?: string; meta?: string; marketOn?: boolean };
+export type PlanConfig = { pallets?: number; shelfM3?: number; pkgs?: Pkgs; storeOn?: boolean; domain?: string; tt?: string; meta?: string; marketOn?: boolean };
 export type PlanInput = { pallets: number; shelf: number; pkgs: Pkgs; storeOn: boolean; domain: string; marketOn: boolean };
 
 // The words on the price lines below, translated where they are shown.
@@ -31,17 +31,13 @@ export const mkRange = () => { const r = MK_CATS.map((c) => c.rate); return Math
 export const STOREFRONT = { monthly: 199, once: 2950 };
 
 const half = (n: number) => Math.round(n * 2) / 2;
-// The storage a saved plan reserves. An old plan sold by the m² has only `legacyM2`.
+// The storage a saved plan reserves.
 export function planStorage(c: PlanConfig | null | undefined) {
   const pallets = Math.max(0, Math.round(Number(c?.pallets) || 0)), shelf = Math.max(0, half(Number(c?.shelfM3) || 0));
-  const legacyM2 = !pallets && !shelf && Number(c?.m2) > 0 ? Math.round(Number(c?.m2) * 10) / 10 : null;
-  return { pallets, shelf, legacyM2 };
+  return { pallets, shelf };
 }
-// What a plan being changed starts from: an old m² plan becomes the pallet places that area held (a pallet took 1.2 m²).
-export function startingStorage(c: PlanConfig | null | undefined) {
-  const s = planStorage(c);
-  return s.legacyM2 !== null ? { pallets: Math.max(1, Math.round(s.legacyM2 / 1.2)), shelf: 0 } : { pallets: s.pallets, shelf: s.shelf };
-}
+// What a plan being changed starts from.
+export const startingStorage = planStorage;
 
 export function pricing(p: PlanInput) {
   const lines: PriceLine[] = [];

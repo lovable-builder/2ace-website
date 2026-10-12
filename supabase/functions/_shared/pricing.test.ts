@@ -1,5 +1,5 @@
 // deno test supabase/functions/_shared/pricing.test.ts
-import { priceConfig, storageOf, comparePlans, fmtNum, PALLET_PRICE, SHELF_M3_PRICE, LEGACY_PRICE_PER_M2, type PlanConfig } from './pricing.ts';
+import { priceConfig, storageOf, comparePlans, fmtNum, PALLET_PRICE, SHELF_M3_PRICE, type PlanConfig } from './pricing.ts';
 const eq = (a: unknown, b: unknown, m: string) => { if (JSON.stringify(a) !== JSON.stringify(b)) throw new Error(`${m}: expected ${JSON.stringify(b)}, got ${JSON.stringify(a)}`); };
 const ok = (c: unknown, m: string) => { if (!c) throw new Error(m); };
 const bad = (c: unknown, re: RegExp, m: string) => { try { priceConfig(c as PlanConfig); } catch (e) { ok(re.test((e as Error).message), `${m}: ${(e as Error).message}`); return; } throw new Error(m + ': should have thrown'); };
@@ -12,11 +12,8 @@ Deno.test('storage is 35 zł per pallet place and 35 zł per m³ of shelf space'
   eq(priceConfig({ shelfM3: 2.5, pkgs: {} }).lines[0], { label: 'Storage (2.5 m³ shelf space)', monthly: 88, once: 0 }, 'shelves only, half m³ rounds to whole zł');
   eq(priceConfig({ pallets: 500, shelfM3: 500, pkgs: {} }).monthly, 35000, 'the largest');
 });
-Deno.test('a plan bought per m² keeps exactly its price', () => {
-  eq(LEGACY_PRICE_PER_M2, 300, 'old rate');
-  eq(priceConfig({ m2: 12, pkgs: {} }).lines[0], { label: 'Storage (12 m²)', monthly: 3600, once: 0 }, 'twelve square metres');
-  eq(priceConfig({ m2: 7.46, pkgs: {} }).monthly, 2250, '7.5 m² costs 2250');
-  eq(storageOf({ m2: 5, pallets: 2, pkgs: {} }), { pallets: 2, shelfM3: 0, legacyM2: null }, 'a new choice replaces the old area');
+Deno.test('a plan with no pallets or shelf space, or an old per-m² plan, is refused', () => {
+  for (const c of [{ pkgs: {} }, { m2: 12, pkgs: {} }, { pallets: 0, shelfM3: 0, pkgs: {} }] as never[]) { let err = ''; try { priceConfig(c); } catch (e) { err = (e as Error).message; } eq(err, 'choose some storage', 'refused'); }
 });
 Deno.test('the other services are unchanged', () => {
   const p = priceConfig({ pallets: 4, pkgs: {}, storeOn: true, tt: 'managed', meta: 'setup' });

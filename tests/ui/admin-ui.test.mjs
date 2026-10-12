@@ -29,7 +29,7 @@ DB.__rpc = { admin_customers: [
   { org_id: 'o2', name: 'Beta GmbH', country: 'DE', status: 'past_due', created_at: '2026-10-02T10:00:00Z', owner_name: 'Bernd', owner_email: 'bernd@beta.de', monthly_pln: 900, plan_status: 'active', sub_status: 'past_due', domain: null, open_requests: 0 }] };
 DB.members = [{ org_id: 'o1', user_id: 'u1', role: 'owner' }];
 DB.profiles = [{ user_id: 'u1', full_name: 'Anna Kowalska', email: 'anna@acme.pl', phone: '+48600100200' }];
-DB.plans = [{ id: 'p1', org_id: 'o1', status: 'active', monthly_pln: 4320, once_pln: 0, created_at: '2026-10-01T10:00:00Z', config: { m2: 14.4, pkgs: {}, storeOn: true } }];
+DB.plans = [{ id: 'p1', org_id: 'o1', status: 'active', monthly_pln: 420, once_pln: 0, created_at: '2026-10-01T10:00:00Z', config: { pallets: 10, shelfM3: 2, pkgs: {}, storeOn: true } }];
 DB.subscriptions = [{ org_id: 'o1', stripe_subscription_id: 'sub_1', status: 'active', current_period_end: '2026-11-01T00:00:00Z', updated_at: '2026-10-01' }];
 DB.agreements = [{ org_id: 'o1', signer_name: 'Anna Kowalska', version: '2026-10-v1', ip: '1.2.3.4', signed_at: '2026-10-01T10:00:00Z' }];
 DB.domain_orders = [
@@ -58,7 +58,7 @@ document.body.innerHTML = '<div id="root"></div>'; calls.length = 0; c = mkCtx('
 const noReason = await modalClick('Continue'); ok('opening a customer asks for a reason first', noReason && /Please give a reason/.test(document.querySelector('.modal')?.textContent || ''));
 await modalClick('Continue', (m) => { m.querySelector('select').value = 'Support request'; }); await p; await tick(50);
 ok('reason is sent to the audit endpoint', calls.some((x) => x[0] === 'viewas.start' && x[1].org_id === 'o1' && /Support request/.test(x[1].reason)), JSON.stringify(calls[0]));
-ok('detail shows company, owner, plan, agreement', /Prosta 1/.test(text()) && /Anna Kowalska/.test(text()) && /14\.4 m² \+ storefront/.test(text()) && /2026-10-v1/.test(text()), text().slice(0, 140));
+ok('detail shows company, owner, plan, agreement', /Prosta 1/.test(text()) && /Anna Kowalska/.test(text()) && /10 pallets \+ 2 m³ shelves \+ storefront/.test(text()) && /2026-10-v1/.test(text()), text().slice(0, 140));
 ok('support cannot change customer status', !/Change status/.test(text()));
 calls.length = 0; await mods.customers.render(c, root(), ['o1']); await tick(50); ok('reason asked only once per customer per session', !document.querySelector('.modal') && !calls.some((x) => x[0] === 'viewas.start'));
 c = mkCtx('admin'); c.session['opened:o1'] = true; await mods.customers.render(c, root(), ['o1']); await tick(50); ok('admin sees Change status', /Change status/.test(text()));

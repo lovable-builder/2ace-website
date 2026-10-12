@@ -126,14 +126,14 @@ describe('changing an active plan', () => {
         if (!c.body.preview) { applied = true; return { kind: 'upgrade', newMonthly: 3600, delta: 600, todayEstimate: 300 }; }
         return c.body.config.pallets === 12 ? { kind: 'upgrade', newMonthly: 3600, delta: 600, todayEstimate: 300 } : { kind: 'downgrade', newMonthly: 2700, delta: -300, todayEstimate: -150 };
       },
-      'GET /rest/v1/plans': () => [applied ? { ...{ config: { pallets: 12 }, monthly_pln: 420 } } : { config: { m2: 12, pkgs: {} }, monthly_pln: 3600 }],
+      'GET /rest/v1/plans': () => [applied ? { ...{ config: { pallets: 12 }, monthly_pln: 420 } } : { config: { pallets: 10, pkgs: {} }, monthly_pln: 350 }],
     });
     const { user } = renderApp('/plan?change=1');
     await until(() => expect(text()).toContain('Changing your plan.'));
-    expect(screen.getByRole('spinbutton', { name: 'Pallet places' })).toHaveValue(10);   // the old 12 m² plan, as pallet places
+    expect(screen.getByRole('spinbutton', { name: 'Pallet places' })).toHaveValue(10);   // the current plan
     expect(screen.getByRole('spinbutton', { name: 'Shelf space (m³)' })).toHaveValue(0);
     fireEvent.change(screen.getByRole('spinbutton', { name: 'Pallet places' }), { target: { value: '12' } });
-    expect(text()).toContain('Downgrade −3 180 zł');
+    expect(text()).toContain('Upgrade +70 zł');
     await user.click(screen.getByRole('link', { name: /04\s*Review/ }));
     await until(() => expect(screen.getAllByRole('button', { name: 'Confirm upgrade' })[0]).toBeInTheDocument());
     const previews = () => callsTo(calls, 'POST /functions/v1/change-plan').filter((c) => c.body.preview);

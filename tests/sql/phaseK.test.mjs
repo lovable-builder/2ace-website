@@ -106,7 +106,7 @@ ok('a customer cannot announce a return for another company', !!(await call(ua, 
 ok('members read their returns and lines, other companies see nothing, staff see all, visitors nothing', (await call(ua, 'aal1', `select count(*)::int n from public.returns`)).rows[0].n >= 3 && (await call(ub, 'aal1', `select count(*)::int n from public.returns`)).rows[0].n === 0 && (await W(`select count(*)::int n from public.return_lines`)).rows[0].n >= 3 && ((await asAnon(`select count(*)::int n from public.returns`)).rows?.[0]?.n ?? 0) === 0);
 ok('nobody can write the tables directly', !!(await call(ua, 'aal1', `update public.returns set status='graded'`)).err && !!(await call(admin, 'aal2', `delete from public.returns`)).err);
 await setOrg({ mode: 'payg' }); const Rp = (await mkRet(await shipped(), {}, [{ product_id: S1, qty: 1 }])).rows[0].r; ok('a customer on pay as you go for returns gets fee_mode payg, stamped when announced', Rp.fee_mode === 'payg'); await setOrg({});
-await direct(`insert into public.plans (org_id, config, monthly_pln, once_pln, status) values ($1,'{"m2":5,"pkgs":{"retp":true}}'::jsonb,1500,0,'active')`, [orgA]);
+await direct(`insert into public.plans (org_id, config, monthly_pln, once_pln, status) values ($1,'{"pallets":2,"pkgs":{"retp":true}}'::jsonb,1500,0,'active')`, [orgA]);
 const Rq = (await mkRet(await shipped(), {}, [{ product_id: S1, qty: 1 }])).rows[0].r; ok('a plan with Returns as you go does the same', Rq.fee_mode === 'payg'); await direct(`update public.plans set status='canceled' where org_id=$1`, [orgA]);
 
 // ---- cancelling ----

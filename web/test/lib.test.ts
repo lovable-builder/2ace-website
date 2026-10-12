@@ -35,7 +35,7 @@ describe('pricing (must match supabase/functions/_shared/pricing.ts)', () => {
   });
   it('storage is 35 zł per pallet place and 35 zł per m³ of shelf space, at or below the market', () => {
     for (const [pallets, shelf, price] of [[1, 0, 35], [0, 1, 35], [10, 4, 490], [0, 2.5, 88], [500, 500, 35000]]) expect(pricing(plan({ pallets, shelf })).monthly).toBe(price);
-    expect(STORAGE).toEqual({ pallet: 35, shelf: 35, maxPallets: 500, maxShelf: 500, legacyPerM2: 300 });
+    expect(STORAGE).toEqual({ pallet: 35, shelf: 35, maxPallets: 500, maxShelf: 500 });
     expect(pricing(plan({ pallets: 3, shelf: 0 })).lines).toHaveLength(1);
   });
   it('import & customs is quoted per shipment: it adds nothing monthly', () => {
@@ -52,11 +52,9 @@ describe('pricing (must match supabase/functions/_shared/pricing.ts)', () => {
     expect(p.monthly).toBe(245); expect(p.lines[2]).toMatchObject({ commission: true });
     expect(mkRange()).toBe('3.6–9.2%');
   });
-  it('a saved plan is read as pallets and shelf m³; an old m² plan is shown as its area and changes into pallet places', () => {
-    expect(planStorage({ pallets: 3, shelfM3: 1.5 })).toEqual({ pallets: 3, shelf: 1.5, legacyM2: null });
-    expect(planStorage({ m2: 14.4 })).toEqual({ pallets: 0, shelf: 0, legacyM2: 14.4 });
-    expect(planStorage(null)).toEqual({ pallets: 0, shelf: 0, legacyM2: null });
-    expect(startingStorage({ m2: 12 })).toEqual({ pallets: 10, shelf: 0 });
+  it('a saved plan is read as pallets and shelf m³', () => {
+    expect(planStorage({ pallets: 3, shelfM3: 1.5 })).toEqual({ pallets: 3, shelf: 1.5 });
+    expect(planStorage(null)).toEqual({ pallets: 0, shelf: 0 });
     expect(startingStorage({ pallets: 2, shelfM3: 3 })).toEqual({ pallets: 2, shelf: 3 });
   });
   it('the estimator puts small items on shelves and the rest on pallets, never below the minimum', () => {
@@ -121,11 +119,6 @@ describe('the saved plan', () => {
     const raw = JSON.parse(localStorage.getItem('ace_plan')!);
     expect(raw.v).toBe(2); expect(raw.plan.pallets).toBe(6);
     expect(restorePlan()).toEqual({ pallets: 6, shelf: 1.5, pkgs: { imp: true }, storeOn: true, domain: 'acme', company: 'Acme', country: 'PL', vat: '1234567890' });
-  });
-  it('reads a plan saved before storage was sold by the pallet: its m² become pallet places', () => {
-    localStorage.setItem('ace_plan', JSON.stringify({ v: 2, t: Date.now(), plan: { qty: 9, orders: 1500, pkgs: {}, storeOn: false, domain: '', tt: 'off', meta: 'off', marketOn: false, company: 'X', country: 'DE', vat: '', step: 2 } }));
-    const r = restorePlan();
-    expect(r).toMatchObject({ pallets: 8, company: 'X', country: 'DE' }); expect(r.qty).toBeUndefined();
   });
   it('drops absurd amounts, and forgets a plan older than a day', () => {
     savePlan({ pallets: 5000, shelf: -1 }); expect(restorePlan().pallets).toBeUndefined(); expect(restorePlan().shelf).toBeUndefined();
