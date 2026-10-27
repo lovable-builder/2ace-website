@@ -75,5 +75,5 @@ where the English version is the binding one. `/admin` and `/scan` stay in Engli
 
 ## The new customer app
 
-Built from `web/` into `app/`, served at `/app/`. See `web/README.md`. It replaced the old plan builder (`platform.html`, deleted):
+Built from `web/` into `app/`, served at `/app/`. See `web/README.md`. Self-service plans and public prices are switched off (pricing on request, customers added in the admin panel): `SELF_SERVE_PRICING` in `scripts/features.mjs` for the website and guides, `selfServe` in `config.js` for the app. See the owner guide, "Pricing on request: the switch". It replaced the old plan builder (`platform.html`, deleted):
 `/platform` redirects to `/app/` with its query string, so Stripe's return links and older emails still land on the right screen.

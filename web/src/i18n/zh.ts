@@ -641,4 +641,13 @@ export const zh: Record<string, string> = {
   "{n} pallet places at {price} each": "{n} 个托盘位，每个 {price}",
   "{pallets} pallet places · {shelf} m³ shelf space": "{pallets} 个托盘位 · {shelf} 立方米货架空间",
   "{pallet} a month per pallet place, {shelf} per m³ of shelf space. At or below the market, no monthly minimum. Change it any month.": "每个托盘位每月 {pallet}，货架空间每立方米 {shelf}。价格不高于市场水平，无每月最低消费。每月均可调整。",
+  "A .pl storefront": "一个 .pl 网店",
+  "Charged per use, as agreed": "按使用量收费，按约定执行",
+  "Notes": "备注",
+  "Questions about your service or its prices? Write to hello@2ace.pl.": "对您的服务或价格有疑问？请写信至 hello@2ace.pl。",
+  "Shipping is not set up for your account yet. Please contact us.": "您的账户尚未开通发货功能。请联系我们。",
+  "We can design, host and connect a Polish web store to your stock. Tell us what you need and we quote it for your case.": "我们可以为您设计、托管并把波兰网店与您的库存连接起来。请告诉我们您的需求，我们会根据您的情况报价。",
+  "Your buyer sends goods back to our warehouse. You announce the return here, issue the return label yourself, and we inspect, grade and restock within 48 hours. Fees are charged as agreed with you, on your monthly invoice.": "您的买家会把货物退回我们的仓库。您在这里登记退货并自行生成退货面单，我们会在 48 小时内检验、评级并重新上架。费用按与您的约定计算，列在您的月度发票上。",
+  "Your service": "您的服务",
+  "Your service is live.": "您的服务已开通。",
 };

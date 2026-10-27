@@ -29,7 +29,8 @@ async function productFor(label: string): Promise<string> {
 
 // Two configs are "the same plan" only if every choice matches. Market (a commission per sale) and Import & customs (quoted per shipment)
 // carry no monthly price, so adding or removing them changes the plan without changing the price.
-const sig = (c: PlanConfig) => JSON.stringify([storageOf(c),  !!c.pkgs?.imp, !!c.storeOn, !!c.marketOn, c.tt ?? 'off', c.meta ?? 'off']);
+const sig = (c: PlanConfig) => { try { return sigOf(c); } catch { return 'unreadable'; } };   // a saved plan that names no pallets or shelf space can be replaced, never priced
+const sigOf = (c: PlanConfig) => JSON.stringify([storageOf(c),  !!c.pkgs?.imp, !!c.storeOn, !!c.marketOn, c.tt ?? 'off', c.meta ?? 'off']);
 
 Deno.serve(withMonitoring('change-plan', async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders(req) });
@@ -62,7 +63,7 @@ Deno.serve(withMonitoring('change-plan', async (req) => {
   const start = sub.current_period_start ?? item0?.current_period_start ?? Math.floor(Date.now() / 1000) - 15 * 86400;
   const end = sub.current_period_end ?? item0?.current_period_end ?? start + 30 * 86400;
   // Setup fees are only charged for newly added services, not for ones the customer already pays for.
-  const prevOnce = priceConfig(plan.config as PlanConfig).once;
+  const prevOnce = (() => { try { return priceConfig(plan.config as PlanConfig).once; } catch { return 0; } })();
   const onceToCharge = Math.max(0, next.once - prevOnce);
   const est = prorate(delta, onceToCharge, Math.floor(Date.now() / 1000), start, end);
 

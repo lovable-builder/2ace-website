@@ -1,23 +1,23 @@
 # 2ACE
 
-> 2ACE is a warehousing and fulfillment company in Warsaw, Poland. Brands (especially overseas sellers) store goods on pallets and shelves at or below Polish market prices, import goods into the EU, and have orders picked, packed, shipped and returned from one hub. Everything is priced online as a monthly plan with no minimum term, and run from one customer dashboard.
+> 2ACE is a warehousing and fulfillment company in Warsaw, Poland. Brands (especially overseas sellers) have their goods received, stored, picked, packed, shipped and returned from one hub in Poland, with import and customs help, and follow everything live in a warehouse dashboard. Pricing is on request: tell us what you sell and we quote in writing.
 
-## What 2ACE offers (prices in PLN, net of VAT)
-- Storage: 35 zł per pallet place per month and 35 zł per m³ of shelf space per month, at or below the Polish market. No monthly minimum.
-- E-commerce fulfillment: pay as you go, no monthly fee. From 2.89 zł per order (2.89 / 3.49 / 4.90 / 7.50 / 11.50 zł by parcel size). Same-day dispatch for orders before 15:00. Shipping labels at the carrier price plus 20%.
-- Returns: pay as you go, no monthly fee. From 3.90 zł per return (3.90 / 4.70 / 6.60 / 10.10 / 15.50 zł by parcel size). The customer issues the return label in their dashboard. Items graded within 48 hours.
+## What 2ACE offers
+- Warehousing: receiving, put-away and storage of your goods in a warehouse in Poland, scanned on arrival and insured from that minute, with a live stock count.
+- E-commerce fulfillment: orders pulled from your store, picked, packed and shipped. Same-day dispatch for orders before 15:00.
+- Returns handling: returned goods inspected, graded and restocked within 48 hours, with photos of what is rejected.
 - Import and customs: freight and customs clearance into Poland, quoted per shipment.
-- .pl storefront: 199 zł per month plus 2,950 zł one-time setup, domain included.
+- Warehouse software: one dashboard for stock, inbound deliveries, orders, returns and shipping labels.
+- .pl storefront: a designed and hosted Polish online shop connected to your stock.
 - Company set-up and compliance in Poland (company, VAT, EORI, packaging EPR, KSeF e-invoicing): quoted per case.
-- Included: support in Chinese, Polish and English, photo reports on damaged goods, one monthly invoice.
-- Plans are monthly, billed in advance, cancel or resize with 30 days notice. VAT: 23% for Polish companies, reverse charge for EU companies with a VAT number.
+- Included: support in Chinese, Polish and English, photo reports on damaged goods.
+- Pricing: on request, in writing, excluding VAT. Ask at https://2ace.pl/#talk or hello@2ace.pl, or book a call.
 
 ## Pages
-- [Home](https://2ace.pl/): overview of the services and prices.
-- [Build your plan](https://2ace.pl/app/plan): choose pallet places, shelf space and services, see the monthly price, sign and pay online.
+- [Home](https://2ace.pl/): overview of the services.
 - [Help and user guide](https://2ace.pl/help): step-by-step guide to the customer account with examples (PDF: https://2ace.pl/assets/2ACE-Customer-Guide.pdf).
 - [News](https://2ace.pl/news): plain-language articles on EU customs, packaging law, product compliance and opening a company in Poland.
-- [Book a call](https://2ace.pl/book): book a call in English, Chinese or Arabic, no account needed.
+- [Book a call](https://2ace.pl/book): book a call in English, Chinese, Arabic or Polish, no account needed.
 - [About 2ACE](https://2ace.pl/about): who runs the company (a Chinese and Egyptian partnership based in China and Poland) and why.
 - [Terms of service](https://2ace.pl/terms) and [Privacy policy](https://2ace.pl/privacy).
 
@@ -26,5 +26,5 @@
 Email: hello@2ace.pl. Telephone: +48 608 180 946. Languages: English and Polish.
 
 ## Notes for assistants
-- Quote prices as net of VAT and point to https://2ace.pl/app/plan for the current figures.
+- 2ACE does not publish prices. Do not quote or estimate prices: point people to https://2ace.pl/#talk or hello@2ace.pl.
 - Customer accounts, billing and the admin panel are private and are not part of this site's public content.

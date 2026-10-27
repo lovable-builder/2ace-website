@@ -25,7 +25,7 @@ Deno.test('nonsense amounts and plans with no storage are refused', () => {
   bad({ pallets: 0, shelfM3: 0, pkgs: {} }, /choose some storage/, 'nothing'); bad({ pkgs: {} }, /choose some storage/, 'nothing given');
   bad({ pallets: 1.5, pkgs: {} }, /invalid pallets/, 'half a pallet'); bad({ pallets: -1, pkgs: {} }, /invalid pallets/, 'negative'); bad({ pallets: 501, pkgs: {} }, /invalid pallets/, 'too many');
   bad({ shelfM3: -2, pkgs: {} }, /invalid shelf/, 'negative shelves'); bad({ shelfM3: 'ten', pkgs: {} }, /invalid shelf/, 'text'); bad({ shelfM3: 0.2, pkgs: {} }, /choose some storage/, 'rounds to nothing');
-  bad({ m2: 0.5, pkgs: {} }, /invalid m2/, 'old plan, half a metre'); bad({ m2: 2001, pkgs: {} }, /invalid m2/, 'old plan, too big');
+  bad({ m2: 12, pkgs: {} }, /choose some storage/, 'an old per-m² plan is not priced');
 });
 Deno.test('shelf space is kept to half m³, and numbers format without a trailing .0', () => {
   eq(storageOf({ shelfM3: 3.3, pkgs: {} }).shelfM3, 3.5, 'half steps'); eq([fmtNum(12), fmtNum(14.5), fmtNum(0.5)], ['12', '14.5', '0.5'], 'format');

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { selfServe } from '../../lib/flags';
 import { useT } from '../../i18n';
 import { useAccount } from '../../state/account';
 import { useWarehouse, type Order } from '../../state/warehouse';
@@ -125,7 +126,7 @@ export function OrderShipping({ order }: { order: Order }) {
   const canBuy = !!caps?.buy_label;
   const intro = busy && !caps ? t('Checking…') : !caps ? '' : caps.mode === 'payg'
     ? (caps.buy_label ? t('You prepare the label yourself: buy it here with 2ACE, or add your own.') : t('You prepare the label yourself. Buying a label with 2ACE is coming soon; for now, add your own label here.'))
-    : t('Your plan does not include fulfilment, so we do not ship orders for you. Add Fulfilment to your plan to use this.');
+    : selfServe() ? t('Your plan does not include fulfilment, so we do not ship orders for you. Add Fulfilment to your plan to use this.') : t('Shipping is not set up for your account yet. Please contact us.');
 
   return (
     <div className="panel" aria-label={t('How is this order shipped?')}>

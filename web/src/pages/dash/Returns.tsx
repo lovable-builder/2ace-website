@@ -9,6 +9,7 @@ import { tariffText, useTariff } from '../../lib/tariff';
 import { ErrLine, Field, Note } from '../../ui';
 import { boughtText, OfferRow, offersNote, parcelBody, parcelComplete, ParcelFields, type Offer, type ParcelInput } from './shared';
 import { leave } from '../../lib/nav';
+import { selfServe } from '../../lib/flags';
 
 // i18n
 const STATUS: Record<string, [string, string]> = {
@@ -73,7 +74,9 @@ export function Returns() {
         <h1 className="h1">{t('Returns')}</h1>
         <button className={'btn' + (open ? ' ghost' : '')} onClick={() => { setOpen(!open); reset(); }}>{open ? t('Cancel') : t('New return')}</button>
       </div>
-      <p className="small">{t('Your buyer sends goods back to our warehouse. You announce the return here, issue the return label yourself (the carrier price plus a small fee, on your invoice), and we inspect, grade and restock within 48 hours. Returns are pay as you go: {fee}, on your monthly invoice.', { fee: tariffText(tariff, 'return', t) })}</p>
+      {selfServe() ? (
+        <p className="small">{t('Your buyer sends goods back to our warehouse. You announce the return here, issue the return label yourself (the carrier price plus a small fee, on your invoice), and we inspect, grade and restock within 48 hours. Returns are pay as you go: {fee}, on your monthly invoice.', { fee: tariffText(tariff, 'return', t) })}</p>
+      ) : <p className="small">{t('Your buyer sends goods back to our warehouse. You announce the return here, issue the return label yourself, and we inspect, grade and restock within 48 hours. Fees are charged as agreed with you, on your monthly invoice.')}</p>}
       <Note text={w.note} onClear={() => w.setNote('')} />
       <ErrLine text={w.err} />
       {open ? (

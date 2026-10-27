@@ -109,4 +109,33 @@ calls.length = 0; await modalClick('Save', (m) => { m.querySelector('select').va
 const sv = calls.find((x) => x[0] === 'org.setShipping');
 ok('saving sends the whole patch: the mode override cleared, the markup back to default, the caps and the switch', sv && sv[1].org_id === 'o1' && sv[1].patch.fulfil_mode_override === '' && sv[1].patch.markup_percent === '' && sv[1].patch.exposure_cap_net === 300 && sv[1].patch.daily_label_cap === 8 && sv[1].patch.label_buying_enabled === false, JSON.stringify(sv));
 
+// ---- adding a customer (customers are created here, there is no self-service sign-up) ----
+document.body.innerHTML = '<div id="root"></div>'; calls.length = 0;
+c = mkCtx('support'); await mods.customers.render(c, root(), undefined); await tick(); ok('support cannot add a customer', ![...document.querySelectorAll('button')].some((b) => b.textContent === 'Add customer'));
+document.body.innerHTML = '<div id="root"></div>'; c = mkCtx('admin'); await mods.customers.render(c, root(), undefined); await tick();
+ok('the list says Service (not Plan) and shows a managed service without a price', /Service/.test(text()) && !/\bPlan\b/.test(root().querySelector('thead').textContent));
+[...document.querySelectorAll('button')].find((b) => b.textContent === 'Add customer').click(); await tick();
+{ const m = document.querySelector('.modal'); const i = m.querySelectorAll('input'), t = m.querySelector('textarea');
+  ok('the form asks for company, contact, email, country, VAT, phone and a note', i.length === 6 && !!t && /invitation|chooses a password/i.test(m.textContent));
+  i[0].value = 'Gamma Ltd'; i[1].value = 'Wei Chen'; i[2].value = 'wei@gamma.cn'; i[3].value = 'cn'; i[4].value = ''; i[5].value = ''; t.value = 'Pick and pack, 24 h cut-off';
+  c.api = async (a, pl) => { calls.push([a, pl]); return { ok: true, org_id: 'o9' }; };
+  const go = [...m.querySelectorAll('button')].find((b) => /Create and send invitation/.test(b.textContent)); calls.length = 0; go.click(); await tick(60);
+  const cr = calls.find((x) => x[0] === 'customer.create');
+  ok('submitting sends the details to the server and opens the new customer', cr && cr[1].company === 'Gamma Ltd' && cr[1].email === 'wei@gamma.cn' && cr[1].country === 'cn' && cr[1].note === 'Pick and pack, 24 h cut-off' && c.session['opened:o9'] === true, JSON.stringify(cr)); }
+// a server refusal is shown in the form and the form stays open
+document.body.innerHTML = '<div id="root"></div>'; c = mkCtx('admin'); await mods.customers.render(c, root(), undefined); await tick();
+[...document.querySelectorAll('button')].find((b) => b.textContent === 'Add customer').click(); await tick();
+{ c.api = async () => { throw new Error('This email already has an account.'); }; const m = document.querySelector('.modal'); [...m.querySelectorAll('button')].find((b) => /Create and send invitation/.test(b.textContent)).click(); await tick(60);
+  ok('an error from the server is shown and the form stays open', /already has an account/.test(document.querySelector('.modal').textContent)); document.querySelector('.modal .x').click(); }
+// a managed customer: the service card shows the note, no prices, and an admin can edit the note
+DB.plans = [{ id: 'p9', org_id: 'o1', status: 'active', monthly_pln: 0, once_pln: 0, created_at: '2026-10-01T10:00:00Z', config: { service: 'managed', note: 'Pick and pack, 24 h cut-off' } }];
+document.body.innerHTML = '<div id="root"></div>'; c = mkCtx('admin'); c.session['opened:o1'] = true; await mods.customers.render(c, root(), ['o1']); await tick(50);
+ok('a managed customer shows "Service" with the note and no monthly price', /Service/.test(text()) && /Managed service: Pick and pack, 24 h cut-off/.test(text()) && !/Setup \(one-time\)/.test(text()));
+calls.length = 0; c.api = async (a, pl) => { calls.push([a, pl]); return { ok: true }; };
+[...document.querySelectorAll('button')].find((b) => b.textContent === 'Edit service note').click(); await tick();
+{ const m = document.querySelector('.modal'); m.querySelector('textarea').value = 'Pick, pack and returns'; [...m.querySelectorAll('button')].find((b) => b.textContent === 'Save').click(); await tick(60);
+  const sv2 = calls.find((x) => x[0] === 'customer.setService'); ok('saving the note sends it for that customer', sv2 && sv2[1].org_id === 'o1' && sv2[1].note === 'Pick, pack and returns', JSON.stringify(sv2)); }
+c = mkCtx('support'); c.session['opened:o1'] = true; document.body.innerHTML = '<div id="root"></div>'; await mods.customers.render(c, root(), ['o1']); await tick(50);
+ok('support sees the service but cannot edit the note', /Managed service/.test(text()) && ![...document.querySelectorAll('button')].some((b) => b.textContent === 'Edit service note'));
+
 console.log(`\n${pass} passed, ${fail} failed`); process.exit(fail ? 1 : 0);

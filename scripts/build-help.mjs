@@ -4,8 +4,10 @@
 // Run: node scripts/build-help.mjs   (the news build is separate)
 import fs from 'node:fs';
 import { iconTags, socialTags } from './seo-head.mjs';
+import { variant } from './help-variant.mjs';
+import { SELF_SERVE_PRICING } from './features.mjs';
 const read = (f) => fs.readFileSync(new URL('../content/help/' + f, import.meta.url), 'utf8');
-const css = read('help.css'), customer = read('customer.html'), staff = read('staff.html'), owner = read('owner.html');
+const css = read('help.css'), customer = variant(read('customer.html')), staff = read('staff.html'), owner = read('owner.html');
 const SITE = 'https://2ace.pl';
 const LEGAL = '2ACE sp. z o.o. · ul. Ostrobramska 101A lok. 301, 04-041 Warszawa · NIP 1133212948 · REGON 545746743 · KRS 0001267111 · hello@2ace.pl · +48 608 180 946';
 const fonts = `<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@100,800&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">`;
@@ -28,10 +30,10 @@ const cols = (label, body) => `<div class="cols"><nav class="toc" id="toc" data-
 const head = (title, desc, extraHead = '') => `<!DOCTYPE html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><title>${title}</title><meta name="description" content="${desc}">${extraHead}${fonts}<style>${css}${extra}</style></head>`;
 
 // ---- public customer guide ----
-const HELP_DESC = 'Step-by-step guide to your 2ACE account: build a plan, add products, book a delivery, read inventory, change your plan and get a domain, with examples.';
+const HELP_DESC = SELF_SERVE_PRICING ? 'Step-by-step guide to your 2ACE account: build a plan, add products, book a delivery, read inventory, change your plan and get a domain, with examples.' : 'Step-by-step guide to your 2ACE account: get started, add products, book a delivery, place orders, ship, handle returns and read your inventory, with examples.';
 const pub = head('Help and user guide | 2ACE', HELP_DESC, iconTags() + socialTags({ title: 'Help and user guide | 2ACE', desc: HELP_DESC, url: '/help' }) + '<script src="/assets/i18n.js"></script>') + `
 <body>
-<header class="top"><a class="brand" href="/">2ACE<small>Help</small></a><nav class="sitenav"><a href="/about">About</a><a href="/book">Book a call</a><a href="/news">News</a><a href="/app/plan">Build your plan</a><a href="/login">Log in</a></nav></header>
+<header class="top"><a class="brand" href="/">2ACE<small>Help</small></a><nav class="sitenav"><a href="/about">About</a><a href="/book">Book a call</a><a href="/news">News</a>${SELF_SERVE_PRICING ? '<a href="/app/plan">Build your plan</a>' : '<a href="/#talk">Request pricing</a>'}<a href="/login">Log in</a></nav></header>
 <div class="wrap">
 <div class="hero"><h1>How to use your 2ACE account, with an example for every step.</h1>
 <p>From creating your account to booking a delivery and reading your stock. The examples follow one made-up company, Acme Home Sp. z o.o., so you can see each step with real numbers. Stuck on something? Write to <a href="mailto:hello@2ace.pl">hello@2ace.pl</a> or call <a href="tel:+48608180946">+48 608 180 946</a>.</p>

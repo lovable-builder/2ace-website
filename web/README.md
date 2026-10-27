@@ -4,6 +4,8 @@ The plan builder, checkout and customer dashboard as a React + TypeScript app bu
 (a design-tool export that compiled JSX in the visitor's browser, now deleted) and talks to the same Supabase tables, database functions
 and Edge Functions, with no backend changes.
 
+**Self-service plans are off.** 2ACE sells fulfilment and warehouse software with pricing on request, and customers are created in the admin panel, so the plan builder, checkout, plan prices, "Change plan" and the Domain tab are hidden. The code stays: `selfServe: true` in `/config.js` (read by `src/lib/flags.ts`) brings it all back. Tests run with it on (`test/setup.ts`); `test/hidden.test.tsx` covers the hidden mode.
+
 The build is written to `../app/` and **committed**, because the server only runs `git pull`. CI rebuilds it and fails if
 `app/` is not exactly what this folder produces, so always commit both together.
 

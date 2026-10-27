@@ -50,8 +50,9 @@
 
   <section id="v-auth">
     <h1 id="title">Welcome back</h1>
-    <p class="sub" id="sub">Log in to see your plan, stock and orders.</p>
-    <div class="tabs" role="tablist">
+    <p class="sub" id="sub">Log in to see your stock and orders.</p>
+    <!-- Self-service sign-up is off: customers are created by 2ACE and get an invitation email. The tabs and the sign-up form stay, hidden. -->
+    <div class="tabs" role="tablist" hidden data-self-serve style="display:none">
       <button type="button" role="tab" id="t-in" aria-selected="true">Log in</button>
       <button type="button" role="tab" id="t-up" aria-selected="false">Create account</button>
     </div>
@@ -61,6 +62,7 @@
       <label>Password<input id="in-pw" type="password" autocomplete="current-password" required></label>
       <button class="go" type="submit">Log in</button>
       <div class="row"><button class="link" type="button" id="forgot">Forgot password?</button></div>
+      <p class="fine">New customer? <a href="/#talk">Request pricing</a> and we will set up your account.</p>
     </form>
 
     <form id="f-up" class="hidden" novalidate>
@@ -106,6 +108,8 @@
 <script src="countries.js?v=3"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
+  // Read the address before the Supabase client sees it: the client removes the #type=... part once it has used it.
+  const INVITED = /type=invite/.test(location.hash), RECOVERING = /type=recovery/.test(location.hash);
   // The anon key is public by design; data is protected by row level security in the database.
   const SUPABASE_URL = window.ACE_CONFIG.supabaseUrl;
   const SUPABASE_ANON_KEY = window.ACE_CONFIG.supabaseAnonKey;
@@ -125,7 +129,7 @@
     $('f-in').classList.toggle('hidden', up);
     $('f-up').classList.toggle('hidden', !up);
     $('title').textContent = up ? 'Create your account' : 'Welcome back';
-    $('sub').textContent = up ? 'One account for your plan, stock, orders and billing.' : 'Log in to see your plan, stock and orders.';
+    $('sub').textContent = up ? 'One account for your plan, stock, orders and billing.' : 'Log in to see your stock and orders.';
     say($('msg'), '');
   }
   $('t-in').onclick = () => mode(false);
@@ -194,12 +198,13 @@
   });
 
   sb.auth.onAuthStateChange((event) => {
-    if (event === 'PASSWORD_RECOVERY') { $('v-auth').classList.add('hidden'); $('v-reset').classList.remove('hidden'); }
+    // A person invited by 2ACE arrives signed in (type=invite) and first chooses a password, like after a password reset.
+    if (event === 'PASSWORD_RECOVERY' || (event === 'SIGNED_IN' && INVITED)) { $('v-auth').classList.add('hidden'); $('v-reset').classList.remove('hidden'); }
   });
 
   // Already signed in (and not mid-recovery): go straight to the dashboard.
   sb.auth.getSession().then(({ data }) => {
-    if (data.session && !/type=recovery/.test(location.hash)) location.href = NEXT;
+    if (data.session && !INVITED && !RECOVERING) location.href = NEXT;
   });
 </script>
 </body>

@@ -351,6 +351,33 @@ const actions: Record<string, { roles?: StaffRole[]; run: (s: StaffCtx, b: Recor
   } },
 
   // ---------- staff management (admin) ----------
+  // ---------- adding customers (self-service plans are off: customers are created here) ----------
+  // Invites the person by email. The sign-up trigger builds their profile, company and owner membership; this then activates the company with one managed service.
+  'customer.create': { roles: ['admin'], run: async (s, b) => {
+    const email = text(b.email, 200).toLowerCase(), company = text(b.company, 200), name = text(b.full_name, 200), country = text(b.country, 8).toUpperCase() || 'PL';
+    const vat = text(b.vat_id, 40), phone = text(b.phone, 40), note = text(b.note, 500);
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new Bad('Enter a valid email');
+    if (company.length < 2) throw new Bad('Enter the company name');
+    if (name.length < 2) throw new Bad('Enter the contact person\'s name');
+    if (!/^[A-Z]{2}$/.test(country)) throw new Bad('Enter the country as two letters, for example PL');
+    const { data, error } = await admin.auth.admin.inviteUserByEmail(email, { redirectTo: SITE + '/login?next=' + encodeURIComponent('/app/dashboard'), data: { company, full_name: name, country, vat_id: vat, phone } });
+    if (error || !data.user) throw new Bad(/already|registered|exists/i.test(error?.message ?? '') ? 'This email already has an account.' : 'Could not send the invitation: ' + (error?.message ?? 'unknown'), /already|registered|exists/i.test(error?.message ?? '') ? 409 : 502);
+    const { data: m } = await admin.from('members').select('org_id').eq('user_id', data.user.id).maybeSingle();
+    if (!m) throw new Error('the invited person has no company');
+    const { error: e2 } = await admin.rpc('admin_activate_customer', { p_org: m.org_id, p_note: note });
+    if (e2) throw new Error(e2.message);
+    await audit(s, 'customer.create', 'organizations', m.org_id, m.org_id, null, { email, company, country, note: note || null });
+    return { ok: true, org_id: m.org_id };
+  } },
+  'customer.setService': { roles: ['admin'], run: async (s, b) => {
+    if (!isUuid(b.org_id)) throw new Bad('Invalid customer');
+    const note = text(b.note, 500);
+    const { error } = await admin.rpc('admin_set_service_note', { p_org: b.org_id, p_note: note });
+    if (error) throw new Bad(error.message);
+    await audit(s, 'customer.service_note', 'organizations', b.org_id, b.org_id, null, { note: note || null });
+    return { ok: true };
+  } },
+
   'staff.list': { roles: ['admin'], run: async () => {
     const { data: rows } = await admin.from('staff_users').select('user_id, role, active, created_at').order('created_at');
     const out = [];

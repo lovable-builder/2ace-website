@@ -10,6 +10,7 @@ import { Builder } from './pages/Builder';
 import { Checkout } from './pages/Checkout';
 import { Dashboard } from './pages/Dashboard';
 import { leave } from './lib/nav';
+import { selfServe } from './lib/flags';
 
 export function Providers({ children }: { children: ReactNode }) {
   return (
@@ -28,8 +29,8 @@ export function AppRoutes() {
     <Routes>
       <Route element={<Shell />}>
         <Route index element={<Entry />} />
-        <Route path="plan/:step?" element={<Builder />} />
-        <Route path="checkout/:step?" element={<Checkout />} />
+        <Route path="plan/:step?" element={<SelfServeOnly><Builder /></SelfServeOnly>} />
+        <Route path="checkout/:step?" element={<SelfServeOnly><Checkout /></SelfServeOnly>} />
         <Route path="dashboard/:tab?" element={<SignedIn><Dashboard /></SignedIn>} />
         <Route path="*" element={<NotFound />} />
       </Route>
@@ -45,6 +46,14 @@ export default function App() {
       </Providers>
     </ErrorBoundary>
   );
+}
+
+// The plan builder and checkout only exist while self-service plans are on. Otherwise people go to their dashboard (or, without a login, to the pricing request on the home page).
+function SelfServeOnly({ children }: { children: ReactNode }) {
+  const nav = useNavigate();
+  const on = selfServe();
+  useEffect(() => { if (!on) { if (currentSession()) nav('/dashboard', { replace: true }); else leave.to('/#talk'); } }, [on, nav]);
+  return on ? <>{children}</> : null;
 }
 
 // Sends someone without a session to /login, and back here afterwards.
@@ -72,7 +81,7 @@ function Entry() {
     else if (q.get('tab') === 'domain') need('/dashboard/domain');
     else if (view === 'dash') need('/dashboard');
     else if (view === 'checkout') nav(signed ? '/checkout/agreement' : '/checkout', { replace: true });
-    else nav('/plan', { replace: true });
+    else nav(selfServe() ? '/plan' : '/dashboard', { replace: true });
   }, [nav, forget, search]);
   return null;
 }
@@ -83,7 +92,7 @@ function NotFound() {
     <div className="center">
       <div className="stack-sm">
         <h1 className="h1">{t('This page does not exist.')}</h1>
-        <p className="sub"><a className="linkbtn" href="/app/plan">{t('Build your plan')}</a> · <a className="linkbtn" href="/app/dashboard">{t('Dashboard')}</a></p>
+        <p className="sub">{selfServe() ? <><a className="linkbtn" href="/app/plan">{t('Build your plan')}</a> · </> : null}<a className="linkbtn" href="/app/dashboard">{t('Dashboard')}</a></p>
       </div>
     </div>
   );

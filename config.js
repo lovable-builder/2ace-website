@@ -26,6 +26,9 @@
     supabaseAnonKey: c.supabaseAnonKey,
     sentryDsn: c.sentryDsn,
     // supabase-js keeps the session under this key; every page reads the same one.
-    authStorageKey: 'sb-' + ref + '-auth-token'
+    authStorageKey: 'sb-' + ref + '-auth-token',
+    // The plan builder and public prices are off: 2ACE sells fulfilment and warehouse software with pricing on request, and customers are created in the admin panel.
+    // true brings the self-service plan builder back (the code is still in web/).
+    selfServe: false
   });
 })();

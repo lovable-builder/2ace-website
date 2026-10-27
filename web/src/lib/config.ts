@@ -5,6 +5,7 @@ export type AceConfig = {
   supabaseAnonKey: string;
   sentryDsn: string;
   authStorageKey: string;
+  selfServe?: boolean;     // the plan builder and public prices (off by default, see lib/flags.ts)
 };
 
 declare global {

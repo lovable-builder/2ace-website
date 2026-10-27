@@ -641,4 +641,13 @@ export const pl: Record<string, string> = {
   "{n} pallet places at {price} each": "{n} miejsc paletowych po {price}",
   "{pallets} pallet places · {shelf} m³ shelf space": "{pallets} miejsc paletowych · {shelf} m³ na półkach",
   "{pallet} a month per pallet place, {shelf} per m³ of shelf space. At or below the market, no monthly minimum. Change it any month.": "{pallet} miesięcznie za miejsce paletowe, {shelf} za m³ na półkach. Ceny na poziomie rynku lub niżej, bez miesięcznego minimum. Zmienisz to w każdym miesiącu.",
+  "A .pl storefront": "Sklep .pl",
+  "Charged per use, as agreed": "Rozliczane za użycie, zgodnie z ustaleniami",
+  "Notes": "Uwagi",
+  "Questions about your service or its prices? Write to hello@2ace.pl.": "Pytania o Twoją usługę lub jej ceny? Napisz na hello@2ace.pl.",
+  "Shipping is not set up for your account yet. Please contact us.": "Wysyłka nie jest jeszcze skonfigurowana dla Twojego konta. Skontaktuj się z nami.",
+  "We can design, host and connect a Polish web store to your stock. Tell us what you need and we quote it for your case.": "Możemy zaprojektować, hostować i połączyć polski sklep internetowy z Twoimi stanami magazynowymi. Napisz, czego potrzebujesz, a wycenimy to dla Twojego przypadku.",
+  "Your buyer sends goods back to our warehouse. You announce the return here, issue the return label yourself, and we inspect, grade and restock within 48 hours. Fees are charged as agreed with you, on your monthly invoice.": "Kupujący odsyła towar do naszego magazynu. Zgłaszasz zwrot tutaj, sam wystawiasz etykietę zwrotną, a my sprawdzamy, oceniamy i przywracamy na stan w ciągu 48 godzin. Opłaty są naliczane zgodnie z ustaleniami, na Twojej miesięcznej fakturze.",
+  "Your service": "Twoja usługa",
+  "Your service is live.": "Twoja usługa jest aktywna.",
 };

@@ -7,6 +7,7 @@ import { fmt } from './lib/format';
 import { loginUrl } from './lib/session';
 import type { Lang } from './lib/format';
 import { leave } from './lib/nav';
+import { selfServe } from './lib/flags';
 
 // Header (plan builder / dashboard switch, who is signed in, the plan price, language) and footer around every screen.
 export function Shell() {
@@ -27,7 +28,7 @@ export function Shell() {
     leave.to(loginUrl('/app/dashboard'));
   };
   const onAuth = () => {
-    if (signedIn) { a.signOut(); nav('/plan'); }
+    if (signedIn) { a.signOut(); if (selfServe()) nav('/plan'); else leave.to('/'); }
     else leave.to(loginUrl('/app' + loc.pathname + loc.search));
   };
 
@@ -36,12 +37,12 @@ export function Shell() {
       <header className="top">
         <div className="brand"><a href="/">2ACE</a><span>PLATFORM</span></div>
         <nav className="vtabs" aria-label={t('Sections')}>
-          <Link to="/plan" className={onDash ? '' : 'on'}>{t('Build plan')}</Link>
+          {selfServe() ? <Link to="/plan" className={onDash ? '' : 'on'}>{t('Build plan')}</Link> : null}
           <Link to="/dashboard" className={onDash ? 'on' : ''} onClick={goDash}>{t('Dashboard')}</Link>
         </nav>
         <div className="who">
           {signedIn ? <span className="welcome">{t('Welcome, {name}', { name: a.orgName || a.userName || a.email })}</span> : null}
-          <span className="price">{t('Plan · {price} / mo', { price: fmt(monthly) })}</span>
+          {selfServe() ? <span className="price">{t('Plan · {price} / mo', { price: fmt(monthly) })}</span> : null}
           <label className="sr-only" htmlFor="lang">{t('Language')}</label>
           <select id="lang" value={lang} onChange={(e) => setLang(e.target.value as Lang)}>
             {LANGS.map((l) => <option key={l.k} value={l.k}>{l.label}</option>)}

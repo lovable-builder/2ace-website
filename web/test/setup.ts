@@ -4,7 +4,7 @@ import { cleanup } from '@testing-library/react';
 
 // The values config.js gives a page on production (tests never call the network: fetch is replaced in each test).
 window.ACE_CONFIG = Object.freeze({
-  env: 'production', supabaseUrl: 'https://proj.supabase.co', supabaseAnonKey: 'anon-key', sentryDsn: '', authStorageKey: 'sb-proj-auth-token',
+  env: 'production', supabaseUrl: 'https://proj.supabase.co', supabaseAnonKey: 'anon-key', sentryDsn: '', authStorageKey: 'sb-proj-auth-token', selfServe: true,
 });
 window.scrollTo = () => {};
 

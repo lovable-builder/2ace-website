@@ -7,7 +7,7 @@ const storageText = (c) => {
   if (!p && !m) return 'no storage';
   return [p ? `${p} pallet${p === 1 ? '' : 's'}` : '', m ? `${String(m).replace(/\.0$/, '')} m³ shelves` : ''].filter(Boolean).join(' + ');
 };
-const planSummary = (c) => { if (!c) return '-'; const on = [ c.pkgs && c.pkgs.imp && 'import', c.storeOn && 'storefront'].filter(Boolean); return storageText(c) + (on.length ? ' + ' + on.join(', ') : ''); };
+const planSummary = (c) => { if (!c) return '-'; if (c.service === 'managed') return 'Managed service' + (c.note ? ': ' + c.note : '') + (c.pkgs && c.pkgs.imp ? ' + import' : ''); const on = [ c.pkgs && c.pkgs.imp && 'import', c.storeOn && 'storefront'].filter(Boolean); return storageText(c) + (on.length ? ' + ' + on.join(', ') : ''); };
 
 export async function render(ctx, root, params) {
   if (params && params[0]) return detail(ctx, root, params[0]);
@@ -24,7 +24,7 @@ export async function render(ctx, root, params) {
       { label: 'Company', render: (r) => el('strong', { text: r.name }) },
       { label: 'Owner', render: (r) => el('div', {}, el('div', { text: r.owner_name || '-' }), el('small', { class: 'muted', text: r.owner_email || '' })) },
       { label: 'Country', key: 'country' },
-      { label: 'Plan', render: (r) => (r.monthly_pln ? zl(r.monthly_pln) + ' / mo' : '-') },
+      { label: 'Service', render: (r) => (r.monthly_pln ? zl(r.monthly_pln) + ' / mo' : r.plan_status === 'active' ? 'Managed service' : '-') },
       { label: 'Status', render: (r) => statusPill(r.status) },
       { label: 'Domain', render: (r) => r.domain || '-' },
       { label: 'Open requests', render: (r) => (Number(r.open_requests) ? el('b', { text: String(r.open_requests) }) : '0') },
@@ -33,7 +33,25 @@ export async function render(ctx, root, params) {
     holder.dataset.count = String(rows.length);
   };
   q.addEventListener('input', draw); st.addEventListener('change', draw); draw();
-  clear(root).append(el('h1', { text: 'Customers' }), el('div', { class: 'row' }, q, st), holder);
+  const add = ctx.me.role === 'admin' && el('button', { class: 'btn', text: 'Add customer', onclick: () => addCustomer(ctx) });
+  clear(root).append(el('div', { class: 'row between' }, el('h1', { text: 'Customers' }), add), el('div', { class: 'row' }, q, st), holder);
+}
+
+// Customers are created here (there is no self-service sign-up): the person gets an invitation email and chooses their own password.
+function addCustomer(ctx) {
+  return modal('Add a customer', (body, done) => {
+    const company = el('input', { placeholder: 'Company name' }), name = el('input', { placeholder: 'Contact person (first name and surname)' }), email = el('input', { type: 'email', placeholder: 'Their email' });
+    const country = el('input', { value: 'PL', maxlength: '2', style: 'width:5em' }), vat = el('input', { placeholder: 'Tax / VAT number (optional)' }), phone = el('input', { placeholder: 'Phone (optional)' });
+    const note = el('textarea', { rows: '3', maxlength: '500', placeholder: 'What we agreed, in a few words. The customer sees it on their overview. No prices.' }), err = el('p', { class: 'err' });
+    const go = el('button', { class: 'btn', text: 'Create and send invitation', onclick: async () => {
+      go.disabled = true; err.textContent = '';
+      try { const r = await ctx.api('customer.create', { company: company.value, full_name: name.value, email: email.value, country: country.value, vat_id: vat.value, phone: phone.value, note: note.value }); toast('Invitation sent to ' + email.value.trim()); ctx.session['opened:' + r.org_id] = true; done(r); ctx.go('customers/' + r.org_id); }
+      catch (e) { err.textContent = e.message; go.disabled = false; }
+    } });
+    body.append(el('p', { class: 'muted', text: 'The person receives an email, chooses a password and lands in the dashboard. Their company is active at once: they can add products, book deliveries and ship. Fulfilment and returns are charged per use.' }),
+      field('Company', company), field('Contact person', name), field('Email', email), field('Country (two letters)', country), field('Tax / VAT number', vat), field('Phone', phone), field('Service note', note), err,
+      el('div', { class: 'row end' }, el('button', { class: 'btn ghost', onclick: () => done(null), text: 'Cancel' }), go));
+  });
 }
 
 async function detail(ctx, root, orgId) {
@@ -62,7 +80,12 @@ async function detail(ctx, root, orgId) {
   const ids = (mem.data || []).map((m) => m.user_id);
   const profs = ids.length ? (await sb.from('profiles').select('user_id, full_name, email, phone').in('user_id', ids)).data || [] : [];
   const pmap = Object.fromEntries(profs.map((p) => [p.user_id, p]));
-  const active = (plans.data || []).find((p) => p.status === 'active');
+  const active = (plans.data || []).find((p) => p.status === 'active'), managed = !!active && active.config && active.config.service === 'managed';
+  const editNote = () => modal('Service note for ' + o.name, (body, done) => {
+    const note = el('textarea', { rows: '4', maxlength: '500', value: (active.config || {}).note || '' }), err = el('p', { class: 'err' });
+    const save = el('button', { class: 'btn', text: 'Save', onclick: async () => { save.disabled = true; err.textContent = ''; try { await ctx.api('customer.setService', { org_id: orgId, note: note.value }); toast('Saved'); done(true); } catch (e) { err.textContent = e.message; save.disabled = false; } } });
+    body.append(el('p', { class: 'muted', text: 'What we agreed, in a few words. The customer sees this on their overview. Do not put prices here.' }), field('Note', note), err, el('div', { class: 'row end' }, el('button', { class: 'btn ghost', text: 'Cancel', onclick: () => done(null) }), save));
+  }).then((ok) => { if (ok) detail(ctx, root, orgId); });
   const ss = shipSet.data || {}, MODE = { payg: 'Pay as you go (handling fee per order, labels bought by the customer or by us)', storage: 'Storage only' };
   const unbilled = (charges.data || []).reduce((t, c) => t + Number(c.net), 0);
   const editShipping = () => modal('Shipping and fulfilment settings', (body, done) => {
@@ -99,8 +122,9 @@ async function detail(ctx, root, orgId) {
         ['Voivodeship', o.region], ['Phone', o.phone], ['Stripe customer', o.stripe_customer_id], ['Joined', fmtDate(o.created_at)]])),
       el('section', { class: 'card' }, el('h2', { text: 'People' }), table([
         { label: 'Name', render: (m) => (pmap[m.user_id] || {}).full_name || '-' }, { label: 'Email', render: (m) => (pmap[m.user_id] || {}).email || '-' }, { label: 'Role', key: 'role' }], mem.data || []))),
-    el('section', { class: 'card' }, el('h2', { text: 'Plan' }),
-      active ? kv([['Current', planSummary(active.config)], ['Monthly', zl(active.monthly_pln)], ['Setup (one-time)', zl(active.once_pln)], ['Since', fmtDate(active.created_at)]]) : el('p', { class: 'muted', text: 'No active plan.' }),
+    el('section', { class: 'card' }, el('h2', { text: managed ? 'Service' : 'Plan' }),
+      active ? kv(managed ? [['Current', planSummary(active.config)], ['Since', fmtDate(active.created_at)]] : [['Current', planSummary(active.config)], ['Monthly', zl(active.monthly_pln)], ['Setup (one-time)', zl(active.once_pln)], ['Since', fmtDate(active.created_at)]]) : el('p', { class: 'muted', text: 'No active plan.' }),
+      managed && ctx.me.role === 'admin' && el('div', { class: 'row' }, el('button', { class: 'btn ghost tiny', text: 'Edit service note', onclick: editNote })),
       (plans.data || []).length > 1 && el('details', {}, el('summary', { text: 'Plan history (' + plans.data.length + ')' }), table([
         { label: 'When', render: (p) => fmtDate(p.created_at) }, { label: 'Plan', render: (p) => planSummary(p.config) }, { label: 'Monthly', render: (p) => zl(p.monthly_pln) }, { label: 'Status', render: (p) => statusPill(p.status) }], plans.data))),
     el('section', { class: 'card' }, el('h2', { text: 'Shipping and fulfilment' }),

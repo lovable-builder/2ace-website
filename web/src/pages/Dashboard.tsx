@@ -13,6 +13,7 @@ import { Orders } from './dash/Orders';
 import { Returns } from './dash/Returns';
 import { Domain } from './dash/Domain';
 import { Contact, type Topic } from './dash/Contact';
+import { selfServe } from '../lib/flags';
 
 // i18n
 export const TABS = [
@@ -35,7 +36,8 @@ function DashboardInner() {
   const loc = useLocation();
   const [sp, setSp] = useSearchParams();
   const { tab: tabParam } = useParams();
-  const tab = (TABS.some(([k]) => k === (tabParam ?? '')) ? tabParam ?? '' : '') as Tab;
+  const tabs = selfServe() ? TABS : TABS.filter(([k]) => k !== 'domain');   // buying a domain is self-service: hidden with the plans
+  const tab = (tabs.some(([k]) => k === (tabParam ?? '')) ? tabParam ?? '' : '') as Tab;
   const [menu, setMenu] = useState(false);
   const [contact, setContact] = useState<Topic | null>(null);
   const [chDone] = useState<string>(() => (loc.state as { chDone?: string } | null)?.chDone ?? '');
@@ -72,7 +74,9 @@ function DashboardInner() {
     tracking: { title: t('No shipments to track'), text: t('Live tracking starts as soon as a shipment is booked with us.'), cta: t('Book inbound'), go: () => go('inbound') },
     storefront: pc?.storeOn
       ? { title: a.domainName ? t('Your store at {domain}', { domain: a.domainName }) : t('Your .pl storefront'), text: t('We are preparing your store. We email you when the first draft is ready to review.'), cta: t('Back to overview'), go: () => go('') }
-      : { title: t('No storefront in your plan'), text: t('Add a designed and hosted .pl store to your plan: 199 zł a month plus 2 950 zł setup.'), cta: t('Change plan'), go: () => nav('/plan?change=1') },
+      : selfServe()
+        ? { title: t('No storefront in your plan'), text: t('Add a designed and hosted .pl store to your plan: 199 zł a month plus 2 950 zł setup.'), cta: t('Change plan'), go: () => nav('/plan?change=1') }
+        : { title: t('A .pl storefront'), text: t('We can design, host and connect a Polish web store to your stock. Tell us what you need and we quote it for your case.'), cta: t('Contact us'), go: () => setContact('other') },
     team: { title: t('Your team'), text: t('You are the account owner ({email}). Inviting colleagues with their own roles for operations, finance and marketing is opening soon.', { email: a.email || t('your email') }), cta: t('Ask for team access'), go: () => setContact('team') },
   };
   const em = EMPTY[tab];
@@ -82,7 +86,7 @@ function DashboardInner() {
       <nav className={'dashnav' + (menu ? ' open' : '')} aria-label={t('Dashboard')}>
         <button className="dashclose" onClick={() => setMenu(false)} aria-label={t('Close menu')}>×</button>
         <span className="who-co">{customer}</span>
-        {TABS.map(([k, label]) => (
+        {tabs.map(([k, label]) => (
           <Link key={k} to={'/dashboard' + (k ? '/' + k : '')} className={tab === k ? 'on' : ''} aria-current={tab === k ? 'page' : undefined} onClick={() => { setMenu(false); scrollTop(); }}>
             <span>{t(label)}</span>{k === 'domain' && a.domainOffer ? <span className="badge">{t('New')}</span> : null}
           </Link>
@@ -106,7 +110,7 @@ function DashboardInner() {
         {tab === 'domain' ? <Domain /> : null}
         {em ? (
           <div className="stack narrow">
-            <h1 className="h1">{t(TABS.find(([k]) => k === tab)![1])}</h1>
+            <h1 className="h1">{t(tabs.find(([k]) => k === tab)![1])}</h1>
             <div className="card stack-sm">
               <span className="h3">{em.title}</span>
               <p className="sub">{em.text}</p>

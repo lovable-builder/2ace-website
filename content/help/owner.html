@@ -20,6 +20,22 @@
   </ol>
   <p>Emails need <code>RESEND_API_KEY</code> and a verified sender (see the settings table). <code>SITE_URL</code> is used for the links in the emails. The booking page needs no account, so anyone can use it; each email address can hold at most 3 upcoming bookings, and a hidden field catches simple bots.</p>
 
+  <h3>Pricing on request: the switch</h3>
+  <p>The warehouse is rented from a landlord and cannot be sub-let, so the website and the customer app no longer sell space by the pallet, shelf or m², show prices, or let people build a plan and pay online. Pricing is on request: every pricing button goes to the contact form and <b>Book a call</b>. Nothing was deleted; it is all hidden behind one switch.</p>
+  <ul>
+    <li><b>Website and guides</b>: <code>SELF_SERVE_PRICING</code> in <code>scripts/features.mjs</code> (false now). The pages keep the old pricing in blocks marked <code>data-self-serve</code>, hidden. The customer guide and its PDF keep the old sections between <code>SELF-SERVE</code> markers.</li>
+    <li><b>Customer app</b>: <code>selfServe</code> in <code>config.js</code> (false now). Off hides the plan builder, checkout, plan prices, Change plan and the Domain tab.</li>
+    <li><b>To bring it back</b>: set both to true, rebuild (<code>node scripts/build-seo.mjs && node scripts/build-news.mjs && node scripts/build-help.mjs</code>), remove the <code>hidden</code> attribute from the <code>data-self-serve</code> blocks and hide the "Get pricing" replacements. The pricing code on the server (<code>pricing.ts</code>, <code>change-plan</code>, <code>create-checkout</code>) was never removed.</li>
+    <li><b>Sign-up</b>: the sign-up form is hidden, but Supabase still accepts sign-ups. In Supabase, open Authentication, Providers, Email and turn off <b>Allow new users to sign up</b>. Invitations from the admin panel keep working. A person who did register anyway has a pending company and nothing ships for them.</li>
+  </ul>
+  <h3>Adding a customer</h3>
+  <ol class="steps">
+    <li>Run <code>supabase db push --yes</code> (adds the functions that activate a customer) and deploy <code>admin-api</code>: <code>supabase functions deploy admin-api --use-api --project-ref &lt;project&gt;</code>.</li>
+    <li>Sign in to the admin panel, open <span class="ui">Customers</span> and click <span class="ui">Add customer</span>. See the staff guide, section "Customers".</li>
+    <li>In Supabase, Authentication, URL Configuration, make sure <code>https://2ace.pl/login</code> is an allowed redirect address, so the invitation link works. The invitation email comes from Supabase's own sender until you set your own SMTP there.</li>
+    <li>Test with your own second email: you should get the invitation, choose a password and see the dashboard with "Your service is live."</li>
+  </ol>
+
   <h3>Customers buying their own labels: switching it on</h3>
   <p>Every customer with an active plan is pay as you go. Buying labels in the dashboard is still closed until you open it, in two steps, so nothing can spend money by accident.</p>
   <ol class="steps">

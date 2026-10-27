@@ -1,4 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
+import { selfServe } from '../../lib/flags';
 import { useLang, type T } from '../../i18n';
 import { useAccount } from '../../state/account';
 import { useWarehouse, type WhData } from '../../state/warehouse';
@@ -48,9 +49,9 @@ export function Overview({ customer, go }: { customer: string; go: (tab: string)
   const showJourney = a.activated || w.book.length > 0 || w.inv.length > 0;
 
   const steps: { title: string; sub: string; done: boolean; cta: string; to: () => void }[] = [
-    { title: t('Your plan is active'), sub: a.activated ? t('Billed monthly, no minimum term.') : t('Finish checkout to activate it.'), done: a.activated, cta: t('Build plan'), to: () => nav('/plan') },
+    ...(selfServe() ? [{ title: t('Your plan is active'), sub: a.activated ? t('Billed monthly, no minimum term.') : t('Finish checkout to activate it.'), done: a.activated, cta: t('Build plan'), to: () => nav('/plan') }] : []),
   ];
-  if (a.hasDomain || a.domainOffer || pc?.storeOn) {
+  if (selfServe() && (a.hasDomain || a.domainOffer || pc?.storeOn)) {
     steps.push({ title: t('Your .pl domain'), sub: a.hasDomain ? t('Requested. We confirm by email.') : pc?.storeOn ? t('Included in your plan. Choose a name.') : t('Optional: 99 zł one-time, first year included.'), done: a.hasDomain, cta: t('Choose'), to: () => go('domain') });
   }
   steps.push({ title: t('Add your products'), sub: t('Add the products you will store with us.'), done: w.inv.length > 0, cta: t('Open'), to: () => go('products') });
@@ -58,16 +59,23 @@ export function Overview({ customer, go }: { customer: string; go: (tab: string)
   steps.push({ title: t('Invite your team'), sub: t('Give colleagues their own access.'), done: false, cta: t('Open'), to: () => go('team') });
 
   const onOff = (v: unknown, yes?: string) => (v ? yes || t('Included') : t('Not in plan'));
-  const planRows = pc ? [
+  const ss = selfServe();
+  const svcNote = (pc as { note?: string } | undefined)?.note;
+  const planRows: string[][] = pc ? (ss ? [
     [t('Storage'), (() => { const st = planStorage(pc); return [st.pallets ? t('{n} pallet places', { n: st.pallets }) : '', st.shelf ? t('{n} m³ of shelf space', { n: m2fmt(st.shelf) }) : ''].filter(Boolean).join(' · '); })()],
     [t('Fulfilment and returns'), t('Pay as you go')],
     [t('Import & customs'), onOff(pc.pkgs?.imp, t('Quoted per shipment'))],
     [t('.pl storefront'), onOff(pc.storeOn)],
-  ] : [];
+  ] : [
+    [t('Fulfilment and returns'), t('Charged per use, as agreed')],
+    ...(pc.pkgs?.imp ? [[t('Import & customs'), t('Quoted per shipment')]] : []),
+    ...(pc.storeOn ? [[t('.pl storefront'), t('Included')]] : []),
+    ...(svcNote ? [[t('Notes'), svcNote]] : []),
+  ]) : [];
 
   return (
     <div className="stack">
-      {a.domainOffer ? (
+      {ss && a.domainOffer ? (
         <div className="warnbox spread">
           <span><strong>{t('Get your own .pl domain.')}</strong> {t('We register it in your company name. 99 zł one-time, first year included.')}</span>
           <button className="btn small" onClick={() => go('domain')}>{t('Choose a domain')}</button>
@@ -80,12 +88,12 @@ export function Overview({ customer, go }: { customer: string; go: (tab: string)
             ? t(hr < 12 ? 'Good morning, {name}' : hr < 18 ? 'Good afternoon, {name}' : 'Good evening, {name}', { name: customer })
             : t(hr < 12 ? 'Good morning' : hr < 18 ? 'Good afternoon' : 'Good evening')}</h1>
         </div>
-        {a.activated ? <Link className="btn ghost" to="/plan?change=1">{t('Change plan')}</Link> : null}
+        {ss && a.activated ? <Link className="btn ghost" to="/plan?change=1">{t('Change plan')}</Link> : null}
       </div>
       {a.activated ? (
         <div className="okbox spread">
-          <span><strong>{t('Your plan is live.')}</strong> {t('Work through the steps below to get your first delivery moving.')}</span>
-          <span className="mono">{t('{price} / month', { price: fmt(a.curPlan?.monthly ?? 0) })}</span>
+          <span><strong>{ss ? t('Your plan is live.') : t('Your service is live.')}</strong> {t('Work through the steps below to get your first delivery moving.')}</span>
+          {ss ? <span className="mono">{t('{price} / month', { price: fmt(a.curPlan?.monthly ?? 0) })}</span> : null}
         </div>
       ) : null}
       {showJourney ? (
@@ -127,9 +135,9 @@ export function Overview({ customer, go }: { customer: string; go: (tab: string)
         </div>
         {planRows.length ? (
           <div className="card" style={{ flex: '1 1 280px' }}>
-            <span className="h3">{t('Your plan')}</span>
+            <span className="h3">{ss ? t('Your plan') : t('Your service')}</span>
             {planRows.map(([k, v]) => <div className="kv" key={k}><span>{k}</span><span>{v}</span></div>)}
-            <div className="kv" style={{ borderBottom: 0, fontWeight: 600 }}><span>{t('Monthly, excl. VAT')}</span><span>{fmt(a.curPlan?.monthly ?? 0)}</span></div>
+            {ss ? <div className="kv" style={{ borderBottom: 0, fontWeight: 600 }}><span>{t('Monthly, excl. VAT')}</span><span>{fmt(a.curPlan?.monthly ?? 0)}</span></div> : <p className="small" style={{ marginTop: 10 }}>{t('Questions about your service or its prices? Write to hello@2ace.pl.')}</p>}
           </div>
         ) : null}
       </div>
