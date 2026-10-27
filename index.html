@@ -168,7 +168,7 @@
           <p class="reveal" style="font-size: clamp(15px, 1.2vw, 18px); line-height: 1.6; margin: 0; max-width: 58ch; color: rgba(245,244,241,0.72);">We sold online in the EU first, so we know where brands lose money. 2ACE puts the warehouse, the border and the storefront into one service that you follow from one dashboard.</p>
         </div>
       </div>
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 1px; background: rgba(245,244,241,0.14);">
+      <div class="svc-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 1px; background: rgba(245,244,241,0.14);">
         <div class="reveal" style="background: #0B0C0E; padding: clamp(26px, 3vw, 40px); display: flex; flex-direction: column;" style-hover="background: #14161A;">
           <p style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.2em; margin: 0 0 26px; color: #E39A2B;">01</p>
           <h3 style="font-family: Archivo, sans-serif; font-variation-settings: 'wdth' 106; font-weight: 700; font-size: 22px; line-height: 1.15; margin: 0 0 12px;">Warehousing</h3>
@@ -199,7 +199,28 @@
           <p style="font-size: 15px; line-height: 1.6; margin: 0 0 24px; color: rgba(245,244,241,0.66);">A Polish web store designed, hosted and connected to your stock, with local payments and carriers at checkout.</p>
           <p style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.06em; margin: auto 0 0; padding-top: 16px; border-top: 1px solid rgba(245,244,241,0.14); color: #F5F4F1;"><!-- self-serve price: 2 950 zł setup · 199 zł / month -->Pricing on request</p>
         </div>
+        <div class="reveal svc-video" style="position: relative; background: #0B0C0E; aspect-ratio: 16 / 9; overflow: hidden;">
+          <video id="svcVideo" src="assets/video/warehouse.mp4" poster="assets/video/warehouse-poster.jpg" preload="none" playsinline aria-label="2ACE video" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; background: #0B0C0E;"></video>
+          <div data-video-cover style="position: absolute; inset: 0; background: linear-gradient(to top, rgba(11,12,14,0.78) 0%, rgba(11,12,14,0.18) 55%, rgba(11,12,14,0.32) 100%); pointer-events: none;"></div>
+          <button type="button" data-video-play aria-label="Play the video" style="position: absolute; inset: 0; margin: auto; width: 80px; height: 80px; border-radius: 50%; border: 1px solid rgba(245,244,241,0.55); background: rgba(11,12,14,0.5); cursor: pointer; display: flex; align-items: center; justify-content: center; padding: 0;"><svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true" style="margin-left: 4px;"><path d="M6 3.5v17l14-8.5z" fill="#E39A2B"></path></svg></button>
+          <p data-video-cover style="position: absolute; left: clamp(18px, 2.4vw, 32px); bottom: clamp(16px, 2vw, 28px); margin: 0; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: #F5F4F1; pointer-events: none;">Watch the video</p>
         </div>
+        </div>
+        <style>
+          .svc-grid { grid-template-columns: 1fr !important; }
+          @media (min-width: 640px) { .svc-grid { grid-template-columns: repeat(2, 1fr) !important; } }
+          @media (min-width: 1220px) { .svc-grid { grid-template-columns: repeat(4, 1fr) !important; } .svc-video { grid-column: 2 / -1; } }
+          .svc-video button:hover { background: rgba(227,154,43,0.22); border-color: #E39A2B; }
+        </style>
+        <script>
+          // One play button over the poster. After it starts, the browser's own controls take over so a visitor can pause, stop or scrub.
+          document.addEventListener('click', (e) => {
+            const b = e.target.closest('[data-video-play]'); if (!b) return;
+            const box = b.parentElement, v = box.querySelector('video'); if (!v) return;
+            v.controls = true; box.querySelectorAll('[data-video-cover]').forEach((n) => { n.style.display = 'none'; }); b.style.display = 'none';
+            v.play().catch(() => { v.controls = true; });
+          });
+        </script>
     </div>
   </section>
 
