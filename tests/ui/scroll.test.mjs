@@ -1,4 +1,6 @@
 import { JSDOM, VirtualConsole } from 'jsdom';
+// Print where a crash came from (the CI log is the only place it can be read), then fail.
+for (const ev of ['uncaughtException', 'unhandledRejection']) process.on(ev, (e) => { console.log('FAIL', ev, String(e && e.stack || e).split('\n').slice(0, 8).join(' | ')); process.exit(1); });
 const vc = new VirtualConsole(); const errs = []; vc.on('jsdomError', (e) => errs.push(e.message.slice(0, 160)));
 let P = 0; const VH = 800, SCREENS = 9.5;
 const dom = await JSDOM.fromURL('http://localhost:8000/' + (process.argv[2] || ''), { runScripts: 'dangerously', resources: 'usable', pretendToBeVisual: true, virtualConsole: vc,
