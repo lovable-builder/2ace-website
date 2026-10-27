@@ -12,7 +12,11 @@ const dom = await JSDOM.fromURL('http://localhost:8000/' + (process.argv[2] || '
     Object.defineProperty(w.HTMLElement.prototype, 'offsetHeight', { get() { return this.id === 'track' ? VH * SCREENS : 0; }, configurable: true });
   } });
 const d = dom.window.document; const wait = (ms) => new Promise((r) => setTimeout(r, ms));
-await wait(800);
+// Wait until the page has built itself (a slow CI machine needs longer than a fixed pause), and say which part is missing if it never does.
+const NEEDED = ['#stageB', '#track', '#counter', '#pct', '#scrimDark'];
+for (let t = 0; t < 100 && (NEEDED.some((s) => !d.querySelector(s)) || !d.querySelector('.band')); t++) await wait(100);
+{ const missing = NEEDED.filter((s) => !d.querySelector(s)); if (missing.length || !d.querySelector('.band')) { console.log('FAIL page never finished loading; missing:', missing.join(', ') || '.band', '| errors:', errs.slice(0, 3)); process.exit(1); } }
+await wait(300);
 const active = () => { const bands = [...d.querySelectorAll('.band')]; const on = bands.findIndex((b) => b.style.opacity === '1'); return { on, title: on >= 0 ? (bands[on].querySelector('h1,h2').textContent.replace(/\s+/g, ' ').trim()) : '-', counter: d.querySelector('#counter').textContent, pct: d.querySelector('#pct').textContent }; };
 console.log('bands:', d.querySelectorAll('.band').length, '| stageA gone:', !d.querySelector('#stageA'), '| stageB visible:', d.querySelector('#stageB').style.display !== 'none');
 const want = [[0.0, 0], [0.02, 0], [0.12, 1], [0.24, 2], [0.36, 3], [0.47, 4], [0.58, 5], [0.7, 6], [0.82, 7], [1.0, 7]];
