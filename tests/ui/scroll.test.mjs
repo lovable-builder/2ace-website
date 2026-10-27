@@ -20,6 +20,8 @@ const NEEDED = ['#stageB', '#track', '#counter', '#pct', '#scrimDark'];
 const complete = () => NEEDED.every((s) => d.querySelector(s)) && !!d.querySelector('.band');
 for (let t = 0, steady = 0; t < 200 && steady < 10; t++) { await wait(100); steady = complete() ? steady + 1 : 0; }
 { const missing = NEEDED.filter((s) => !d.querySelector(s)); if (missing.length || !d.querySelector('.band')) { console.log('FAIL page never finished loading; missing:', missing.join(', ') || '.band', '| errors:', errs.slice(0, 3)); process.exit(1); } }
+// Everything kept only for the self-service model must stay hidden once the page has rendered (the template engine once dropped the hidden attribute).
+{ const shown = [...d.querySelectorAll('[data-self-serve]')].filter((e) => dom.window.getComputedStyle(e).display !== 'none'); console.log(shown.length ? 'FAIL' : 'PASS', 'self-service blocks hidden after render:', d.querySelectorAll('[data-self-serve]').length, 'blocks,', shown.length, 'visible'); if (shown.length) process.exit(1); }
 const active = () => { const bands = [...d.querySelectorAll('.band')]; const on = bands.findIndex((b) => b.style.opacity === '1'); return { on, title: on >= 0 ? (bands[on].querySelector('h1,h2').textContent.replace(/\s+/g, ' ').trim()) : '-', counter: d.querySelector('#counter').textContent, pct: d.querySelector('#pct').textContent }; };
 console.log('bands:', d.querySelectorAll('.band').length, '| stageA gone:', !d.querySelector('#stageA'), '| stageB visible:', d.querySelector('#stageB').style.display !== 'none');
 const want = [[0.0, 0], [0.02, 0], [0.12, 1], [0.24, 2], [0.36, 3], [0.47, 4], [0.58, 5], [0.7, 6], [0.82, 7], [1.0, 7]];
